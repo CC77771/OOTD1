@@ -1,7 +1,7 @@
 <%@page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
 <%@page import="java.sql.*"%>
 <%@page import="java.util.*"%>
-
+<!DO<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
