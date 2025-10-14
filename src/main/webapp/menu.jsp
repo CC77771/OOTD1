@@ -22,7 +22,6 @@
   <link rel="stylesheet" type="text/css" href="css/vendor.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.css" />
   <link rel="stylesheet" type="text/css" href="style.css">
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
@@ -30,11 +29,8 @@
     rel="stylesheet">
 </head>
 <body>
-  <!-- Header -->
-  <!-- Header -->
 <form method="post" action="logout.jsp">
   <header class="w3l-header">
-    <!-- Navbar -->
     <nav class="navbar navbar-expand-lg bg-light text-uppercase fs-6 p-3 border-bottom align-items-center">
       <div class="container-fluid">
         <div class="row justify-content-between align-items-center w-100">
@@ -45,7 +41,6 @@
             </a>
           </div>
 
-          <!-- Navbar Toggler and Offcanvas -->
           <div class="col-auto">
             <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar">
               <span class="navbar-toggler-icon"></span>
@@ -57,7 +52,8 @@
               </div>
               <div class="offcanvas-body">
                 <ul class="navbar-nav justify-content-end flex-grow-1 gap-1 gap-md-5 pe-3">
-                  <!-- Body Type Suggestions -->
+                  
+                  <!-- 體型建議 -->
                   <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle active" href="#" id="dropdownBodyTypeSuggestions" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">體型建議</a>
                     <ul class="dropdown-menu" aria-labelledby="dropdownBodyTypeSuggestions">
@@ -69,18 +65,18 @@
                     </ul>
                   </li>                  
 
-                  <!-- Wear Exhibition Area -->
+                  <!-- 穿搭展示區 -->
                   <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="dropdownWearExhibitionArea" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">穿搭展示區</a>
                     <ul class="dropdown-menu" aria-labelledby="dropdownWearExhibitionArea">
-                    <li><a href="Posts.jsp" class="dropdown-item">上傳貼文</a></li>
-                     <li><a href="Posts.jsp" class="dropdown-item">上傳服飾</a></li>
+                      <li><a href="Posts.jsp" class="dropdown-item">上傳貼文</a></li>
+                      <li><a href="Posts.jsp" class="dropdown-item">上傳服飾</a></li>
                       <li><a href="index1.jsp#Posts" class="dropdown-item">貼文</a></li>
                       <li><a href="index1.jsp#Same style" class="dropdown-item">同款服飾</a></li>
                     </ul>
                   </li>
 
-                  <!-- Reward -->
+                  <!-- 穿搭分享獎勵 -->
                   <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="dropdownReward" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">穿搭分享獎勵</a>
                     <ul class="dropdown-menu" aria-labelledby="dropdownReward">
@@ -89,31 +85,35 @@
                     </ul>
                   </li>
                   
-            <div class="ml-lg-3">
-            <li class="nav-item dropdown"> 
-             <a class="nav-link" href="member.jsp?memberId=<%=session.getAttribute("accessId")%>">
-                           <%
-					if(session.getAttribute("accessId") == null){
-						out.println("");
-					}else{
-						out.println(session.getAttribute("accessId"));
-					}
-			 %></a>
-                                                    
-          <%if(session.getAttribute("accessId") != null){%>          
-          	<input type="submit" value="登出" name="login" class="btn btn-style btn-effect">          	 
-		  <%}else{%>
-		  <a class="text-uppercase mx-3 align-items-center" href="login.jsp">登入</a>                
-	  	  <%}%>    
-           </li>
-          </div>                 
+                  <!-- ✅ 我的衣櫃（改為跳轉 my_wardrobe.jsp） -->
+                  <li class="nav-item">
+                    <a class="nav-link" href="#" id="goWardrobe">我的衣櫃</a>
+                  </li>
+
+                  <div class="ml-lg-3">
+                    <li class="nav-item dropdown"> 
+                      <a class="nav-link" href="member.jsp?memberId=<%=session.getAttribute("accessId")%>">
+                        <%
+                          if(session.getAttribute("accessId") == null){
+                            out.println("");
+                          }else{
+                            out.println(session.getAttribute("accessId"));
+                          }
+                        %>
+                      </a>
+                      <% if(session.getAttribute("accessId") != null){ %>          
+                        <input type="submit" value="登出" name="login" class="btn btn-style btn-effect">          	 
+                      <% } else { %>
+                        <a class="text-uppercase mx-3 align-items-center" href="login.jsp">登入</a>                
+                      <% } %>    
+                    </li>
+                  </div>                 
+                </ul>
               </div>
             </div>
           </div>
 
-          <!-- Icons and Search -->          
           <div class="col-auto d-flex align-items-center">
-            
             <a href="#search" class="search-button mx-2">
               <svg width="24" height="24" viewBox="0 0 24 24">
                 <use xlink:href="#search"></use>   
@@ -126,13 +126,24 @@
     </nav>
   </header>
 </form>
+
+<!-- ✅ Script 放在 body 最下方，確保能抓到 goWardrobe -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  document.getElementById("goWardrobe").addEventListener("click", function(e) {
+    e.preventDefault(); // 防止 href="#" 導致頁面跳回頂端
+    window.location.href = "my_wardrobe.jsp"; // ✅ 跳轉至你的衣櫃頁面
+  });
+});
+</script>
+
 <script src="js/jquery.min.js"></script>
-  <script src="js/plugins.js"></script>
-  <script src="js/SmoothScroll.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe"
-    crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.js"></script>
-  <script src="js/script.min.js"></script>
+<script src="js/plugins.js"></script>
+<script src="js/SmoothScroll.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"
+  integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe"
+  crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.js"></script>
+<script src="js/script.min.js"></script>
 </body>
 </html>
