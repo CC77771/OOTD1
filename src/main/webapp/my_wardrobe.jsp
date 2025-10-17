@@ -47,25 +47,15 @@
             
             try {
                 if (clothingCode != null && !clothingCode.isEmpty()) {
-                    // 編輯 - 如果有新圖片則更新，否則保持原圖
-                    if (wearingDisplay != null && !wearingDisplay.isEmpty()) {
-                        String sql = "UPDATE my_wardrobe SET text_description = ?, color_code = ?, brand = ?, wearing_display = ? WHERE account_number = ? AND clothing_code = ?";
-                        pstmt = conn.prepareStatement(sql);
-                        pstmt.setString(1, textDescription);
-                        pstmt.setString(2, colorCode);
-                        pstmt.setString(3, brand);
-                        pstmt.setString(4, wearingDisplay);
-                        pstmt.setString(5, accountNumber);
-                        pstmt.setString(6, clothingCode);
-                    } else {
-                        String sql = "UPDATE my_wardrobe SET text_description = ?, color_code = ?, brand = ? WHERE account_number = ? AND clothing_code = ?";
-                        pstmt = conn.prepareStatement(sql);
-                        pstmt.setString(1, textDescription);
-                        pstmt.setString(2, colorCode);
-                        pstmt.setString(3, brand);
-                        pstmt.setString(4, accountNumber);
-                        pstmt.setString(5, clothingCode);
-                    }
+                    // 編輯
+                    String sql = "UPDATE my_wardrobe SET text_description = ?, color_code = ?, brand = ?, wearing_display = ? WHERE account_number = ? AND clothing_code = ?";
+                    pstmt = conn.prepareStatement(sql);
+                    pstmt.setString(1, textDescription);
+                    pstmt.setString(2, colorCode);
+                    pstmt.setString(3, brand);
+                    pstmt.setString(4, wearingDisplay);
+                    pstmt.setString(5, accountNumber);
+                    pstmt.setString(6, clothingCode);
                     pstmt.executeUpdate();
                     message = "衣物已更新";
                 } else {
@@ -202,9 +192,6 @@
         .form-label { display: block; margin-bottom: 10px; font-weight: 700; color: #555; font-size: 14px; letter-spacing: 0.5px; }
         .form-input { width: 100%; padding: 14px 16px; border: 2px solid #e8e8e8; border-radius: 12px; font-size: 15px; transition: all 0.3s ease; font-family: 'Microsoft JhengHei', 'Arial', sans-serif; }
         .form-input:focus { outline: none; border-color: #c4b5a0; box-shadow: 0 0 0 4px rgba(196, 181, 160, 0.1); }
-        .image-preview-box { width: 100%; height: 250px; background: #f0f0f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; overflow: hidden; border: 2px solid #e8e8e8; }
-        .image-preview-box img { width: 100%; height: 100%; object-fit: cover; }
-        .image-preview-box span { color: #999; font-size: 14px; }
         .form-actions { display: flex; gap: 12px; margin-top: 32px; }
         .btn-primary { flex: 1; padding: 16px; background: linear-gradient(135deg, #c4b5a0 0%, #a89f91 100%); color: white; border: none; border-radius: 14px; cursor: pointer; font-size: 16px; font-weight: 700; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); letter-spacing: 0.5px; box-shadow: 0 4px 16px rgba(168, 159, 145, 0.35); }
         .btn-primary:hover { background: linear-gradient(135deg, #a89f91 0%, #9a8e7e 100%); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(168, 159, 145, 0.45); }
@@ -266,32 +253,30 @@
                 <% } else {
                     for (Map<String, String> item : itemsList) {
                         String imagePath = item.get("wearing_display");
+                        if (imagePath == null || imagePath.isEmpty()) {
+                            imagePath = "images/no-image.jpg";
+                        }
                         String desc = item.get("text_description");
                         if (desc == null) desc = "未命名";
                         String color = item.get("color_code");
                         if (color == null) color = "";
-                        String brand = item.get("brand");
-                        if (brand == null) brand = "";
                 %>
                     <div class="item-card">
                         <div class="item-image-container">
-                            <% if (imagePath != null && !imagePath.isEmpty()) { %>
-                                <img src="<%= imagePath %>" alt="<%= desc %>" class="item-image">
-                            <% } else { %>
-                                <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #999;">無圖片</div>
-                            <% } %>
+                            <img src="<%= imagePath %>" alt="<%= desc %>" class="item-image">
                         </div>
                         <div class="item-info">
                             <div class="item-name"><%= desc %></div>
                             <% if (!color.isEmpty()) { %>
                                 <div class="item-details">顏色：<%= color %></div>
                             <% } %>
-                            <% if (!brand.isEmpty()) { %>
+                            <% String brand = item.get("brand");
+                               if (brand != null && !brand.isEmpty()) { %>
                                 <div class="item-details">品牌：<%= brand %></div>
                             <% } %>
                         </div>
                         <div class="item-actions">
-                            <button class="btn-edit" onclick='openEditModal("<%= item.get("clothing_code") %>", "<%= desc.replace("\"", "&quot;") %>", "<%= color.replace("\"", "&quot;") %>", "<%= brand.replace("\"", "&quot;") %>", "<%= imagePath != null ? imagePath.replace("\"", "&quot;") : "" %>")'>編輯</button>
+                            <button class="btn-edit" onclick="openEditModal('<%= item.get("clothing_code") %>', '<%= desc.replace("'", "\\'") %>', '<%= color.replace("'", "\\'") %>')">編輯</button>
                             <form method="post" style="flex:1; margin:0;" onsubmit="return confirm('確定要刪除這件衣物嗎？');">
                                 <input type="hidden" name="action" value="delete">
                                 <input type="hidden" name="clothing_code" value="<%= item.get("clothing_code") %>">
@@ -319,10 +304,10 @@
                 <input type="hidden" name="wearing_display" id="wearing_display">
                 <div class="form-group">
                     <label class="form-label">衣物圖片</label>
-                    <div id="image-preview" class="image-preview-box">
-                        <span>點擊下方選擇圖片預覽</span>
+                    <div id="image-preview" style="width: 100%; height: 250px; background: #f0f0f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; overflow: hidden;">
+                        <span style="color: #999;">點擊下方選擇圖片預覽</span>
                     </div>
-                    <input type="file" id="wearing_display_file" class="form-input" accept="image/*">
+                    <input type="file" name="wearing_display_file" id="wearing_display_file" class="form-input" accept="image/*" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">衣物名稱</label>
@@ -365,4 +350,35 @@
         });
         
         function openAddModal() {
-            document.getElementById('modal-title').textContent
+            document.getElementById('modal-title').textContent = '新增衣物';
+            document.getElementById('clothing_code').value = '';
+            document.getElementById('text_description').value = '';
+            document.getElementById('color_code').value = '';
+            document.getElementById('brand').value = '';
+            document.getElementById('wearing_display_file').value = '';
+            document.getElementById('wearing_display').value = '';
+            document.getElementById('image-preview').innerHTML = '<span style="color: #999;">點擊下方選擇圖片預覽</span>';
+            document.getElementById('edit-modal').classList.add('show');
+        }
+        
+        function openEditModal(code, desc, color, brand) {
+            document.getElementById('modal-title').textContent = '編輯衣物';
+            document.getElementById('clothing_code').value = code;
+            document.getElementById('text_description').value = desc;
+            document.getElementById('color_code').value = color;
+            document.getElementById('brand').value = brand;
+            document.getElementById('wearing_display_file').value = '';
+            document.getElementById('image-preview').innerHTML = '<span style="color: #999;">點擊下方選擇圖片預覽</span>';
+            document.getElementById('edit-modal').classList.add('show');
+        }
+        
+        function closeModal() {
+            document.getElementById('edit-modal').classList.remove('show');
+        }
+        
+        document.getElementById('edit-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+    </script>
+</body>
+</html>
