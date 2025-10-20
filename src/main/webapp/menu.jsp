@@ -85,9 +85,9 @@
                     </ul>
                   </li>
                   
-                  <!-- ✅ 我的衣櫃（改為跳轉 my_wardrobe.jsp） -->
+                  <!-- ✅ 我的衣櫃（直接跳轉 my_wardrobe3.jsp） -->
                   <li class="nav-item">
-                    <a class="nav-link" href="#" id="goWardrobe">我的衣櫃</a>
+                    <a class="nav-link" href="my_wardrobe3.jsp">我的衣櫃</a>
                   </li>
 
                   <div class="ml-lg-3">
@@ -126,16 +126,6 @@
     </nav>
   </header>
 </form>
-
-<!-- ✅ Script 放在 body 最下方，確保能抓到 goWardrobe -->
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-  document.getElementById("goWardrobe").addEventListener("click", function(e) {
-    e.preventDefault(); // 防止 href="#" 導致頁面跳回頂端
-    window.location.href = "my_wardrobe.jsp"; // ✅ 跳轉至你的衣櫃頁面
-  });
-});
-</script>
 
 <script src="js/jquery.min.js"></script>
 <script src="js/plugins.js"></script>
