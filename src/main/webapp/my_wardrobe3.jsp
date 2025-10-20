@@ -207,6 +207,48 @@
             // 保持原有功能但使用記憶體儲存
         }
         
+        // 圖片壓縮函數
+        function compressImage(base64, callback, maxWidth = 1000, quality = 0.85) {
+            const img = new Image();
+            img.onload = function() {
+                try {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+                    
+                    // 如果圖片寬度超過 maxWidth,按比例縮小
+                    if (width > maxWidth) {
+                        height = Math.floor((height * maxWidth) / width);
+                        width = maxWidth;
+                    }
+                    
+                    canvas.width = width;
+                    canvas.height = height;
+                    
+                    const ctx = canvas.getContext('2d');
+                    // 使用白色背景
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fillRect(0, 0, width, height);
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    // 轉換為壓縮後的 base64
+                    const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+                    console.log('圖片壓縮成功:', compressedBase64.substring(0, 50) + '...');
+                    callback(compressedBase64);
+                } catch (error) {
+                    console.error('圖片壓縮錯誤:', error);
+                    showNotification('圖片處理失敗', 'error');
+                    callback(null);
+                }
+            };
+            img.onerror = function() {
+                console.error('圖片載入錯誤');
+                showNotification('圖片載入失敗', 'error');
+                callback(null);
+            };
+            img.src = base64;
+        }
+        
         // 顯示通知
         function showNotification(message, type = 'success') {
             const notification = document.getElementById('notification');
@@ -245,10 +287,24 @@
                 if (item.brand) detailsHtml += `<div class="item-details">品牌：${item.brand}</div>`;
                 if (item.color) detailsHtml += `<div class="item-details">顏色：${item.color}</div>`;
                 
+                const imgElement = document.createElement('img');
+                imgElement.className = 'item-image';
+                imgElement.dataset.index = index;
+                imgElement.alt = item.name;
+                
+                // 確保圖片資料存在且正確
+                if (item.image && item.image.startsWith('data:image')) {
+                    imgElement.src = item.image;
+                } else {
+                    imgElement.src = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22300%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22300%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%23999%22 font-size=%2218%22%3E無圖片%3C/text%3E%3C/svg%3E';
+                }
+                
+                imgElement.onerror = function() {
+                    this.src = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22300%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22300%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%23999%22 font-size=%2218%22%3E圖片載入失敗%3C/text%3E%3C/svg%3E';
+                };
+                
                 card.innerHTML = `
-                    <div class="item-image-container">
-                        <img src="${item.image}" alt="${item.name}" class="item-image" data-index="${index}">
-                    </div>
+                    <div class="item-image-container"></div>
                     <div class="item-info">
                         <div class="item-name">${item.name}</div>
                         ${detailsHtml}
@@ -258,6 +314,8 @@
                         <button class="btn-delete" data-index="${index}">刪除</button>
                     </div>
                 `;
+                
+                card.querySelector('.item-image-container').appendChild(imgElement);
                 
                 container.appendChild(card);
             });
@@ -363,10 +421,31 @@
             if (files.length === 0) return;
             
             const file = files[0];
+            
+            // 檢查檔案大小 (限制 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                showNotification('圖片檔案過大,請選擇小於 5MB 的圖片', 'error');
+                e.target.value = '';
+                return;
+            }
+            
             const reader = new FileReader();
             reader.onload = function(event) {
-                tempImageData = event.target.result;
-                openEditModal(-1);
+                console.log('檔案讀取成功');
+                // 壓縮圖片
+                compressImage(event.target.result, function(compressedData) {
+                    if (compressedData) {
+                        tempImageData = compressedData;
+                        console.log('準備開啟彈窗,圖片資料長度:', compressedData.length);
+                        openEditModal(-1);
+                    } else {
+                        showNotification('圖片處理失敗,請重試', 'error');
+                    }
+                });
+            };
+            reader.onerror = function(error) {
+                console.error('讀取錯誤:', error);
+                showNotification('讀取圖片失敗', 'error');
             };
             reader.readAsDataURL(file);
             
@@ -377,12 +456,32 @@
             const file = e.target.files[0];
             if (!file) return;
             
+            // 檢查檔案大小
+            if (file.size > 5 * 1024 * 1024) {
+                showNotification('圖片檔案過大,請選擇小於 5MB 的圖片', 'error');
+                e.target.value = '';
+                return;
+            }
+            
             const reader = new FileReader();
             reader.onload = function(event) {
-                tempImageData = event.target.result;
-                const preview = document.getElementById('preview-image');
-                preview.src = tempImageData;
-                preview.style.display = 'block';
+                console.log('更換圖片讀取成功');
+                // 壓縮圖片
+                compressImage(event.target.result, function(compressedData) {
+                    if (compressedData) {
+                        tempImageData = compressedData;
+                        const preview = document.getElementById('preview-image');
+                        preview.src = tempImageData;
+                        preview.style.display = 'block';
+                        console.log('預覽圖片已更新');
+                    } else {
+                        showNotification('圖片處理失敗,請重試', 'error');
+                    }
+                });
+            };
+            reader.onerror = function(error) {
+                console.error('更換圖片讀取錯誤:', error);
+                showNotification('讀取圖片失敗', 'error');
             };
             reader.readAsDataURL(file);
             
