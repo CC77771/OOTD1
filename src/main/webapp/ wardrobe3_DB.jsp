@@ -31,12 +31,12 @@ try {
         new DefaultFileRenamePolicy()
     );
 
-    // 取得表單資料
+    // 取得表單資料 - 對應圖片的欄位
     String memberId = multi.getParameter("memberId");
-    String clothing_code = multi.getParameter("clothing_code");
-    String text_description = multi.getParameter("text_description");
-    String types_of_clothes = multi.getParameter("types_of_clothes");
-    String color_code = multi.getParameter("color_code");
+    String text_description = multi.getParameter("text_description");  // 衣物名稱
+    String clothing_code = multi.getParameter("clothing_code");        // 品牌
+    String color_code = multi.getParameter("color_code");              // 顏色
+    String types_of_clothes = multi.getParameter("types_of_clothes");  // 分類
 
     // 取得上傳的檔案名稱
     String fileName = multi.getFilesystemName("clothingImage");
@@ -45,11 +45,11 @@ try {
     // 連接 Access 資料庫
     String dbPath = "C:\\Users\\My\\eclipse-workspace\\CZ\\OOTD1\\OOTD1\\src\\main\\webapp\\OOTD1.accdb";
     String dbURL = "jdbc:ucanaccess://" + dbPath;
-    
+
     // 載入 UCanAccess 驅動程式
     Class.forName("net.ucanaccess.jdbc.UcanaccessDriver");
     con = DriverManager.getConnection(dbURL);
-    
+
     smt = con.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 
     // 建立 SQL 語句
