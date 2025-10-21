@@ -423,8 +423,8 @@
             const file = files[0];
             
             // 檢查檔案大小 (限制 5MB)
-            if (file.size > 5 * 1024 * 1024) {
-                showNotification('圖片檔案過大,請選擇小於 5MB 的圖片', 'error');
+            if (file.size > 50 * 1024 * 1024) {
+                showNotification('圖片檔案過大,請選擇小於 50MB 的圖片', 'error');
                 e.target.value = '';
                 return;
             }
@@ -457,8 +457,8 @@
             if (!file) return;
             
             // 檢查檔案大小
-            if (file.size > 5 * 1024 * 1024) {
-                showNotification('圖片檔案過大,請選擇小於 5MB 的圖片', 'error');
+            if (file.size > 50 * 1024 * 1024) {
+                showNotification('圖片檔案過大,請選擇小於 50MB 的圖片', 'error');
                 e.target.value = '';
                 return;
             }
