@@ -159,17 +159,17 @@
             
             <div class="form-group">
                 <label class="form-label">衣物名稱</label>
-                <input type="text" id="item-name" class="form-input" placeholder="例如：白色T恤">
+                <input type="text" id="item-name" class="form-input" placeholder="例如:白色T恤">
             </div>
             
             <div class="form-group">
                 <label class="form-label">品牌</label>
-                <input type="text" id="item-brand" class="form-input" placeholder="例如：UNIQLO">
+                <input type="text" id="item-brand" class="form-input" placeholder="例如:UNIQLO">
             </div>
             
             <div class="form-group">
                 <label class="form-label">顏色</label>
-                <input type="text" id="item-color" class="form-input" placeholder="例如：白色">
+                <input type="text" id="item-color" class="form-input" placeholder="例如:白色">
             </div>
             
             <div class="form-actions">
@@ -284,8 +284,8 @@
                 card.className = 'item-card';
                 
                 let detailsHtml = '';
-                if (item.brand) detailsHtml += `<div class="item-details">品牌：${item.brand}</div>`;
-                if (item.color) detailsHtml += `<div class="item-details">顏色：${item.color}</div>`;
+                if (item.brand) detailsHtml += `<div class="item-details">品牌:${item.brand}</div>`;
+                if (item.color) detailsHtml += `<div class="item-details">顏色:${item.color}</div>`;
                 
                 const imgElement = document.createElement('img');
                 imgElement.className = 'item-image';
@@ -323,23 +323,27 @@
         
         // 開啟編輯彈窗
         function openEditModal(index = -1) {
+            console.log('開啟彈窗, editingIndex:', index);
             editingIndex = index;
             const modal = document.getElementById('edit-modal');
             const preview = document.getElementById('preview-image');
             
             if (index >= 0) {
-                // 編輯模式
+                // 編輯模式 - 載入現有資料
                 const item = wardrobeData[currentCategory][index];
+                console.log('編輯模式, 當前分類:', currentCategory, '項目數量:', wardrobeData[currentCategory].length);
                 document.getElementById('modal-title').textContent = '編輯衣物';
                 document.getElementById('item-name').value = item.name || '';
                 document.getElementById('item-brand').value = item.brand || '';
                 document.getElementById('item-color').value = item.color || '';
                 
+                // 編輯模式下,直接使用該項目的圖片
                 tempImageData = item.image;
                 preview.src = item.image;
                 preview.style.display = 'block';
             } else {
                 // 新增模式
+                console.log('新增模式');
                 document.getElementById('modal-title').textContent = '新增衣物';
                 document.getElementById('item-name').value = '';
                 document.getElementById('item-brand').value = '';
@@ -359,9 +363,11 @@
         // 關閉彈窗
         function closeModal() {
             document.getElementById('edit-modal').classList.remove('show');
+            // 只在新增模式取消時清空 tempImageData
             if (editingIndex < 0) {
                 tempImageData = null;
             }
+            editingIndex = -1;
         }
         
         // 儲存項目
@@ -373,32 +379,45 @@
                 return;
             }
             
-            const itemData = {
-                id: editingIndex >= 0 ? wardrobeData[currentCategory][editingIndex].id : ++itemIdCounter,
-                name: name || '未命名',
-                brand: document.getElementById('item-brand').value.trim(),
-                color: document.getElementById('item-color').value.trim(),
-                image: tempImageData,
-                date: new Date().toLocaleDateString('zh-TW')
-            };
+            console.log('儲存項目, editingIndex:', editingIndex, '當前分類:', currentCategory);
+            console.log('儲存前項目數量:', wardrobeData[currentCategory].length);
             
             if (editingIndex >= 0) {
-                wardrobeData[currentCategory][editingIndex] = itemData;
+                // 編輯模式 - 直接在原位置更新資料
+                wardrobeData[currentCategory][editingIndex].name = name || '未命名';
+                wardrobeData[currentCategory][editingIndex].brand = document.getElementById('item-brand').value.trim();
+                wardrobeData[currentCategory][editingIndex].color = document.getElementById('item-color').value.trim();
+                wardrobeData[currentCategory][editingIndex].image = tempImageData;
+                wardrobeData[currentCategory][editingIndex].date = new Date().toLocaleDateString('zh-TW');
+                console.log('已更新索引', editingIndex, '的項目');
                 showNotification('衣物已更新');
             } else {
+                // 新增模式 - 新增一筆資料
+                const itemData = {
+                    id: ++itemIdCounter,
+                    name: name || '未命名',
+                    brand: document.getElementById('item-brand').value.trim(),
+                    color: document.getElementById('item-color').value.trim(),
+                    image: tempImageData,
+                    date: new Date().toLocaleDateString('zh-TW')
+                };
                 wardrobeData[currentCategory].push(itemData);
+                console.log('已新增項目');
                 showNotification('衣物已新增');
             }
+            
+            console.log('儲存後項目數量:', wardrobeData[currentCategory].length);
             
             saveData();
             renderItems();
             closeModal();
             tempImageData = null;
+            editingIndex = -1;
         }
         
         // 刪除項目
         function deleteItem(index) {
-            if (confirm('確定要刪除這件衣物嗎？')) {
+            if (confirm('確定要刪除這件衣物嗎?')) {
                 wardrobeData[currentCategory].splice(index, 1);
                 saveData();
                 renderItems();
@@ -469,11 +488,12 @@
                 // 壓縮圖片
                 compressImage(event.target.result, function(compressedData) {
                     if (compressedData) {
+                        // 直接覆蓋 tempImageData
                         tempImageData = compressedData;
                         const preview = document.getElementById('preview-image');
                         preview.src = tempImageData;
                         preview.style.display = 'block';
-                        console.log('預覽圖片已更新');
+                        console.log('預覽圖片已更新,將覆蓋原圖片');
                     } else {
                         showNotification('圖片處理失敗,請重試', 'error');
                     }
