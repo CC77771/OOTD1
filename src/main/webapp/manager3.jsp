@@ -202,15 +202,15 @@ table img {
                 <thead class="table-light">
                     <tr><th>編號</th><th>使用者名稱</th><th>電子郵件</th><th>註冊日期</th><th>操作</th></tr>
                 </thead>
-                <tbody>
+                <tbody id="userTable">
                     <tr>
                         <td>001</td>
                         <td>user_01</td>
                         <td>user01@example.com</td>
                         <td>2024-01-15</td>
                         <td>
-                            <button class="btn btn-warning btn-action">編輯</button>
-                            <button class="btn btn-danger btn-action">停權</button>
+                            <button class="btn btn-warning btn-action" onclick="editUser('001')">編輯</button>
+                            <button class="btn btn-danger btn-action" onclick="suspendUser('001')">停權</button>
                         </td>
                     </tr>
                     <tr>
@@ -219,8 +219,8 @@ table img {
                         <td>user02@example.com</td>
                         <td>2024-02-20</td>
                         <td>
-                            <button class="btn btn-warning btn-action">編輯</button>
-                            <button class="btn btn-danger btn-action">停權</button>
+                            <button class="btn btn-warning btn-action" onclick="editUser('002')">編輯</button>
+                            <button class="btn btn-danger btn-action" onclick="suspendUser('002')">停權</button>
                         </td>
                     </tr>
                 </tbody>
@@ -236,7 +236,7 @@ table img {
                 <thead class="table-light">
                     <tr><th>編號</th><th>使用者</th><th>問題類型</th><th>內容</th><th>狀態</th><th>操作</th></tr>
                 </thead>
-                <tbody>
+                <tbody id="feedbackTable">
                     <tr>
                         <td>001</td>
                         <td>user_03</td>
@@ -244,8 +244,8 @@ table img {
                         <td>無法上傳圖片</td>
                         <td><span class="badge bg-warning">待處理</span></td>
                         <td>
-                            <button class="btn btn-primary btn-action">回覆</button>
-                            <button class="btn btn-success btn-action">完成</button>
+                            <button class="btn btn-primary btn-action" onclick="replyFeedback('001')">回覆</button>
+                            <button class="btn btn-success btn-action" onclick="completeFeedback('001')">完成</button>
                         </td>
                     </tr>
                     <tr>
@@ -255,7 +255,7 @@ table img {
                         <td>忘記密碼</td>
                         <td><span class="badge bg-success">已處理</span></td>
                         <td>
-                            <button class="btn btn-secondary btn-action">查看</button>
+                            <button class="btn btn-secondary btn-action" onclick="viewFeedback('002')">查看</button>
                         </td>
                     </tr>
                 </tbody>
@@ -292,7 +292,9 @@ function approvePost(postId) {
 }
 
 function rejectPost(postId) {
-    alert('拒絕貼文：' + postId);
+    if (confirm('確定要拒絕貼文 ' + postId + ' 嗎？')) {
+        alert('已拒絕貼文：' + postId);
+    }
 }
 
 function deletePost(postId) {
@@ -300,6 +302,61 @@ function deletePost(postId) {
         alert('已刪除貼文：' + postId);
     }
 }
+
+function editUser(userId) {
+    alert('編輯使用者：' + userId);
+}
+
+function suspendUser(userId) {
+    if (confirm('確定要停權使用者 ' + userId + ' 嗎？')) {
+        alert('已停權使用者：' + userId);
+    }
+}
+
+function replyFeedback(feedbackId) {
+    alert('回覆回饋：' + feedbackId);
+}
+
+function completeFeedback(feedbackId) {
+    if (confirm('確定將回饋 ' + feedbackId + ' 標記為已完成嗎？')) {
+        alert('已完成回饋：' + feedbackId);
+    }
+}
+
+function viewFeedback(feedbackId) {
+    alert('查看回饋：' + feedbackId);
+}
+
+// === 搜尋功能 ===
+document.getElementById('postSearch').addEventListener('input', function(e) {
+    const searchText = e.target.value.toLowerCase();
+    const rows = document.querySelectorAll('#postTable tr');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchText) ? '' : 'none';
+    });
+});
+
+document.getElementById('userSearch').addEventListener('input', function(e) {
+    const searchText = e.target.value.toLowerCase();
+    const rows = document.querySelectorAll('#userTable tr');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchText) ? '' : 'none';
+    });
+});
+
+document.getElementById('feedbackSearch').addEventListener('input', function(e) {
+    const searchText = e.target.value.toLowerCase();
+    const rows = document.querySelectorAll('#feedbackTable tr');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchText) ? '' : 'none';
+    });
+});
 </script>
 
 </body>
