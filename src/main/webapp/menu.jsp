@@ -85,12 +85,7 @@
                     </ul>
                   </li>
                   
-                  <!-- ✅ 我的衣櫃（直接跳轉 my_wardrobe3.jsp） -->
-                  <li class="nav-item">
-                    <a class="nav-link" href="my_wardrobe3.jsp">我的衣櫃</a>
-                  </li>
-
-                  <div class="ml-lg-3">
+<div class="ml-lg-3">
                     <li class="nav-item dropdown"> 
                       <a class="nav-link" href="member.jsp?memberId=<%=session.getAttribute("accessId")%>">
                         <%

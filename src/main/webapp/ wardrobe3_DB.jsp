@@ -1,16 +1,17 @@
-<%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
-<%@page import="java.sql.*"%>
-<%@page import="java.io.*"%>
-<%@page import="com.oreilly.servlet.MultipartRequest"%>
-<%@page import="com.oreilly.servlet.multipart.DefaultFileRenamePolicy"%>
-<%@page import="CZ.group.tool.database.DBConfig"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page import="java.sql.*, java.io.*, java.util.*" %>
+<%@ page import="com.oreilly.servlet.MultipartRequest" %>
+<%@ page import="CZ.group.tool.upload.FolderConfig2" %>
+<%@ page import="CZ.group.tool.database.DBConfig" %>
+<jsp:useBean id="objFolderConfig" scope="session" class="CZ.group.tool.upload.FolderConfig2" />
+<jsp:useBean id="objDBConfig" scope="session" class="CZ.group.tool.database.DBConfig" />
 
 <%
 // 設定圖片上傳路徑
-String savePath = application.getRealPath("/") + "images\\wardrobe";
+String savePath = application.getRealPath("/") + "images";
 File saveDir = new File(savePath);
 if (!saveDir.exists()) {
-    saveDir.mkdirs();
+saveDir.mkdirs();
 }
 
 // 設定上傳檔案大小限制 (5MB)
@@ -28,11 +29,10 @@ String color_code = new String(multi.getParameter("color_code"));
 
 // 取得上傳的檔案名稱
 String fileName = multi.getFilesystemName("clothingImage");
-String pic = "images/wardrobe/" + fileName;
+String pic = "images/my_wardrobe/" + fileName;
 
 // 連接資料庫
-DBConfig dbConfig = new DBConfig();
-String dbPath = dbConfig.FilePath();
+String dbPath = objDBConfig.FilePath();
 Class.forName("net.ucanaccess.jdbc.UcanaccessDriver");
 Connection con = DriverManager.getConnection("jdbc:ucanaccess://" + dbPath);
 Statement smt = con.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
@@ -40,7 +40,7 @@ Statement smt = con.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet
 // 執行 SQL
 smt.executeUpdate("INSERT INTO my_wardrobe VALUES('" + memberId + "','" + clothing_code + "','" + text_description + "','" + types_of_clothes + "','" + pic + "','" + color_code + "')");
 
-// 除錯用：印出 SQL
+// 除錯用:印出 SQL
 out.println("INSERT INTO my_wardrobe VALUES('" + memberId + "','" + clothing_code + "','" + text_description + "','" + types_of_clothes + "','" + pic + "','" + color_code + "')");
 
 // 關閉連接

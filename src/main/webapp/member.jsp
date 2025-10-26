@@ -264,8 +264,8 @@
 </form>
 
 <a href="memberEdit1.jsp?memberId=<%=rs.getString("memberId")%>"  class="custom-button">編輯</a>
-
- 
+<br><br>
+<a class="custom-button" href="my_wardrobe3.jsp">我的衣櫃</a>
 </div>
 
 </body>

@@ -1,22 +1,23 @@
 <%@page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
-<%
-    // 取得當前登入的會員ID (請根據你的登入系統調整)
-    String memberId = (String)session.getAttribute("memberId");
-    if(memberId == null) {
-        memberId = "1"; // 預設值
-    }
-%>
+<%@include file = "menu.jsp" %>
+<jsp:useBean id="objFolderConfig" scope="session" class="CZ.group.tool.upload.FolderConfig2" />
+<jsp:useBean id="objDBConfig" scope="session" class="CZ.group.tool.database.DBConfig" />
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>新增衣物</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Microsoft JhengHei', 'Arial', sans-serif; background: #fafbfc; min-height: 100vh; padding: 40px 20px; }
-        
-        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 24px; padding: 40px; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1); }
+    <title>新增衣物</title>  
+  <style>
+ .container { 
+    max-width: 600px; 
+    margin: 40px auto 0; /* 上方40px 左右auto 下方0 */
+    background: white; 
+    border-radius: 24px; 
+    padding: 40px; 
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1); 
+}
         .page-title { font-size: 28px; font-weight: 700; color: #2c3e50; margin-bottom: 32px; text-align: center; }
         
         .modal-content { background: white; }
@@ -38,66 +39,80 @@
         .btn-secondary { flex: 1; padding: 16px; background: linear-gradient(135deg, #e8e8e8 0%, #d8d8d8 100%); color: #555; border: none; border-radius: 14px; cursor: pointer; font-size: 16px; font-weight: 600; transition: all 0.3s ease; letter-spacing: 0.5px; }
         .btn-secondary:hover { background: linear-gradient(135deg, #d8d8d8 0%, #c8c8c8 100%); transform: translateY(-2px); }
         
-        .notification { position: fixed; top: 24px; right: 24px; padding: 18px 32px; background: linear-gradient(135deg, #48c774 0%, #3ec46d 100%); color: white; border-radius: 14px; box-shadow: 0 8px 24px rgba(72, 199, 116, 0.4); display: none; z-index: 1001; font-weight: 600; letter-spacing: 0.5px; font-size: 15px; }
-        .notification.show { display: block; animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        .notification.error { background: linear-gradient(135deg, #ff6b81 0%, #ee5a6f 100%); box-shadow: 0 8px 24px rgba(255, 107, 129, 0.4); }
-        @keyframes slideIn { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        
+       
         #file-input { display: none; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1 class="page-title">新增衣物</h1>
-        
-        <form id="clothingForm" action="insert_DB.jsp" method="post" enctype="multipart/form-data">
-            <input type="hidden" name="memberId" value="<%= memberId %>">
-            
-            <div class="form-group">
-                <label class="form-label">衣物圖片<span class="required">*</span></label>
-                <img id="preview-image" class="preview-image">
-                <label for="file-input" class="change-image-btn">📷 點擊選擇圖片</label>
-                <input type="file" id="file-input" name="clothingImage" accept="image/*" required>
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">衣物名稱</label>
-                <input type="text" name="clothing_code" class="form-input" placeholder="例如：白色T恤">
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">衣物描述</label>
-                <input type="text" name="text_description" class="form-input" placeholder="例如：簡約舒適的基本款">
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">衣物類型<span class="required">*</span></label>
-                <select name="types_of_clothes" class="form-select" required>
-                    <option value="">請選擇類型</option>
-                    <option value="上衣">上衣</option>
-                    <option value="褲子">褲子</option>
-                    <option value="裙子">裙子</option>
-                    <option value="洋裝">洋裝</option>
-                    <option value="外套">外套</option>
-                    <option value="其他">其他</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">顏色</label>
-                <input type="text" name="color_code" class="form-input" placeholder="例如：白色">
-            </div>
-            
-            <div class="form-actions">
-                <button type="button" class="btn-secondary" onclick="window.location.href='my_wardrobe3.jsp'">取消</button>
-                <button type="submit" class="btn-primary">儲存</button>
-            </div>
-        </form>
+    
+    <form id="clothingForm" action="T1.jsp" method="post" enctype="multipart/form-data">
+<input type="hidden" name="memberId" value="<%= session.getAttribute("accessId") %>">
+
+<div class="form-group">
+<label class="form-label">衣物圖片<span class="required">*</span></label>
+<img id="preview-image" class="preview-image">
+<label for="file-input" class="change-image-btn">📷 點擊選擇圖片</label>
+<input type="file" id="file-input" name="clothingImage" accept="image/*" required>
+</div>
+<%
+String clothing_code = "";
+String text_description = "";
+String types_of_clothes = "";
+String color_code = "";
+%>
+<div class="form-group">
+<label class="form-label">衣物名稱</label>
+<input type="text" name="clothing_code" class="form-input" placeholder="例如:白色T恤" value="<%= clothing_code %>">
+</div>
+
+<div class="form-group">
+<label class="form-label">衣物描述</label>
+<input type="text" name="text_description" class="form-input" placeholder="例如:簡約舒適的基本款" value="<%= text_description %>">
+</div>
+
+<div class="form-group">
+<label class="form-label">衣物類型<span class="required">*</span></label>
+<select name="types_of_clothes" class="form-select" required>
+<option value="">請選擇類型</option>
+<option value="1">衣服</option>
+<option value="2">褲子</option>
+<option value="3">裙子</option>
+<option value="4">連身裙/褲</option>
+<option value="5">配件</option>
+<option value="6">鞋子</option>
+</select>
+</div>
+
+<div class="form-group">
+<label class="form-label">顏色</label>
+<select name="color_code" class="form-select" required>
+<option value="">請選擇顏色</option>
+<option value="BK">黑</option>
+<option value="BL">藍</option>
+<option value="BR">棕</option>
+<option value="G">綠</option>
+<option value="GR">灰</option>
+<option value="OR">橙</option>
+<option value="P">紫</option>
+<option value="R">紅</option>
+<option value="W">白</option>
+<option value="Y">黃</option>
+<option value="O">其他</option>
+</select>
+</div>
+
+<div class="form-actions">
+<button type="button" class="btn-secondary" onclick="window.location.href='my_wardrobe3.jsp'">取消</button>
+<button type="submit" class="btn-primary">儲存</button>
+</div>
+</form>
     </div>
     
     <div class="notification" id="notification"></div>
     
-    <script>
+   <script>
         // 圖片預覽
         document.getElementById('file-input').addEventListener('change', function(e) {
             const file = e.target.files[0];
