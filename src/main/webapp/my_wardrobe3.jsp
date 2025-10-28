@@ -6,12 +6,16 @@
 <%
     // 取得當前登入的會員ID
     String memberId = (String)session.getAttribute("accessId");
+//String clothing_number = request.getParameter("clothing_number");
+
+        // 取得當前選擇的分類，預設為「衣服」
     
     // 取得當前選擇的分類，預設為「衣服」
     String currentCategory = request.getParameter("category");
-    if(currentCategory == null) {
-        currentCategory = "衣服";
+    if(currentCategory == null || currentCategory.isEmpty()) {
+        currentCategory = "衣服";  // 👈 只有沒傳 category 時才預設為「衣服」
     }
+
     
     // 從資料庫讀取衣物資料
     Map<String, List<Map<String, String>>> wardrobeData = new HashMap<>();
@@ -42,21 +46,23 @@
             Class.forName("net.ucanaccess.jdbc.UcanaccessDriver");
             Connection con = DriverManager.getConnection("jdbc:ucanaccess://" + dbPath);
             
-            String sql = "SELECT * FROM my_wardrobe WHERE memberId = ?";
+            String sql = "SELECT * FROM my_wardrobe WHERE memberId = ? ";
             PreparedStatement pstmt = con.prepareStatement(sql);
             pstmt.setString(1, memberId);
+                 
             ResultSet rs = pstmt.executeQuery();
             
             while(rs.next()) {
                 Map<String, String> item = new HashMap<>();
+                item.put("clothing_number", rs.getString("clothing_number"));               
                 item.put("clothing_code", rs.getString("clothing_code"));
                 item.put("text_description", rs.getString("text_description"));
-                item.put("types_of_clothes", rs.getString("types_of_clothes"));
+                item.put("brand", rs.getString("brand"));
                 item.put("pic", rs.getString("pic"));
                 item.put("color_code", rs.getString("color_code"));
                 
-                // 根據 types_of_clothes 分類
-                String type = rs.getString("types_of_clothes");
+                // 根據 clothing_code 分類
+                String type = rs.getString("clothing_code");
                 String category = "";
                 switch(type) {
                     case "1": category = "衣服"; break;
@@ -204,7 +210,9 @@
                 <% 
                 } else {
                     for(Map<String, String> item : currentItems) {
-                        String clothingCode = item.get("clothing_code");
+                    	String clothing_number = item.get("clothing_number");  
+                        String clothing_code = item.get("clothing_code");
+                        String brand = item.get("brand");
                         String textDescription = item.get("text_description");
                         String pic = item.get("pic");
                         String colorCode = item.get("color_code");
@@ -213,10 +221,10 @@
                 %>
                     <div class="item-card">
                         <div class="item-image-container">
-                            <img src="<%= pic %>" class="item-image" alt="<%= clothingCode != null ? clothingCode : "衣物" %>">
+                            <img src="<%= pic %>" class="item-image" alt="<%= brand != null ? brand : "衣物" %>">
                         </div>
                         <div class="item-info">
-                            <div class="item-name"><%= clothingCode != null && !clothingCode.isEmpty() ? clothingCode : "未命名" %></div>
+                            <div class="item-name"><%= brand != null && !brand.isEmpty() ? brand : "未命名" %></div>
                             <% if(textDescription != null && !textDescription.isEmpty()) { %>
                                 <div class="item-details">描述: <%= textDescription %></div>
                             <% } %>
@@ -225,8 +233,8 @@
                             <% } %>
                         </div>
                         <div class="item-actions">
-                            <a href="wardrobe3_edit.jsp?code=<%= clothingCode %>" class="btn-edit">編輯</a>
-                            <a href="wardrobe3_delete.jsp?code=<%= clothingCode %>" class="btn-delete" onclick="return confirm('確定要刪除這件衣物嗎?')">刪除</a>
+                            <a href="wardrobe3_Edit.jsp?memberId=<%= memberId %>&clothing_number=<%= clothing_number %>&category=<%= currentCategory %>" class="btn-edit">編輯</a>
+                            <a href="wardrobe3_delete.jsp?memberId=<%= memberId %>&clothing_number=<%= clothing_number %>&category=<%= currentCategory %>" class="btn-delete" onclick="return confirm('確定要刪除這件衣物嗎?')">刪除</a>
                         </div>
                     </div>
                 <% 

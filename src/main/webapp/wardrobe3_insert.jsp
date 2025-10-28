@@ -59,12 +59,12 @@
 <%
 String clothing_code = "";
 String text_description = "";
-String types_of_clothes = "";
+String brand = "";
 String color_code = "";
 %>
 <div class="form-group">
 <label class="form-label">衣物名稱</label>
-<input type="text" name="clothing_code" class="form-input" placeholder="例如:白色T恤" value="<%= clothing_code %>">
+<input type="text" name="brand" class="form-input" placeholder="例如:品牌名稱" value="<%= brand %>">
 </div>
 
 <div class="form-group">
@@ -74,7 +74,7 @@ String color_code = "";
 
 <div class="form-group">
 <label class="form-label">衣物類型<span class="required">*</span></label>
-<select name="types_of_clothes" class="form-select" required>
+<select name="clothing_code" class="form-select" required>
 <option value="">請選擇類型</option>
 <option value="1">衣服</option>
 <option value="2">褲子</option>

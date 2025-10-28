@@ -21,43 +21,64 @@ MultipartRequest multi = new MultipartRequest(request, savePath, maxSize, "UTF-8
 
 // 取得表單資料
 String memberId = multi.getParameter("memberId");
+String oldClothingCode = multi.getParameter("oldClothingCode");
 String clothing_code = multi.getParameter("clothing_code");
 String text_description = multi.getParameter("text_description");
 String brand = multi.getParameter("brand");
 String color_code = multi.getParameter("color_code");
 
-System.out.println("memberId: " + memberId);
-System.out.println("clothing_code: " + clothing_code);
-System.out.println("brand: " + brand);
-// 取得上傳的檔案名稱
+// 取得圖片路徑
+String pic = multi.getParameter("oldPic"); // 預設使用舊圖片
 String fileName = multi.getFilesystemName("clothingImage");
-String pic = "images/my_wardrobe/" + fileName;
+if(fileName != null && !fileName.isEmpty()) {
+    // 如果有上傳新圖片，使用新圖片
+    pic = "images/my_wardrobe/" + fileName;
+}
 
 // 連接資料庫
 String dbPath = objDBConfig.FilePath();
 Class.forName("net.ucanaccess.jdbc.UcanaccessDriver");
 Connection con = DriverManager.getConnection("jdbc:ucanaccess://" + dbPath);
 
-// 使用 PreparedStatement 防止 SQL Injection
-String sql = "INSERT INTO my_wardrobe (memberId, clothing_code, text_description, brand, pic, color_code) VALUES(?, ?, ?, ?, ?, ?)";
+// 更新資料
+String sql = "UPDATE my_wardrobe SET clothing_code = ?, text_description = ?, brand = ?, pic = ?, color_code = ? WHERE memberId = ? AND clothing_code = ?";
 PreparedStatement pstmt = con.prepareStatement(sql);
-pstmt.setString(1, memberId);
-pstmt.setString(2, clothing_code);
-pstmt.setString(3, text_description);
-pstmt.setString(4, brand);
-pstmt.setString(5, pic);
-pstmt.setString(6, color_code);
+pstmt.setString(1, clothing_code);
+pstmt.setString(2, text_description);
+pstmt.setString(3, brand);
+pstmt.setString(4, pic);
+pstmt.setString(5, color_code);
+pstmt.setString(6, memberId);
+pstmt.setString(7, oldClothingCode);
 
 // 執行 SQL
-pstmt.executeUpdate();
-
-// 除錯用：印出 SQL
-out.println("資料已成功新增");
+int result = pstmt.executeUpdate();
 
 // 關閉連接
 pstmt.close();
 con.close();
 
-// 導向回衣櫥頁面
-response.sendRedirect("my_wardrobe3.jsp");
+
+
+
+
+//... 你的更新邏輯
+
+if(result > 0) {
+ // 根據 clothing_code 決定跳轉的分類
+ String category = "";
+ switch(clothing_code) {
+     case "1": category = "衣服"; break;
+     case "2": category = "褲子"; break;
+     case "3": category = "裙子"; break;
+     case "4": category = "連身裙/褲"; break;
+     case "5": category = "配件"; break;
+     case "6": category = "鞋子"; break;
+     default: category = "衣服";
+ }
+ 
+ out.println("<script>alert('更新成功!'); window.location.href='my_wardrobe3.jsp?category=" + category + "';</script>");
+} else {
+ out.println("<script>alert('更新失敗!'); window.history.back();</script>");
+}
 %>
