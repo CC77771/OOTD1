@@ -4,6 +4,7 @@
 <%@page import="com.oreilly.servlet.MultipartRequest"%>
 <%@page import="com.oreilly.servlet.multipart.DefaultFileRenamePolicy"%>
 <jsp:useBean id="objDBConfig" scope="session" class="CZ.group.tool.database.DBConfig" />
+<jsp:useBean id="objFolderConfig" scope="session" class="CZ.group.tool.upload.FolderConfig2" />
 
 <%
 // 設定圖片上傳路徑

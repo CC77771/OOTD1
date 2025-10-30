@@ -1,4 +1,10 @@
 <%@page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
+<%
+// ✅ 加在這裡!緊接在 page 指令之後
+response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+response.setHeader("Pragma", "no-cache");
+response.setDateHeader("Expires", 0);
+%>
 <%@page import="java.sql.*"%>
 <%@page import="java.util.*"%>
 <%@include file = "menu.jsp" %>
@@ -46,7 +52,7 @@
             Class.forName("net.ucanaccess.jdbc.UcanaccessDriver");
             Connection con = DriverManager.getConnection("jdbc:ucanaccess://" + dbPath);
             
-            String sql = "SELECT * FROM my_wardrobe WHERE memberId = ? ";
+            String sql = "SELECT * FROM my_wardrobe WHERE memberId = ? AND state = 'True'";
             PreparedStatement pstmt = con.prepareStatement(sql);
             pstmt.setString(1, memberId);
                  
@@ -234,7 +240,7 @@
                         </div>
                         <div class="item-actions">
                             <a href="wardrobe3_Edit.jsp?memberId=<%= memberId %>&clothing_number=<%= clothing_number %>&category=<%= currentCategory %>" class="btn-edit">編輯</a>
-                            <a href="wardrobe3_delete.jsp?memberId=<%= memberId %>&clothing_number=<%= clothing_number %>&category=<%= currentCategory %>" class="btn-delete" onclick="return confirm('確定要刪除這件衣物嗎?')">刪除</a>
+                            <a href="wardrobe3_Delete.jsp?memberId=<%= memberId %>&clothing_number=<%= clothing_number %>&category=<%= currentCategory %>" class="btn-delete" onclick="return confirm('確定要刪除這件衣物嗎?')">刪除</a>
                         </div>
                     </div>
                 <% 

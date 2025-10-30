@@ -47,7 +47,7 @@
     <div class="container">
         <h1 class="page-title">新增衣物</h1>
     
-    <form id="clothingForm" action="T1.jsp" method="post" enctype="multipart/form-data">
+    <form id="clothingForm" action="wardrobe3_DB.jsp" method="post" enctype="multipart/form-data">
 <input type="hidden" name="memberId" value="<%= session.getAttribute("accessId") %>">
 
 <div class="form-group">

@@ -86,14 +86,13 @@
 </head>
 <body>
     <div class="container">
-        <h1 class="page-title">編輯衣物</h1>
-        
+        <h1 class="page-title">編輯衣物</h1>         
         <form action="wardrobe3_Update.jsp" method="post" enctype="multipart/form-data">
             <input type="hidden" name="memberId" value="<%= memberId %>">
             <input type="hidden" name="oldClothingCode" value="<%= clothing_code %>">
-            
+            <input type="hidden" name="clothing_number" value="<%= clothing_number %>">
             <div class="form-group">
-                <label class="form-label">衣物圖片</label>
+                <label class="form-label">衣物圖片</label>                
                 <% if(pic != null && !pic.isEmpty()) { %>
                     <img src="<%= pic %>" class="preview-image" id="preview-image">
                 <% } %>
