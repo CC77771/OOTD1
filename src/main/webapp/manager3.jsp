@@ -89,6 +89,11 @@ table img {
     width: 60px;
     height: 60px;
     object-fit: cover;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+table img:hover {
+    transform: scale(1.1);
 }
 .btn-action {
     padding: 5px 10px;
@@ -100,16 +105,6 @@ table img {
     border: 2px solid #ddd;
     border-radius: 8px;
     padding: 6px 10px;
-}
-.status-toggle {
-    display: flex;
-    gap: 5px;
-    justify-content: center;
-}
-.status-toggle .btn {
-    min-width: 45px;
-    padding: 5px 12px;
-    font-size: 14px;
 }
 .modal-content {
     border-radius: 15px;
@@ -130,6 +125,50 @@ table img {
     border-radius: 10px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
+.analytics-card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    margin-bottom: 20px;
+}
+.analytics-card h5 {
+    color: #a89f91;
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+.chart-container {
+    position: relative;
+    height: 300px;
+}
+.rank-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+.rank-number {
+    font-size: 24px;
+    font-weight: 700;
+    color: #a89f91;
+    width: 40px;
+}
+.rank-info {
+    flex: 1;
+    margin-left: 15px;
+}
+.rank-bar {
+    height: 8px;
+    background: #e9ecef;
+    border-radius: 10px;
+    margin-top: 5px;
+    overflow: hidden;
+}
+.rank-bar-fill {
+    height: 100%;
+    background: linear-gradient(135deg, #a89f91 0%, #8f8c7f 100%);
+    transition: width 0.3s ease;
+}
 </style>
 </head>
 
@@ -144,7 +183,7 @@ table img {
     <div class="row mb-4">
         <div class="col-md-3">
             <div class="stats-card">
-                <p>待審核貼文</p>
+                <p>待審核評論</p>
                 <h3 id="statPending"><%= pendingCount %></h3>
             </div>
         </div>
@@ -162,7 +201,7 @@ table img {
         </div>
         <div class="col-md-3">
             <div class="stats-card">
-                <p>總貼文數</p>
+                <p>總評論數</p>
                 <h3 id="statPosts"><%= postCount %></h3>
             </div>
         </div>
@@ -170,26 +209,26 @@ table img {
 
     <!-- 分頁導航 -->
     <ul class="nav nav-tabs" id="adminTab" role="tablist">
-        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#posts">📝 貼文審核</button></li>
+        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#comments">💬 評論審核</button></li>
         <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#users">👥 使用者管理</button></li>
-        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#feedback">💬 客服支援</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#feedback">🛠️ 客服支援</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#analytics">📊 點擊率分析</button></li>
     </ul>
 
     <div class="tab-content" id="adminTabContent">
 
-        <!-- 貼文審核 -->
-        <div class="tab-pane fade show active" id="posts">
+        <!-- 評論審核 -->
+        <div class="tab-pane fade show active" id="comments">
             <div class="d-flex justify-content-between mb-3">
                 <div class="search-box">
-                    <input type="text" id="postSearch" placeholder="搜尋貼文...">
+                    <input type="text" id="commentSearch" placeholder="搜尋評論...">
                 </div>
-                <button class="btn btn-primary" onclick="addNewPost()">➕ 新增測試貼文</button>
             </div>
             <table class="table table-hover">
                 <thead class="table-light">
-                    <tr><th>編號</th><th>縮圖</th><th>標題</th><th>作者</th><th>狀態</th><th>操作</th></tr>
+                    <tr><th>編號</th><th>評論者</th><th>貼文標題</th><th>評論內容</th><th>狀態</th><th>操作</th></tr>
                 </thead>
-                <tbody id="postTable"></tbody>
+                <tbody id="commentTable"></tbody>
             </table>
         </div>
 
@@ -199,7 +238,6 @@ table img {
                 <div class="search-box">
                     <input type="text" id="userSearch" placeholder="搜尋使用者...">
                 </div>
-                <button class="btn btn-primary" onclick="addNewUser()">➕ 新增使用者</button>
             </div>
             <table class="table table-hover">
                 <thead class="table-light">
@@ -215,7 +253,6 @@ table img {
                 <div class="search-box">
                     <input type="text" id="feedbackSearch" placeholder="搜尋回饋...">
                 </div>
-                <button class="btn btn-primary" onclick="addNewFeedback()">➕ 新增測試回饋</button>
             </div>
             <table class="table table-hover">
                 <thead class="table-light">
@@ -223,6 +260,63 @@ table img {
                 </thead>
                 <tbody id="feedbackTable"></tbody>
             </table>
+        </div>
+
+        <!-- 點擊率分析 -->
+        <div class="tab-pane fade" id="analytics">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="analytics-card">
+                        <h5>📈 每日點擊趨勢</h5>
+                        <div class="chart-container">
+                            <canvas id="dailyClickChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="analytics-card">
+                        <h5>🏆 熱門貼文排行 TOP 10</h5>
+                        <div id="topPostsRanking"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="analytics-card">
+                        <h5>👤 活躍用戶排行 TOP 10</h5>
+                        <div id="topUsersRanking"></div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="analytics-card">
+                        <h5>🏷️ 熱門標籤分析</h5>
+                        <div class="chart-container">
+                            <canvas id="tagsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="analytics-card">
+                        <h5>📊 點擊率數據總覽</h5>
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>貼文ID</th>
+                                    <th>標題</th>
+                                    <th>發布者</th>
+                                    <th>總點擊</th>
+                                    <th>今日點擊</th>
+                                    <th>平均停留時間</th>
+                                    <th>互動率</th>
+                                </tr>
+                            </thead>
+                            <tbody id="analyticsTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
 
     </div>
@@ -319,25 +413,29 @@ table img {
 <div class="toast-container"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 <script>
 // 從 JSP 傳入的當前日期
 var currentDate = '<%= currentDate %>';
 
 // 資料儲存
-var posts = [];
+var comments = [];
 var users = [];
 var feedbacks = [];
+var analyticsData = [];
+
+// 圖表實例
+var dailyClickChart = null;
+var tagsChart = null;
 
 // 初始化資料
 function initData() {
-    // 可以透過 AJAX 從後端載入資料
-    // 目前使用前端模擬資料
-    posts = [
-        {id: 1, image: 'https://picsum.photos/80/80?1', title: '秋季OOTD分享', author: 'user_01', status: 'pending'},
-        {id: 2, image: 'https://picsum.photos/80/80?2', title: '街頭風穿搭', author: 'user_02', status: 'approved'},
-        {id: 3, image: 'https://picsum.photos/80/80?3', title: '冬季大衣推薦', author: 'user_03', status: 'pending'},
-        {id: 4, image: 'https://picsum.photos/80/80?4', title: '極簡風格穿搭', author: 'user_01', status: 'rejected'},
-        {id: 5, image: 'https://picsum.photos/80/80?5', title: '約會穿搭分享', author: 'user_04', status: 'pending'}
+    comments = [
+        {id: 1, commenter: 'user_01', postTitle: '秋季OOTD分享', content: '超級好看！想知道外套哪裡買的', status: 'pending'},
+        {id: 2, commenter: 'user_02', postTitle: '街頭風穿搭', content: '配色很棒，學起來了', status: 'approved'},
+        {id: 3, commenter: 'user_03', postTitle: '冬季大衣推薦', content: '這件大衣質感真的很好', status: 'pending'},
+        {id: 4, commenter: 'user_01', postTitle: '極簡風格穿搭', content: '不適合的評論內容', status: 'rejected'},
+        {id: 5, commenter: 'user_04', postTitle: '約會穿搭分享', content: '太美了！可以請問鞋子品牌嗎', status: 'pending'}
     ];
 
     users = [
@@ -353,7 +451,22 @@ function initData() {
         {id: 3, user: 'user_01', type: '功能建議', content: '希望新增服飾標籤功能', status: 'pending', reply: ''}
     ];
 
+    // 點擊率分析模擬數據
+    analyticsData = [
+        {id: 1, title: '秋季OOTD分享', author: 'user_01', totalClicks: 2580, todayClicks: 156, avgTime: '2:45', engagement: '8.5%'},
+        {id: 2, title: '街頭風穿搭', author: 'user_02', totalClicks: 1920, todayClicks: 98, avgTime: '2:12', engagement: '6.8%'},
+        {id: 3, title: '冬季大衣推薦', author: 'user_03', totalClicks: 3150, todayClicks: 203, avgTime: '3:20', engagement: '9.2%'},
+        {id: 4, title: '極簡風格穿搭', author: 'user_01', totalClicks: 1650, todayClicks: 87, avgTime: '1:55', engagement: '5.4%'},
+        {id: 5, title: '約會穿搭分享', author: 'user_04', totalClicks: 2340, todayClicks: 142, avgTime: '2:30', engagement: '7.6%'},
+        {id: 6, title: '韓系穿搭教學', author: 'user_02', totalClicks: 2890, todayClicks: 178, avgTime: '2:58', engagement: '8.9%'},
+        {id: 7, title: '復古風搭配', author: 'user_03', totalClicks: 1480, todayClicks: 76, avgTime: '1:48', engagement: '5.1%'},
+        {id: 8, title: '運動休閒風', author: 'user_01', totalClicks: 2120, todayClicks: 125, avgTime: '2:22', engagement: '7.2%'},
+        {id: 9, title: '職場穿搭分享', author: 'user_04', totalClicks: 1850, todayClicks: 95, avgTime: '2:05', engagement: '6.3%'},
+        {id: 10, title: '夏日清新風格', author: 'user_02', totalClicks: 3420, todayClicks: 215, avgTime: '3:35', engagement: '9.8%'}
+    ];
+
     renderAll();
+    initCharts();
 }
 
 // 顯示提示訊息
@@ -382,46 +495,45 @@ function showToast(message, type) {
 
 // 更新統計數據
 function updateStats() {
-    var pendingPosts = posts.filter(function(p) { return p.status === 'pending'; }).length;
+    var pendingComments = comments.filter(function(c) { return c.status === 'pending'; }).length;
     var pendingFeedbacks = feedbacks.filter(function(f) { return f.status === 'pending'; }).length;
     
-    document.getElementById('statPending').textContent = pendingPosts;
+    document.getElementById('statPending').textContent = pendingComments;
     document.getElementById('statUsers').textContent = users.length;
     document.getElementById('statFeedback').textContent = pendingFeedbacks;
-    document.getElementById('statPosts').textContent = posts.length;
+    document.getElementById('statPosts').textContent = comments.length;
 }
 
 // 渲染所有表格
 function renderAll() {
-    renderPosts();
+    renderComments();
     renderUsers();
     renderFeedbacks();
+    renderAnalytics();
     updateStats();
 }
 
-// 渲染貼文表格
-function renderPosts() {
-    var tbody = document.getElementById('postTable');
+// 渲染評論表格 - 只保留拒絕和刪除
+function renderComments() {
+    var tbody = document.getElementById('commentTable');
     tbody.innerHTML = '';
     
-    posts.forEach(function(post) {
-        var statusBadge = post.status === 'pending' ? 
+    comments.forEach(function(comment) {
+        var statusBadge = comment.status === 'pending' ? 
             '<span class="badge bg-warning">待審核</span>' :
-            post.status === 'approved' ? 
+            comment.status === 'approved' ? 
             '<span class="badge bg-success">已通過</span>' :
             '<span class="badge bg-danger">已拒絕</span>';
             
         var row = '<tr>' +
-            '<td>' + String(post.id).padStart(3, '0') + '</td>' +
-            '<td><img src="' + post.image + '" alt="post"></td>' +
-            '<td>' + post.title + '</td>' +
-            '<td>' + post.author + '</td>' +
+            '<td>' + String(comment.id).padStart(3, '0') + '</td>' +
+            '<td>' + comment.commenter + '</td>' +
+            '<td>' + comment.postTitle + '</td>' +
+            '<td>' + (comment.content.length > 30 ? comment.content.substring(0, 30) + '...' : comment.content) + '</td>' +
             '<td>' + statusBadge + '</td>' +
             '<td>' +
-            (post.status === 'pending' ? 
-                '<button class="btn btn-success btn-action" onclick="approvePost(' + post.id + ')">通過</button>' +
-                '<button class="btn btn-danger btn-action" onclick="rejectPost(' + post.id + ')">拒絕</button>' : '') +
-            '<button class="btn btn-secondary btn-action" onclick="deletePost(' + post.id + ')">刪除</button>' +
+            '<button class="btn btn-danger btn-action" onclick="rejectComment(' + comment.id + ')">拒絕</button>' +
+            '<button class="btn btn-secondary btn-action" onclick="deleteComment(' + comment.id + ')">刪除</button>' +
             '</td></tr>';
         tbody.innerHTML += row;
     });
@@ -444,7 +556,7 @@ function renderUsers() {
             '<td>' + user.joinDate + '</td>' +
             '<td>' + statusBadge + '</td>' +
             '<td>' +
-            '<button class="btn btn-warning btn-action" onclick="editUser(' + user.id + ')">編輯</button>' +
+            '<button class="btn btn-warning btn-action" onclick="warnUser(' + user.id + ')">警告</button>' +
             '<button class="btn ' + (user.suspended ? 'btn-success' : 'btn-danger') + ' btn-action" onclick="toggleSuspendUser(' + user.id + ')">' +
             (user.suspended ? '解除停權' : '停權') + '</button>' +
             '</td></tr>';
@@ -478,66 +590,180 @@ function renderFeedbacks() {
     });
 }
 
-// === 貼文功能 ===
-function approvePost(postId) {
-    var post = posts.find(function(p) { return p.id === postId; });
-    if (post) {
-        post.status = 'approved';
-        renderAll();
-        showToast('貼文「' + post.title + '」已通過審核', 'success');
-        
-        // TODO: 可在此處加入 AJAX 呼叫後端 API 更新資料庫
-        // $.ajax({ url: 'approvePost.jsp', data: {id: postId}, method: 'POST' });
-    }
-}
-
-function rejectPost(postId) {
-    if (confirm('確定要拒絕此貼文嗎？')) {
-        var post = posts.find(function(p) { return p.id === postId; });
-        if (post) {
-            post.status = 'rejected';
-            renderAll();
-            showToast('貼文「' + post.title + '」已被拒絕', 'danger');
-        }
-    }
-}
-
-function deletePost(postId) {
-    if (confirm('確定要刪除此貼文嗎？此操作無法復原！')) {
-        var index = posts.findIndex(function(p) { return p.id === postId; });
-        if (index !== -1) {
-            var title = posts[index].title;
-            posts.splice(index, 1);
-            renderAll();
-            showToast('貼文「' + title + '」已刪除', 'info');
-        }
-    }
-}
-
-function addNewPost() {
-    var newId = Math.max.apply(Math, posts.map(function(p) { return p.id; })) + 1;
-    var randomNum = Math.floor(Math.random() * 1000);
-    posts.push({
-        id: newId,
-        image: 'https://picsum.photos/80/80?' + randomNum,
-        title: '測試貼文 ' + newId,
-        author: 'user_' + String(newId).padStart(2, '0'),
-        status: 'pending'
+// 渲染點擊率分析
+function renderAnalytics() {
+    // 渲染數據表格
+    var tbody = document.getElementById('analyticsTable');
+    tbody.innerHTML = '';
+    
+    analyticsData.forEach(function(data) {
+        var row = '<tr>' +
+            '<td>' + String(data.id).padStart(3, '0') + '</td>' +
+            '<td>' + data.title + '</td>' +
+            '<td>' + data.author + '</td>' +
+            '<td><strong>' + data.totalClicks.toLocaleString() + '</strong></td>' +
+            '<td><span class="badge bg-info">' + data.todayClicks + '</span></td>' +
+            '<td>' + data.avgTime + '</td>' +
+            '<td><span class="badge bg-success">' + data.engagement + '</span></td>' +
+            '</tr>';
+        tbody.innerHTML += row;
     });
-    renderAll();
-    showToast('新貼文已新增', 'success');
+
+    // 渲染熱門貼文排行
+    var topPosts = analyticsData.slice().sort(function(a, b) { return b.totalClicks - a.totalClicks; }).slice(0, 10);
+    var maxClicks = topPosts[0].totalClicks;
+    var topPostsHTML = '';
+    
+    topPosts.forEach(function(post, index) {
+        var percentage = (post.totalClicks / maxClicks * 100).toFixed(1);
+        topPostsHTML += '<div class="rank-item">' +
+            '<div class="rank-number">' + (index + 1) + '</div>' +
+            '<div class="rank-info">' +
+            '<div><strong>' + post.title + '</strong></div>' +
+            '<div class="rank-bar"><div class="rank-bar-fill" style="width: ' + percentage + '%"></div></div>' +
+            '<small class="text-muted">' + post.totalClicks.toLocaleString() + ' 次點擊</small>' +
+            '</div></div>';
+    });
+    document.getElementById('topPostsRanking').innerHTML = topPostsHTML;
+
+    // 渲染活躍用戶排行
+    var userClicks = {};
+    analyticsData.forEach(function(data) {
+        if (!userClicks[data.author]) {
+            userClicks[data.author] = 0;
+        }
+        userClicks[data.author] += data.totalClicks;
+    });
+    
+    var topUsers = Object.keys(userClicks).map(function(username) {
+        return {username: username, clicks: userClicks[username]};
+    }).sort(function(a, b) { return b.clicks - a.clicks; }).slice(0, 10);
+    
+    var maxUserClicks = topUsers[0].clicks;
+    var topUsersHTML = '';
+    
+    topUsers.forEach(function(user, index) {
+        var percentage = (user.clicks / maxUserClicks * 100).toFixed(1);
+        topUsersHTML += '<div class="rank-item">' +
+            '<div class="rank-number">' + (index + 1) + '</div>' +
+            '<div class="rank-info">' +
+            '<div><strong>' + user.username + '</strong></div>' +
+            '<div class="rank-bar"><div class="rank-bar-fill" style="width: ' + percentage + '%"></div></div>' +
+            '<small class="text-muted">' + user.clicks.toLocaleString() + ' 總點擊</small>' +
+            '</div></div>';
+    });
+    document.getElementById('topUsersRanking').innerHTML = topUsersHTML;
+}
+
+// 初始化圖表
+function initCharts() {
+    // 每日點擊趨勢圖
+    var ctx1 = document.getElementById('dailyClickChart');
+    if (ctx1) {
+        var last7Days = [];
+        var clickData = [];
+        
+        for (var i = 6; i >= 0; i--) {
+            var date = new Date();
+            date.setDate(date.getDate() - i);
+            last7Days.push((date.getMonth() + 1) + '/' + date.getDate());
+            clickData.push(Math.floor(Math.random() * 500) + 800);
+        }
+        
+        dailyClickChart = new Chart(ctx1, {
+            type: 'line',
+            data: {
+                labels: last7Days,
+                datasets: [{
+                    label: '每日點擊數',
+                    data: clickData,
+                    borderColor: '#a89f91',
+                    backgroundColor: 'rgba(168, 159, 145, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    // 熱門標籤圖表
+    var ctx2 = document.getElementById('tagsChart');
+    if (ctx2) {
+        tagsChart = new Chart(ctx2, {
+            type: 'doughnut',
+            data: {
+                labels: ['#OOTD', '#街頭風', '#韓系', '#極簡', '#復古', '#休閒'],
+                datasets: [{
+                    data: [450, 320, 280, 240, 180, 150],
+                    backgroundColor: [
+                        '#a89f91',
+                        '#8f8c7f',
+                        '#c4b5a0',
+                        '#9d8f7f',
+                        '#b5a99a',
+                        '#d4c8b8'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    }
+                }
+            }
+        });
+    }
+}
+
+// === 評論功能 - 只保留拒絕和刪除 ===
+function rejectComment(commentId) {
+    if (confirm('確定要拒絕此評論嗎？')) {
+        var comment = comments.find(function(c) { return c.id === commentId; });
+        if (comment) {
+            comment.status = 'rejected';
+            renderAll();
+            showToast('評論已被拒絕', 'danger');
+        }
+    }
+}
+
+function deleteComment(commentId) {
+    if (confirm('確定要刪除此評論嗎？此操作無法復原！')) {
+        var index = comments.findIndex(function(c) { return c.id === commentId; });
+        if (index !== -1) {
+            comments.splice(index, 1);
+            renderAll();
+            showToast('評論已刪除', 'info');
+        }
+    }
 }
 
 // === 使用者功能 ===
-function editUser(userId) {
+function warnUser(userId) {
     var user = users.find(function(u) { return u.id === userId; });
     if (user) {
-        document.getElementById('editUserId').value = user.id;
-        document.getElementById('editUsername').value = user.username;
-        document.getElementById('editEmail').value = user.email;
-        
-        var modal = new bootstrap.Modal(document.getElementById('editUserModal'));
-        modal.show();
+        var reason = prompt('請輸入警告原因：', '違反社群規範');
+        if (reason && reason.trim()) {
+            showToast('已對使用者「' + user.username + '」發送警告：' + reason, 'warning');
+        }
     }
 }
 
@@ -565,19 +791,6 @@ function toggleSuspendUser(userId) {
             showToast('使用者「' + user.username + '」已' + action, user.suspended ? 'danger' : 'success');
         }
     }
-}
-
-function addNewUser() {
-    var newId = Math.max.apply(Math, users.map(function(u) { return u.id; })) + 1;
-    users.push({
-        id: newId,
-        username: 'user_' + String(newId).padStart(2, '0'),
-        email: 'user' + String(newId).padStart(2, '0') + '@example.com',
-        joinDate: currentDate,
-        suspended: false
-    });
-    renderAll();
-    showToast('新使用者已新增', 'success');
 }
 
 // === 回饋功能 ===
@@ -640,25 +853,10 @@ function viewFeedback(feedbackId) {
     }
 }
 
-function addNewFeedback() {
-    var newId = Math.max.apply(Math, feedbacks.map(function(f) { return f.id; })) + 1;
-    var types = ['技術問題', '帳號問題', '功能建議', '其他'];
-    feedbacks.push({
-        id: newId,
-        user: 'user_' + String(newId).padStart(2, '0'),
-        type: types[Math.floor(Math.random() * types.length)],
-        content: '測試回饋內容 ' + newId,
-        status: 'pending',
-        reply: ''
-    });
-    renderAll();
-    showToast('新回饋已新增', 'success');
-}
-
 // === 搜尋功能 ===
-document.getElementById('postSearch').addEventListener('input', function(e) {
+document.getElementById('commentSearch').addEventListener('input', function(e) {
     var searchText = e.target.value.toLowerCase();
-    var rows = document.querySelectorAll('#postTable tr');
+    var rows = document.querySelectorAll('#commentTable tr');
     rows.forEach(function(row) {
         var text = row.textContent.toLowerCase();
         row.style.display = text.includes(searchText) ? '' : 'none';
