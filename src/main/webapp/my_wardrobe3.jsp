@@ -157,6 +157,59 @@ response.setDateHeader("Expires", 0);
         .empty-state { grid-column: 1 / -1; text-align: center; padding: 100px 20px; color: #999; }
         .empty-title { font-size: 20px; margin-bottom: 12px; color: #666; font-weight: 600; }
         .empty-text { font-size: 15px; color: #999; }
+     
+/* 圖片容器 - 可點擊放大 */
+.item-image-container { 
+    position: relative; 
+    overflow: hidden; 
+    background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%); 
+    height: 300px; 
+    cursor: pointer; 
+}
+
+/* 圖片容器 - 可點擊放大 */
+.item-image-container { 
+    position: relative; 
+    overflow: hidden; 
+    background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%); 
+    height: 300px; 
+    cursor: pointer; 
+}
+
+/* 圖片放大檢視器 */
+.image-modal { 
+    display: none; 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    background: rgba(0, 0, 0, 0.92); 
+    z-index: 10000; 
+    justify-content: center; 
+    align-items: center; 
+    cursor: pointer;
+}
+
+.image-modal.active { 
+    display: flex; 
+}
+
+.modal-content { 
+    position: relative; 
+    max-width: 95%; 
+    max-height: 95vh; 
+    pointer-events: none;  /* 👈 關鍵：讓點擊穿透 */
+}
+
+.modal-image { 
+    max-width: 100%; 
+    max-height: 95vh; 
+    object-fit: contain; 
+    border-radius: 12px; 
+    pointer-events: auto;  /* 👈 關鍵：圖片本身可接收點擊 */
+    cursor: default;
+}
     </style>
 </head>
 <body>
@@ -226,10 +279,9 @@ response.setDateHeader("Expires", 0);
                         if(colorName == null) colorName = colorCode;
                 %>
                     <div class="item-card">
-                        <div class="item-image-container">
-                            <img src="<%= pic %>" class="item-image" alt="<%= brand != null ? brand : "衣物" %>">
-                        </div>
-                        <div class="item-info">
+                        <div class="item-image-container" onclick="openImageModal('<%= pic %>')">
+    <img src="<%= pic %>" class="item-image" alt="<%= brand != null ? brand : "衣物" %>">
+</div>                        <div class="item-info">
                             <div class="item-name"><%= brand != null && !brand.isEmpty() ? brand : "未命名" %></div>
                             <% if(textDescription != null && !textDescription.isEmpty()) { %>
                                 <div class="item-details">描述: <%= textDescription %></div>
@@ -250,5 +302,45 @@ response.setDateHeader("Expires", 0);
             </div>
         </div>
     </div>
+  <!-- 圖片放大檢視器 -->
+<div class="image-modal" id="imageModal">
+    <div class="modal-content">
+        <img src="" alt="放大檢視" class="modal-image" id="modalImage">
+    </div>
+</div>
+
+<script>
+    function openImageModal(imageSrc) {
+        const modal = document.getElementById('imageModal');
+        const modalImage = document.getElementById('modalImage');
+        modalImage.src = imageSrc;
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+    
+    function closeImageModal() {
+        const modal = document.getElementById('imageModal');
+        modal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
+    
+    // 點擊任何地方都關閉
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('imageModal');
+        
+        modal.addEventListener('click', function(e) {
+            closeImageModal();
+        });
+    });
+    
+    // ESC 鍵關閉
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeImageModal();
+        }
+    });
+</script>
+</body>
+</html>
 </body>
 </html>
