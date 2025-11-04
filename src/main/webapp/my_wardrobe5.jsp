@@ -141,8 +141,7 @@ response.setDateHeader("Expires", 0);
         .items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 28px; min-height: 400px; }
         .item-card { background: white; border-radius: 18px; overflow: hidden; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid #f0f0f0; }
         .item-card:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.16); border-color: #e0e0e0; }
-        .item-image-container { position: relative; overflow: hidden; background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%); height: 300px; cursor: zoom-in; }
-        .item-image-container:hover::after { content: '🔍'; position: absolute; top: 10px; right: 10px; background: rgba(0, 0, 0, 0.7); color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .item-image-container { position: relative; overflow: hidden; background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%); height: 300px; }
         .item-image { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
         .item-card:hover .item-image { transform: scale(1.08); }
         .item-info { padding: 20px 22px; }
@@ -158,17 +157,59 @@ response.setDateHeader("Expires", 0);
         .empty-state { grid-column: 1 / -1; text-align: center; padding: 100px 20px; color: #999; }
         .empty-title { font-size: 20px; margin-bottom: 12px; color: #666; font-weight: 600; }
         .empty-text { font-size: 15px; color: #999; }
-        
-        /* 圖片放大檢視器 */
-        .image-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.92); z-index: 10000; justify-content: center; align-items: center; animation: fadeIn 0.3s ease; }
-        .image-modal.active { display: flex; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .modal-content { position: relative; max-width: 95%; max-height: 95vh; animation: zoomIn 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        @keyframes zoomIn { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .modal-image { max-width: 100%; max-height: 95vh; object-fit: contain; border-radius: 12px; box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6); }
-        .modal-close { position: absolute; top: -60px; right: 0; background: rgba(255, 255, 255, 0.95); border: none; width: 48px; height: 48px; border-radius: 50%; cursor: pointer; font-size: 28px; color: #333; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; font-weight: bold; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
-        .modal-close:hover { background: white; transform: rotate(90deg) scale(1.1); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4); }
-        .modal-info { position: absolute; bottom: -80px; left: 0; right: 0; text-align: center; color: rgba(255, 255, 255, 0.9); font-size: 14px; padding: 12px; background: rgba(0, 0, 0, 0.5); border-radius: 8px; backdrop-filter: blur(10px); }
+     
+/* 圖片容器 - 可點擊放大 */
+.item-image-container { 
+    position: relative; 
+    overflow: hidden; 
+    background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%); 
+    height: 300px; 
+    cursor: pointer; 
+}
+
+/* 圖片容器 - 可點擊放大 */
+.item-image-container { 
+    position: relative; 
+    overflow: hidden; 
+    background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%); 
+    height: 300px; 
+    cursor: pointer; 
+}
+
+/* 圖片放大檢視器 */
+.image-modal { 
+    display: none; 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    background: rgba(0, 0, 0, 0.92); 
+    z-index: 10000; 
+    justify-content: center; 
+    align-items: center; 
+    cursor: pointer;
+}
+
+.image-modal.active { 
+    display: flex; 
+}
+
+.modal-content { 
+    position: relative; 
+    max-width: 95%; 
+    max-height: 95vh; 
+    pointer-events: none;  /* 👈 關鍵：讓點擊穿透 */
+}
+
+.modal-image { 
+    max-width: 100%; 
+    max-height: 95vh; 
+    object-fit: contain; 
+    border-radius: 12px; 
+    pointer-events: auto;  /* 👈 關鍵：圖片本身可接收點擊 */
+    cursor: default;
+}
     </style>
 </head>
 <body>
@@ -236,16 +277,12 @@ response.setDateHeader("Expires", 0);
                         String colorCode = item.get("color_code");
                         String colorName = colorMap.get(colorCode);
                         if(colorName == null) colorName = colorCode;
-                        
-                        // 準備顯示用的品牌名稱
-                        String displayBrand = (brand != null && !brand.isEmpty()) ? brand : "未命名";
                 %>
                     <div class="item-card">
-                        <div class="item-image-container" onclick="openImageModal('<%= pic %>', '<%= displayBrand %>')">
-                            <img src="<%= pic %>" class="item-image" alt="<%= displayBrand %>">
-                        </div>
-                        <div class="item-info">
-                            <div class="item-name"><%= displayBrand %></div>
+                        <div class="item-image-container" onclick="openImageModal('<%= pic %>')">
+    <img src="<%= pic %>" class="item-image" alt="<%= brand != null ? brand : "衣物" %>">
+</div>                        <div class="item-info">
+                            <div class="item-name"><%= brand != null && !brand.isEmpty() ? brand : "未命名" %></div>
                             <% if(textDescription != null && !textDescription.isEmpty()) { %>
                                 <div class="item-details">描述: <%= textDescription %></div>
                             <% } %>
@@ -265,40 +302,45 @@ response.setDateHeader("Expires", 0);
             </div>
         </div>
     </div>
-    
-    <!-- 圖片放大檢視器 -->
-    <div class="image-modal" id="imageModal" onclick="closeImageModal()">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <button class="modal-close" onclick="closeImageModal()">×</button>
-            <img src="" alt="放大檢視" class="modal-image" id="modalImage">
-            <div class="modal-info" id="modalInfo">點擊背景或按 ESC 鍵關閉</div>
-        </div>
+  <!-- 圖片放大檢視器 -->
+<div class="image-modal" id="imageModal">
+    <div class="modal-content">
+        <img src="" alt="放大檢視" class="modal-image" id="modalImage">
     </div>
+</div>
+
+<script>
+    function openImageModal(imageSrc) {
+        const modal = document.getElementById('imageModal');
+        const modalImage = document.getElementById('modalImage');
+        modalImage.src = imageSrc;
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
     
-    <script>
-        function openImageModal(imageSrc, itemName) {
-            const modal = document.getElementById('imageModal');
-            const modalImage = document.getElementById('modalImage');
-            const modalInfo = document.getElementById('modalInfo');
-            
-            modalImage.src = imageSrc;
-            modalInfo.textContent = itemName + ' - 點擊背景或按 ESC 鍵關閉';
-            modal.classList.add('active');
-            document.body.style.overflow = 'hidden'; // 防止背景滾動
-        }
+    function closeImageModal() {
+        const modal = document.getElementById('imageModal');
+        modal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
+    
+    // 點擊任何地方都關閉
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('imageModal');
         
-        function closeImageModal() {
-            const modal = document.getElementById('imageModal');
-            modal.classList.remove('active');
-            document.body.style.overflow = 'auto'; // 恢復滾動
-        }
-        
-        // ESC 鍵關閉
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeImageModal();
-            }
+        modal.addEventListener('click', function(e) {
+            closeImageModal();
         });
-    </script>
+    });
+    
+    // ESC 鍵關閉
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeImageModal();
+        }
+    });
+</script>
+</body>
+</html>
 </body>
 </html>
