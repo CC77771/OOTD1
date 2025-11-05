@@ -77,9 +77,7 @@ try {
         con.close();
         
         if(updateCount > 0) {
-            out.println("<p style='color:green;'>✓ 圖片上傳成功！</p>");
-            out.println("<script>");            
-            out.println("</script>");
+        	response.sendRedirect("member.jsp?memberId=" + session.getAttribute("accessId"));
         } else {
             out.println("<p style='color:red;'>✗ 數據庫更新失敗！</p>");
         }
