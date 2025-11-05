@@ -14,7 +14,7 @@ public String FilePath(){
 		   //li's 
 		//String Path="assets/images/member/";
 		   //Yujia's 
-			 String Path="images/";
+			 String Path="images\\";
 			 
 		   return Path;		
 		}

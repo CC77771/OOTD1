@@ -7,12 +7,13 @@ if(request.getParameter("memberid") !=null &&
 request.getParameter("memberpwd") !=null){
 Connection con=DriverManager.getConnection("jdbc:ucanaccess://"+objDBConfig.FilePath()+";");
 Statement smt= con.createStatement();
-String getpaperdata = "SELECT memberid FROM personal_information;WHERE memberid='"+
+String getpaperdata = "SELECT memberid, positionId FROM personal_information;WHERE memberid='"+
 		request.getParameter("memberid")+"' AND memberpwd='" +
 		request.getParameter("memberpwd")+"'";
 ResultSet paperrs = smt.executeQuery(getpaperdata);
 if(paperrs.next()){
 	session.setAttribute("accessId",request.getParameter("memberid"));
+	session.setAttribute("positionId", paperrs.getString("positionId"));
 	//session.setMaxInactiveInterval(20); 自動登出
 	response.sendRedirect("index1.jsp");
 }else

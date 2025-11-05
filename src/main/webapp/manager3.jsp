@@ -1,5 +1,6 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
 <%@ page import="java.util.*, java.text.*" %>
+<%@include file ="menu.jsp" %>
 
 <%
     // === 模擬 Session 登入資料 ===
@@ -193,12 +194,12 @@ table img:hover {
                 <h3 id="statUsers"><%= userCount %></h3>
             </div>
         </div>
-        <div class="col-md-3">
+        <!--<div class="col-md-3">
             <div class="stats-card">
                 <p>待處理回饋</p>
                 <h3 id="statFeedback"><%= feedbackCount %></h3>
             </div>
-        </div>
+        </div>-->
         <div class="col-md-3">
             <div class="stats-card">
                 <p>總評論數</p>
@@ -211,7 +212,7 @@ table img:hover {
     <ul class="nav nav-tabs" id="adminTab" role="tablist">
         <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#comments">💬 評論審核</button></li>
         <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#users">👥 使用者管理</button></li>
-        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#feedback">🛠️ 客服支援</button></li>
+         <!--<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#feedback">🛠️ 客服支援</button></li>-->
         <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#analytics">📊 點擊率分析</button></li>
     </ul>
 

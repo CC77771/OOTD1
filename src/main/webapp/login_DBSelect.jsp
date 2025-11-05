@@ -8,12 +8,13 @@ if(request.getParameter("memberid") !=null &&
 	Class.forName("net.ucanaccess.jdbc.UcanaccessDriver");
 	Connection con=DriverManager.getConnection("jdbc:ucanaccess://"+objDBConfig.FilePath()+";");
 	Statement smt= con.createStatement();
-	String getMemberData = "SELECT memberid FROM Personal_information WHERE memberid='"+
+	String getMemberData = "SELECT memberid, positionId FROM Personal_information WHERE memberid='"+
 			request.getParameter("memberid")+"' AND memberpwd='" +
 			request.getParameter("memberpwd")+"'";
 	ResultSet members = smt.executeQuery(getMemberData);
 	if(members.next()){
 		session.setAttribute("accessId",request.getParameter("memberid"));
+		session.setAttribute("positionId", members.getString("positionId"));
 		//session.setMaxInactiveInterval(20); 自動登出
 		response.sendRedirect("index1.jsp");
 	}else

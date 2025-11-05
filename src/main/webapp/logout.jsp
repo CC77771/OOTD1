@@ -6,6 +6,7 @@
 <%
 if(session.getAttribute("accessId") !=null){
 	session.removeAttribute("accessId");
+	session.removeAttribute("positionId"); 
 	response.sendRedirect("index1.jsp");
 }else{
 	response.sendRedirect("login.jsp");

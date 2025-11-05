@@ -256,7 +256,7 @@
         </div>
       
 <form name="form" action="memberEdit_DBUpdate_pic.jsp" method="post" enctype="multipart/form-data">
-    <input type="file" name="theFirstFile" />
+    <input type="file" name="theFirstFile" accept="image/*">
      <input type="hidden" name="memberId" value="<%=rs.getString("memberId")%> " />
   <button type="submit" value="上傳圖片" name="submitButton" style="background-color: #a89f91; color: #fff; border: none; padding: 10px 30px; border-radius: 5px; cursor: pointer;">
 修改圖片

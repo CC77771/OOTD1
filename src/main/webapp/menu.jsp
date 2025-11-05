@@ -1,8 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="BIG5">
+<head>  
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <title>CZ Web</title>
   <!-- Template CSS -->
@@ -85,8 +84,17 @@
                     </ul>
                   </li>
                   
-<div class="ml-lg-3">
-                    <li class="nav-item dropdown"> 
+                <!-- 管理者控制台 (只有管理員可見) -->
+<% 
+  String positionId = (String) session.getAttribute("positionId");
+  if("1".equals(positionId)) { 
+%>
+<li class="nav-item">
+  <a class="nav-link" href="manager3.jsp">管理者控制台</a>
+</li>
+<% } %>
+
+                    <li class="nav-item d-flex align-items-center gap-2"> 
                       <a class="nav-link" href="member.jsp?memberId=<%=session.getAttribute("accessId")%>">
                         <%
                           if(session.getAttribute("accessId") == null){
@@ -97,12 +105,12 @@
                         %>
                       </a>
                       <% if(session.getAttribute("accessId") != null){ %>          
-                        <input type="submit" value="登出" name="login" class="btn btn-style btn-effect">          	 
+                        <input type="submit" value="登出" name="login" class="btn btn-style btn-effect px-3 py-1">          	 
                       <% } else { %>
                         <a class="text-uppercase mx-3 align-items-center" href="login.jsp">登入</a>                
                       <% } %>    
                     </li>
-                  </div>                 
+                
                 </ul>
               </div>
             </div>
