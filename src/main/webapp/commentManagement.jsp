@@ -1,6 +1,5 @@
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
 <%@ page import="java.util.*, java.text.*, java.sql.*" %>
-<%@include file="menu.jsp" %>
 <jsp:useBean id="objDBConfig" scope="session" class="CZ.group.tool.database.DBConfig" />
 
 <%!
@@ -14,72 +13,81 @@
 <%
     String dbPath = objDBConfig.FilePath();
     
-    // ============ 處理 AJAX 請求 ============
-    String ajaxAction = request.getParameter("ajax");
-    if("true".equals(ajaxAction)) {
-        String commentId = request.getParameter("commentId");
-        String action = request.getParameter("action");
+//============ 處理 AJAX 請求 ============
+String ajaxAction = request.getParameter("ajax");
+if("true".equals(ajaxAction)) {
+    // 清除輸出緩衝區
+    out.clearBuffer();
+    
+    String commentId = request.getParameter("commentId");
+    String action = request.getParameter("action");
+    
+    String message = "";
+    boolean success = false;
+    
+    if(commentId != null && action != null && !commentId.trim().isEmpty()) {
+        Connection con = null;
+        PreparedStatement pstmt = null;
         
-        String message = "";
-        boolean success = false;
-        
-        if(commentId != null && action != null && !commentId.trim().isEmpty()) {
-            Connection con = null;
-            PreparedStatement pstmt = null;
+        try {
+            con = getConnection(dbPath);
+            String sql = "";
             
-            try {
-                con = getConnection(dbPath);
-                String sql = "";
+            if("approve".equals(action)) {
+                sql = "UPDATE personal_wear SET post_state = True WHERE postid = ?";
+                message = "評論已通過";
+            } else if("reject".equals(action)) {
+                sql = "UPDATE personal_wear SET post_state = False WHERE postid = ?";
+                message = "評論已拒絕";
+            } else if("delete".equals(action)) {
+                sql = "DELETE FROM personal_wear WHERE postid = ?";
+                message = "評論已刪除";
+            } else {
+                message = "無效的操作";
+            }
+            
+            if(!sql.isEmpty()) {
+                pstmt = con.prepareStatement(sql);
+                pstmt.setInt(1, Integer.parseInt(commentId));
                 
-                if("approve".equals(action)) {
-                    sql = "UPDATE personal_wear SET post_state = True WHERE postid = ?";
-                    message = "評論已通過";
-                } else if("reject".equals(action)) {
-                    sql = "UPDATE personal_wear SET post_state = False WHERE postid = ?";
-                    message = "評論已拒絕";
-                } else if("delete".equals(action)) {
-                    sql = "DELETE FROM personal_wear WHERE postid = ?";
-                    message = "評論已刪除";
+                int result = pstmt.executeUpdate();
+                
+                if(result > 0) {
+                    success = true;
                 } else {
-                    message = "無效的操作";
-                }
-                
-                if(!sql.isEmpty()) {
-                    pstmt = con.prepareStatement(sql);
-                    pstmt.setInt(1, Integer.parseInt(commentId));
-                    
-                    int result = pstmt.executeUpdate();
-                    
-                    if(result > 0) {
-                        success = true;
-                    } else {
-                        message = "找不到該評論";
-                    }
-                }
-                
-            } catch(NumberFormatException e) {
-                message = "評論ID格式錯誤";
-                e.printStackTrace();
-            } catch(Exception e) {
-                message = "系統錯誤: " + e.getMessage();
-                e.printStackTrace();
-            } finally {
-                try {
-                    if(pstmt != null) pstmt.close();
-                    if(con != null) con.close();
-                } catch(SQLException e) {
-                    e.printStackTrace();
+                    message = "找不到該評論";
                 }
             }
-        } else {
-            message = "參數錯誤";
+            
+        } catch(NumberFormatException e) {
+            message = "評論ID格式錯誤";
+            e.printStackTrace();
+        } catch(Exception e) {
+            message = "系統錯誤: " + e.getMessage();
+            e.printStackTrace();
+        } finally {
+            try {
+                if(pstmt != null) pstmt.close();
+                if(con != null) con.close();
+            } catch(SQLException e) {
+                e.printStackTrace();
+            }
         }
-        
-        // 回傳 JSON
-        response.setContentType("application/json; charset=utf-8");
-        out.print("{\"success\":" + success + ",\"message\":\"" + message + "\"}");
-        return; // 重要：結束處理，不繼續執行下面的 HTML
+    } else {
+        message = "參數錯誤";
     }
+    
+    // 回傳 JSON
+    response.setContentType("application/json; charset=utf-8");
+    out.print("{\"success\":" + success + ",\"message\":\"" + message + "\"}");
+    out.flush();
+    return; // 重要：結束處理，不繼續執行下面的 HTML
+}
+
+// 正常顯示時才引入 menu
+%>
+<%@include file="menu.jsp" %>
+<%
     
     // ============ 讀取評論資料 ============
     Connection conn = null;
@@ -321,7 +329,6 @@ table img:hover {
                         <th>編號</th>
                         <th>圖片</th>
                         <th>評論者</th>
-                        <th>貼文標題</th>
                         <th>評論內容</th>
                         <th>狀態</th>
                         <th>操作</th>
@@ -412,7 +419,7 @@ function renderComments() {
     }
     
     if(filteredComments.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">沒有符合條件的評論</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">沒有符合條件的評論</td></tr>';
         return;
     }
     
@@ -446,8 +453,7 @@ function renderComments() {
         var row = '<tr>' +
             '<td>' + String(comment.id).padStart(3, '0') + '</td>' +
             '<td>' + imageCell + '</td>' +
-            '<td>' + comment.commenter + '</td>' +
-            '<td>' + comment.postTitle + '</td>' +
+            '<td>' + comment.commenter + '</td>' +          
             '<td>' + (comment.content.length > 50 ? comment.content.substring(0, 50) + '...' : comment.content) + '</td>' +
             '<td>' + statusBadge + '</td>' +
             '<td>' + actionButtons + '</td>' +
