@@ -180,7 +180,7 @@ table img:hover {
         <p>歡迎回來,<%= admin %> | 管理 CZ_OOTD 平台內容與使用者</p>
     </div>
 
-    <!-- 統計卡片 -->
+    <!-- 統計卡片 
     <div class="row mb-4">
         <div class="col-md-3">
             <div class="stats-card">
@@ -199,14 +199,14 @@ table img:hover {
                 <p>待處理回饋</p>
                 <h3 id="statFeedback"><%= feedbackCount %></h3>
             </div>
-        </div>-->
+        </div>
         <div class="col-md-3">
             <div class="stats-card">
                 <p>總評論數</p>
                 <h3 id="statPosts"><%= postCount %></h3>
             </div>
         </div>
-    </div>
+    </div>-->
 
     <!-- 分頁導航 -->
     <ul class="nav nav-tabs" id="adminTab" role="tablist">
