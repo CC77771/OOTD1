@@ -263,64 +263,49 @@ table img:hover {
             </table>
         </div>
 
-        <!-- 點擊率分析 -->
-        <div class="tab-pane fade" id="analytics">
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="analytics-card">
-                        <h5>📈 每日點擊趨勢</h5>
-                        <div class="chart-container">
-                            <canvas id="dailyClickChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="analytics-card">
-                        <h5>🏆 熱門貼文排行 TOP 10</h5>
-                        <div id="topPostsRanking"></div>
-                    </div>
-                </div>
+<!-- 點擊率分析 -->
+<div class="tab-pane fade" id="analytics">
+    <!-- 第一行：兩個排行榜並排 -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="analytics-card">
+                <h5>🏆 熱門貼文排行 TOP 10</h5>
+                <div id="topPostsRanking"></div>
             </div>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="analytics-card">
-                        <h5>👤 活躍用戶排行 TOP 10</h5>
-                        <div id="topUsersRanking"></div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="analytics-card">
-                        <h5>🏷️ 熱門標籤分析</h5>
-                        <div class="chart-container">
-                            <canvas id="tagsChart"></canvas>
-                        </div>
-                    </div>
-                </div>
+        </div>
+        <div class="col-md-6">
+            <div class="analytics-card">
+                <h5>👤 活躍用戶排行 TOP 10</h5>
+                <div id="topUsersRanking"></div>
             </div>
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="analytics-card">
-                        <h5>📊 點擊率數據總覽</h5>
-                        <table class="table table-hover">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>貼文ID</th>
-                                    <th>標題</th>
-                                    <th>發布者</th>
-                                    <th>總點擊</th>
-                                    <th>今日點擊</th>
-                                    <th>平均停留時間</th>
-                                    <th>互動率</th>
-                                </tr>
-                            </thead>
-                            <tbody id="analyticsTable"></tbody>
-                        </table>
-                    </div>
+        </div>
+    </div>
+    
+    <!-- 第二行：點擊率數據總覽獨立展開 -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="analytics-card">
+                <h5>📊 點擊率數據總覽</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>貼文ID</th>
+                                <th>標題</th>
+                                <th>發布者</th>
+                                <th>總點擊</th>
+                                <th>今日點擊</th>
+                                <th>平均停留時間</th>
+                                <th>互動率</th>
+                            </tr>
+                        </thead>
+                        <tbody id="analyticsTable"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
-
     </div>
+</div>
 </div>
 
 <!-- 編輯使用者 Modal -->
@@ -431,13 +416,13 @@ var tagsChart = null;
 
 // 初始化資料
 function initData() {
-    comments = [
-        {id: 1, commenter: 'user_01', postTitle: '秋季OOTD分享', content: '超級好看！想知道外套哪裡買的', status: 'pending'},
-        {id: 2, commenter: 'user_02', postTitle: '街頭風穿搭', content: '配色很棒，學起來了', status: 'approved'},
-        {id: 3, commenter: 'user_03', postTitle: '冬季大衣推薦', content: '這件大衣質感真的很好', status: 'pending'},
-        {id: 4, commenter: 'user_01', postTitle: '極簡風格穿搭', content: '不適合的評論內容', status: 'rejected'},
-        {id: 5, commenter: 'user_04', postTitle: '約會穿搭分享', content: '太美了！可以請問鞋子品牌嗎', status: 'pending'}
-    ];
+	comments = [
+	    {id: 1, commenter: 'user_01', postTitle: '秋季OOTD分享', content: '超級好看！想知道外套哪裡買的', status: 'approved'},
+	    {id: 2, commenter: 'user_02', postTitle: '街頭風穿搭', content: '配色很棒，學起來了', status: 'approved'},
+	    {id: 3, commenter: 'user_03', postTitle: '冬季大衣推薦', content: '這件大衣質感真的很好', status: 'approved'},
+	    {id: 4, commenter: 'user_01', postTitle: '極簡風格穿搭', content: '簡約又有質感', status: 'approved'},
+	    {id: 5, commenter: 'user_04', postTitle: '約會穿搭分享', content: '太美了！可以請問鞋子品牌嗎', status: 'approved'}
+	];
 
     users = [
         {id: 1, username: 'user_01', email: 'user01@example.com', joinDate: '2024-01-15', suspended: false},
@@ -514,17 +499,29 @@ function renderAll() {
     updateStats();
 }
 
-// 渲染評論表格 - 只保留拒絕和刪除
+//渲染評論表格 - 根據狀態顯示對應按鈕
 function renderComments() {
     var tbody = document.getElementById('commentTable');
     tbody.innerHTML = '';
     
     comments.forEach(function(comment) {
-        var statusBadge = comment.status === 'pending' ? 
-            '<span class="badge bg-warning">待審核</span>' :
-            comment.status === 'approved' ? 
-            '<span class="badge bg-success">已通過</span>' :
-            '<span class="badge bg-danger">已拒絕</span>';
+        var statusBadge = '';
+        var actionButtons = '';
+        
+        if (comment.status === 'approved') {
+            statusBadge = '<span class="badge bg-success">已通過</span>';
+            actionButtons = '<button class="btn btn-danger btn-action" onclick="rejectComment(' + comment.id + ')">拒絕</button>' +
+                          '<button class="btn btn-secondary btn-action" onclick="deleteComment(' + comment.id + ')">刪除</button>';
+        } else if (comment.status === 'rejected') {
+            statusBadge = '<span class="badge bg-danger">已拒絕</span>';
+            actionButtons = '<button class="btn btn-success btn-action" onclick="approveComment(' + comment.id + ')">通過</button>' +
+                          '<button class="btn btn-secondary btn-action" onclick="deleteComment(' + comment.id + ')">刪除</button>';
+        } else {
+            statusBadge = '<span class="badge bg-warning">待審核</span>';
+            actionButtons = '<button class="btn btn-success btn-action" onclick="approveComment(' + comment.id + ')">通過</button>' +
+                          '<button class="btn btn-danger btn-action" onclick="rejectComment(' + comment.id + ')">拒絕</button>' +
+                          '<button class="btn btn-secondary btn-action" onclick="deleteComment(' + comment.id + ')">刪除</button>';
+        }
             
         var row = '<tr>' +
             '<td>' + String(comment.id).padStart(3, '0') + '</td>' +
@@ -532,10 +529,8 @@ function renderComments() {
             '<td>' + comment.postTitle + '</td>' +
             '<td>' + (comment.content.length > 30 ? comment.content.substring(0, 30) + '...' : comment.content) + '</td>' +
             '<td>' + statusBadge + '</td>' +
-            '<td>' +
-            '<button class="btn btn-danger btn-action" onclick="rejectComment(' + comment.id + ')">拒絕</button>' +
-            '<button class="btn btn-secondary btn-action" onclick="deleteComment(' + comment.id + ')">刪除</button>' +
-            '</td></tr>';
+            '<td>' + actionButtons + '</td>' +
+            '</tr>';
         tbody.innerHTML += row;
     });
 }
@@ -557,7 +552,7 @@ function renderUsers() {
             '<td>' + user.joinDate + '</td>' +
             '<td>' + statusBadge + '</td>' +
             '<td>' +
-            '<button class="btn btn-warning btn-action" onclick="warnUser(' + user.id + ')">警告</button>' +
+            //'<button class="btn btn-warning btn-action" onclick="warnUser(' + user.id + ')">警告</button>' +
             '<button class="btn ' + (user.suspended ? 'btn-success' : 'btn-danger') + ' btn-action" onclick="toggleSuspendUser(' + user.id + ')">' +
             (user.suspended ? '解除停權' : '停權') + '</button>' +
             '</td></tr>';
@@ -734,7 +729,16 @@ function initCharts() {
     }
 }
 
-// === 評論功能 - 只保留拒絕和刪除 ===
+//=== 評論功能 - 通過、拒絕、刪除 ===
+function approveComment(commentId) {
+    var comment = comments.find(function(c) { return c.id === commentId; });
+    if (comment) {
+        comment.status = 'approved';
+        renderAll();
+        showToast('評論已通過', 'success');
+    }
+}
+
 function rejectComment(commentId) {
     if (confirm('確定要拒絕此評論嗎？')) {
         var comment = comments.find(function(c) { return c.id === commentId; });
@@ -756,7 +760,6 @@ function deleteComment(commentId) {
         }
     }
 }
-
 // === 使用者功能 ===
 function warnUser(userId) {
     var user = users.find(function(u) { return u.id === userId; });
