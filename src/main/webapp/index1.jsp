@@ -73,7 +73,278 @@
             padding: 20px;
             background-color: lightgray;
         }
-    </style>    
+    </style> 
+    <style>
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.modal-card {
+    background: linear-gradient(165deg, #ffffff 0%, #f8f5f0 50%, #f0ebe5 100%);
+    border-radius: 25px;
+    max-width: 650px;
+    width: 92%;
+    padding: 60px 50px;
+    position: relative;
+    box-shadow: 0 25px 80px rgba(168, 159, 145, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+    animation: slideScale 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    overflow: hidden;
+    font-family: 'Noto Serif TC', serif;
+}
+
+@keyframes slideScale {
+    from {
+        transform: translateY(40px) scale(0.9);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+.modal-card::before {
+    content: '';
+    position: absolute;
+    top: -100px;
+    right: -100px;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(168, 159, 145, 0.15) 0%, transparent 60%);
+    border-radius: 50%;
+    animation: float 6s ease-in-out infinite;
+}
+
+.modal-card::after {
+    content: '';
+    position: absolute;
+    bottom: -80px;
+    left: -80px;
+    width: 250px;
+    height: 250px;
+    background: radial-gradient(circle, rgba(168, 159, 145, 0.12) 0%, transparent 60%);
+    border-radius: 50%;
+    animation: float 7s ease-in-out infinite reverse;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translate(0, 0) scale(1);
+    }
+    50% {
+        transform: translate(20px, 20px) scale(1.1);
+    }
+}
+
+.close-btn {
+    position: absolute;
+    top: 25px;
+    right: 25px;
+    width: 40px;
+    height: 40px;
+    border: 2px solid rgba(168, 159, 145, 0.2);
+    background: rgba(255, 255, 255, 0.8);
+    color: #a89f91;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 22px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    font-weight: 300;
+}
+
+.close-btn:hover {
+    background: #a89f91;
+    color: white;
+    border-color: #a89f91;
+    transform: rotate(90deg) scale(1.1);
+}
+
+.modal-content {
+    text-align: center;
+    position: relative;
+    z-index: 5;
+}
+
+.top-decoration {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 35px;
+}
+
+.deco-line {
+    width: 80px;
+    height: 1px;
+    background: linear-gradient(to right, transparent, #a89f91, transparent);
+}
+
+.deco-dot {
+    width: 8px;
+    height: 8px;
+    background: #a89f91;
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 0.4;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.3);
+    }
+}
+
+.modal-title {
+    font-size: 32px;
+    color: #4a4239;
+    margin-bottom: 40px;
+    font-weight: 500;
+    letter-spacing: 8px;
+    position: relative;
+    display: inline-block;
+}
+
+.modal-title::after {
+    content: '';
+    position: absolute;
+    bottom: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 2px;
+    background: #a89f91;
+}
+
+.quote-text {
+    font-size: 18px;
+    line-height: 2.2;
+    color: #6a6158;
+    margin-bottom: 20px;
+    font-weight: 300;
+    letter-spacing: 1.5px;
+    padding: 0 20px;
+}
+
+.quote-text:last-of-type {
+    margin-bottom: 45px;
+}
+
+.highlight {
+    color: #a89f91;
+    font-weight: 500;
+}
+
+.start-btn {
+    background: linear-gradient(135deg, #a89f91 0%, #9b8e82 100%);
+    color: white;
+    border: none;
+    padding: 16px 55px;
+    font-size: 17px;
+    border-radius: 35px;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    font-family: 'Noto Serif TC', serif;
+    letter-spacing: 3px;
+    font-weight: 400;
+    box-shadow: 0 8px 25px rgba(168, 159, 145, 0.35);
+    position: relative;
+    overflow: hidden;
+}
+
+.start-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.start-btn:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+.start-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px rgba(168, 159, 145, 0.45);
+}
+
+.start-btn span {
+    position: relative;
+    z-index: 1;
+}
+
+.bottom-decoration {
+    margin-top: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.ornament {
+    width: 25px;
+    height: 1px;
+    background: #a89f91;
+    opacity: 0.4;
+}
+
+.ornament-circle {
+    width: 5px;
+    height: 5px;
+    background: #a89f91;
+    border-radius: 50%;
+    opacity: 0.4;
+    animation: twinkle 2s ease-in-out infinite;
+}
+
+.ornament-circle:nth-child(2) {
+    animation-delay: 0.4s;
+}
+
+.ornament-circle:nth-child(4) {
+    animation-delay: 0.8s;
+}
+
+@keyframes twinkle {
+    0%, 100% { opacity: 0.2; }
+    50% { opacity: 0.8; }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+</style>   
 </head>
 <body class="homepage">
 <button id="backToTop" class="back-to-top" onclick="scrollToTop()">
@@ -736,7 +1007,78 @@ if (newStmt != null) newStmt.close();
       </div>
     </div>
   </footer>
-  
+
+
+
+<div class="modal-overlay" id="modalOverlay">    
+
+        <div class="modal-content">
+        <button class="close-btn" onclick="closeModal()">×</button>
+            <div class="top-decoration">
+                <span class="deco-line"></span>
+                <span class="deco-dot"></span>
+                <span class="deco-line"></span>
+            </div>
+
+            <h2 class="modal-title">穿搭美學</h2>
+            
+            <p class="quote-text">
+                <span class="highlight">穿搭</span>,不只是外在的表現<br>
+                也是一種對場合、對他人<br>
+                更對自己的<span class="highlight">溫柔尊重</span>
+            </p>
+            
+            <p class="quote-text">
+                用心挑選每一件衣服<br>
+                讓生活多一份<span class="highlight">儀式感</span>
+            </p>
+            
+            <p class="quote-text">
+                穿衣,是一種表達<br>
+                合宜的穿搭,不只是風格<br>
+                更是一份對世界的<span class="highlight">禮貌與溫柔</span>
+            </p>
+            
+            <button class="start-btn" onclick="closeModal()">
+                <span>開始探索</span>
+            </button>
+            
+            <div class="bottom-decoration">
+                <span class="ornament"></span>
+                <span class="ornament-circle"></span>
+                <span class="ornament"></span>
+                <span class="ornament-circle"></span>
+                <span class="ornament"></span>
+            </div>
+        </div>
+    
+</div>
+
+ <script>
+function closeModal() {
+    const overlay = document.getElementById('modalOverlay');
+    overlay.style.animation = 'fadeOut 0.4s ease';
+    setTimeout(() => {
+        overlay.style.display = 'none';
+    }, 400);
+}
+
+window.addEventListener('load', function() {
+    document.getElementById('modalOverlay').style.display = 'flex';
+});
+
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeModal();
+    }
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeModal();
+    }
+});
+</script>
 </body>
 
 </html>
