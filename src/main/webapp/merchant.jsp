@@ -1,15 +1,17 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
+<%@ page import="java.util.*, java.text.*" %>
+<%@include file ="menu.jsp" %>
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>服飾商家管理系統</title>
+    <title>商家管理系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .tab-active {
-            border-bottom: 2px solid #EC4899;
-            color: #EC4899;
+            border-bottom: 2px solid #a89f91;
+            color: #a89f91;
         }
         .tab-inactive {
             color: #6B7280;
@@ -38,18 +40,47 @@
         .stat-card:hover {
             transform: translateY(-2px);
         }
+        .btn-primary {
+            background-color: #a89f91;
+        }
+        .btn-primary:hover {
+            background-color: #958c7f;
+        }
+        .btn-secondary {
+            background-color: #c4b5a0;
+        }
+        .btn-secondary:hover {
+            background-color: #b3a48f;
+        }
+        .border-primary {
+            border-color: #a89f91;
+        }
+        .text-primary {
+            color: #a89f91;
+        }
+        .bg-primary {
+            background-color: #a89f91;
+        }
+        .bg-primary-light {
+            background-color: #d4cdc3;
+        }
+        .focus-ring-primary:focus {
+            outline: none;
+            ring: 2px;
+            ring-color: #a89f91;
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
-    <div class="bg-gradient-to-r from-pink-500 to-purple-600 shadow-lg">
+    <div class="bg-gradient-to-r from-[#a89f91] to-[#c4b5a0] shadow-lg">
         <div class="max-w-7xl mx-auto px-6 py-6">
             <div class="flex items-center gap-3">
                 <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                 </svg>
                 <div>
-                    <h1 class="text-3xl font-bold text-white">服飾商家管理系統</h1>
-                    <p class="text-pink-100 text-sm mt-1">管理您的服裝訂單與庫存</p>
+                    <h1 class="text-3xl font-bold text-white">商家管理系統</h1>
+                    <p class="text-white/80 text-sm mt-1">管理您的服裝訂單與庫存</p>
                 </div>
             </div>
         </div>
@@ -57,13 +88,13 @@
 
     <div class="max-w-7xl mx-auto px-6 py-6">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div class="bg-white rounded-lg shadow p-6 stat-card border-t-4 border-pink-500">
+            <div class="bg-white rounded-lg shadow p-6 stat-card border-t-4" style="border-top-color: #a89f91;">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-600 text-sm">總訂單數</p>
                         <p class="text-3xl font-bold text-gray-800 mt-2" id="totalOrders">0</p>
                     </div>
-                    <div class="bg-pink-500 p-3 rounded-lg">
+                    <div class="p-3 rounded-lg" style="background-color: #a89f91;">
                         <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
                         </svg>
@@ -71,13 +102,13 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow p-6 stat-card border-t-4 border-purple-500">
+            <div class="bg-white rounded-lg shadow p-6 stat-card border-t-4" style="border-top-color: #c4b5a0;">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-600 text-sm">服裝款式</p>
                         <p class="text-3xl font-bold text-gray-800 mt-2" id="totalCommodities">0</p>
                     </div>
-                    <div class="bg-purple-500 p-3 rounded-lg">
+                    <div class="p-3 rounded-lg" style="background-color: #c4b5a0;">
                         <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
                         </svg>
@@ -85,13 +116,13 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow p-6 stat-card border-t-4 border-blue-500">
+            <div class="bg-white rounded-lg shadow p-6 stat-card border-t-4" style="border-top-color: #8b7e6f;">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-600 text-sm">總庫存量</p>
                         <p class="text-3xl font-bold text-gray-800 mt-2" id="totalInventory">0</p>
                     </div>
-                    <div class="bg-blue-500 p-3 rounded-lg">
+                    <div class="p-3 rounded-lg" style="background-color: #8b7e6f;">
                         <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
                         </svg>
@@ -115,7 +146,7 @@
         </div>
 
         <div class="bg-white rounded-lg shadow">
-            <div class="border-b bg-gradient-to-r from-pink-50 to-purple-50">
+            <div class="border-b" style="background: linear-gradient(to right, #f5f3f0, #e8e3dc);">
                 <div class="flex">
                     <button onclick="switchTab('orders')" id="ordersTab" class="px-6 py-4 font-medium tab-active flex items-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -138,11 +169,11 @@
                         <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                         </svg>
-                        <input type="text" id="searchInput" onkeyup="searchItems()" placeholder="搜尋款式、尺寸、顏色..." class="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500">
+                        <input type="text" id="searchInput" onkeyup="searchItems()" placeholder="搜尋款式、尺寸、顏色..." class="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2" style="--tw-ring-color: #a89f91;">
                     </div>
                     <button onclick="clearSearch()" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600">清除</button>
-                    <button onclick="addItem()" class="bg-pink-500 text-white px-4 py-2 rounded-lg hover:bg-pink-600">新增</button>
-                    <button onclick="exportData()" class="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600">匯出</button>
+                    <button onclick="addItem()" class="btn-primary text-white px-4 py-2 rounded-lg">新增</button>
+                    <button onclick="exportData()" class="btn-secondary text-white px-4 py-2 rounded-lg">匯出</button>
                 </div>
                 <div id="searchResults" class="mt-2 text-sm text-gray-600"></div>
             </div>
@@ -187,20 +218,20 @@
 
     <div id="orderModal" class="modal">
         <div class="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full mx-4">
-            <h2 class="text-xl font-bold mb-4 text-pink-600" id="orderModalTitle">編輯訂單</h2>
+            <h2 class="text-xl font-bold mb-4 text-primary" id="orderModalTitle">編輯訂單</h2>
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">訂單編號</label>
-                    <input type="text" id="editOrderCode" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500">
+                    <input type="text" id="editOrderCode" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2" style="--tw-ring-color: #a89f91;">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">服裝款式</label>
-                    <input type="text" id="editOrderName" placeholder="例：春季連身裙" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500">
+                    <input type="text" id="editOrderName" placeholder="例：春季連身裙" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2" style="--tw-ring-color: #a89f91;">
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">尺寸</label>
-                        <select id="editOrderSize" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500">
+                        <select id="editOrderSize" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2" style="--tw-ring-color: #a89f91;">
                             <option value="XS">XS</option>
                             <option value="S">S</option>
                             <option value="M">M</option>
@@ -211,24 +242,24 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">顏色</label>
-                        <input type="text" id="editOrderColor" placeholder="例：粉紅色" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500">
+                        <input type="text" id="editOrderColor" placeholder="例：粉紅色" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2" style="--tw-ring-color: #a89f91;">
                     </div>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">數量</label>
-                    <input type="number" id="editOrderQuantity" min="1" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500">
+                    <input type="number" id="editOrderQuantity" min="1" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2" style="--tw-ring-color: #a89f91;">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">收件人</label>
-                    <input type="text" id="editOrderRecipient" placeholder="例：王小明" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500">
+                    <input type="text" id="editOrderRecipient" placeholder="例：王小明" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2" style="--tw-ring-color: #a89f91;">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">配送地址</label>
-                    <input type="text" id="editOrderAddress" placeholder="例：台北市信義區..." class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500">
+                    <input type="text" id="editOrderAddress" placeholder="例：台北市信義區..." class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2" style="--tw-ring-color: #a89f91;">
                 </div>
             </div>
             <div class="flex gap-3 mt-6">
-                <button onclick="saveOrder()" class="flex-1 bg-pink-500 text-white px-4 py-2 rounded-lg hover:bg-pink-600">儲存</button>
+                <button onclick="saveOrder()" class="flex-1 btn-primary text-white px-4 py-2 rounded-lg">儲存</button>
                 <button onclick="closeOrderModal()" class="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400">取消</button>
             </div>
         </div>
@@ -236,19 +267,19 @@
 
     <div id="commodityModal" class="modal">
         <div class="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full mx-4 max-h-screen overflow-y-auto">
-            <h2 class="text-xl font-bold mb-4 text-purple-600" id="commodityModalTitle">編輯商品</h2>
+            <h2 class="text-xl font-bold mb-4 text-primary" id="commodityModalTitle">編輯商品</h2>
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">商品編號</label>
-                    <input type="text" id="editCommodityCode" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    <input type="text" id="editCommodityCode" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2" style="--tw-ring-color: #a89f91;">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">服裝款式</label>
-                    <input type="text" id="editCommodityName" placeholder="例：復古牛仔外套" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    <input type="text" id="editCommodityName" placeholder="例：復古牛仔外套" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2" style="--tw-ring-color: #a89f91;">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">類別</label>
-                    <select id="editCommodityCategory" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    <select id="editCommodityCategory" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2" style="--tw-ring-color: #a89f91;">
                         <option value="上衣">上衣</option>
                         <option value="褲子">褲子</option>
                         <option value="裙子">裙子</option>
@@ -260,7 +291,7 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">尺寸</label>
-                        <select id="editCommoditySize" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <select id="editCommoditySize" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2" style="--tw-ring-color: #a89f91;">
                             <option value="XS">XS</option>
                             <option value="S">S</option>
                             <option value="M">M</option>
@@ -271,22 +302,22 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">顏色</label>
-                        <input type="text" id="editCommodityColor" placeholder="例：深藍色" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <input type="text" id="editCommodityColor" placeholder="例：深藍色" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2" style="--tw-ring-color: #a89f91;">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">價格 (NT$)</label>
-                        <input type="number" id="editCommodityPrice" min="0" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <input type="number" id="editCommodityPrice" min="0" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2" style="--tw-ring-color: #a89f91;">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">庫存</label>
-                        <input type="number" id="editCommodityInventory" min="0" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <input type="number" id="editCommodityInventory" min="0" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2" style="--tw-ring-color: #a89f91;">
                     </div>
                 </div>
             </div>
             <div class="flex gap-3 mt-6">
-                <button onclick="saveCommodity()" class="flex-1 bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600">儲存</button>
+                <button onclick="saveCommodity()" class="flex-1 btn-primary text-white px-4 py-2 rounded-lg">儲存</button>
                 <button onclick="closeCommodityModal()" class="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400">取消</button>
             </div>
         </div>
@@ -376,10 +407,6 @@
                 tr.innerHTML = 
                     '<td class="px-6 py-4 text-sm font-medium text-gray-800">' + order.order_code + '</td>' +
                     '<td class="px-6 py-4 text-sm text-gray-800">' + order.clothing_name + '</td>' +
-                    '<td class="px-6 py-4 text-sm"><span class="px-2 py-1 bg-gray-100 rounded text-gray-700">' + order.size + '</span></td>' +
-                    '<td class="px-6 py-4 text-sm"><span class="px-2 py-1 bg-pink-100 rounded text-pink-700">' + order.color + '</span></td>' +
-                    '<td class="px-6 py-4 text-sm font-bold text-gray-800">' + order.quantity + ' 件</td>' +
-                    '<td class="px-6 py-4 text-sm text-gray-800">' + order.recipient + '</td>' +
                     '<td class="px-6 py-4 text-sm"><span class="px-2 py-1 rounded-full text-xs ' + status.color + '">' + status.text + '</span></td>' +
                     '<td class="px-6 py-4 text-sm">' +
                     '<button onclick="editOrder(' + order.id + ')" class="text-blue-600 hover:underline mr-2">編輯</button>' +
@@ -403,10 +430,10 @@
                 tr.innerHTML = 
                     '<td class="px-6 py-4 text-sm font-medium text-gray-800">' + c.commodity_code + '</td>' +
                     '<td class="px-6 py-4 text-sm text-gray-800">' + c.clothing_name + '</td>' +
-                    '<td class="px-6 py-4 text-sm"><span class="px-2 py-1 bg-purple-100 rounded text-purple-700">' + c.category + '</span></td>' +
+                    '<td class="px-6 py-4 text-sm"><span class="px-2 py-1 rounded" style="background-color: #c4b5a0; color: white;">' + c.category + '</span></td>' +
                     '<td class="px-6 py-4 text-sm"><span class="px-2 py-1 bg-gray-100 rounded text-gray-700">' + c.size + '</span></td>' +
-                    '<td class="px-6 py-4 text-sm"><span class="px-2 py-1 bg-pink-100 rounded text-pink-700">' + c.color + '</span></td>' +
-                    '<td class="px-6 py-4 text-sm font-bold text-green-600">NT$ ' + c.price.toLocaleString() + '</td>' +
+                    '<td class="px-6 py-4 text-sm"><span class="px-2 py-1 rounded" style="background-color: #d4cdc3; color: #5a5347;">' + c.color + '</span></td>' +
+                    '<td class="px-6 py-4 text-sm font-bold" style="color: #a89f91;">NT$ ' + c.price.toLocaleString() + '</td>' +
                     '<td class="px-6 py-4 text-sm"><span class="px-2 py-1 rounded-full text-xs ' + badgeClass + '">' + c.inventory + '</span></td>' +
                     '<td class="px-6 py-4 text-sm">' +
                     '<button onclick="editCommodity(' + c.id + ')" class="text-blue-600 hover:underline mr-2">編輯</button>' +

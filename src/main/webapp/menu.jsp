@@ -26,6 +26,36 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&family=Marcellus&display=swap"
     rel="stylesheet">
+    <style>
+/* 🔒 鎖住 header 排版，避免 logo 被擠動 */
+.w3l-header .navbar .container-fluid > .row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between !important;
+    width: 100%;
+    margin: 0;
+}
+
+/* 🔒 固定 logo 尺寸，避免圖片大小導致 layout 改變 */
+.w3l-header .navbar-brand img {
+    width: 220px !important;   /* 你的原本寬度 */
+    height: 40px !important;   /* 固定高度 */
+    object-fit: contain;       /* 保持比例縮放 */
+    display: block;
+}
+
+/* 🛡 防止 Bootstrap 或其他頁面的 CSS 蓋掉你的設定 */
+.w3l-header .navbar {
+    flex-wrap: nowrap !important;
+}
+
+/* 🔧 修復 col-auto 在某些頁面被壓縮造成跑版 */
+.w3l-header .col-auto {
+    display: flex;
+    align-items: center;
+}
+</style>
+    
 </head>
 <body>
 <form method="post" action="logout.jsp">
@@ -91,6 +121,15 @@
 %>
 <li class="nav-item">
   <a class="nav-link" href="manager3.jsp">管理者控制台</a>
+</li>
+<% } %>
+
+<!-- 商家控制台 (只有商家可見) -->
+<% 
+  if("4".equals(positionId)) { 
+%>
+<li class="nav-item">
+  <a class="nav-link" href="merchant.jsp">商家控制台</a>
 </li>
 <% } %>
 
