@@ -1,6 +1,8 @@
 <%@page contentType="text/html"%>
 <%@page pageEncoding="utf-8"%>
 <%@page import="java.sql.*"%>
+<%@page import="java.time.LocalDateTime"%>
+<%@page import="java.time.format.DateTimeFormatter"%>
 <jsp:useBean id='objDBConfig' scope='application' class='CZ.group.tool.database.DBConfig' />
 <html>
 <body>
@@ -22,12 +24,18 @@
         if (rs.next() && rs.getInt(1) > 0) {
             response.sendRedirect("signUp.jsp?status=IDexist");
         } else {
+        	// 取得當前日期時間
+            LocalDateTime now = LocalDateTime.now();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            String register_date = now.format(formatter);
             // If memberId does not exist, proceed with the INSERT operation
-            String sql = "INSERT INTO personal_information (memberId, memberPwd) VALUES (?, ?)";
+            String sql = "INSERT INTO personal_information (memberId, memberPwd, register_date) VALUES (?, ?, ?)";
             PreparedStatement pstmt = con.prepareStatement(sql);
             pstmt.setString(1, memberid);  // Set memberid in the query
             pstmt.setString(2, memberpwd); // Set memberpwd in the query
-
+            pstmt.setString(3, register_date); // 新增這行
+        
+          
             // Execute the query
             pstmt.executeUpdate();
             pstmt.close();
