@@ -266,6 +266,7 @@
 <a href="memberEdit1.jsp?memberId=<%=rs.getString("memberId")%>"  class="custom-button">編輯</a>
 <br><br>
 <a class="custom-button" href="my_wardrobe3.jsp">我的衣櫃</a>
+<a class="custom-button" href="Posts.jsp">新增貼文</a>
 </div>
 
 </body>
