@@ -58,11 +58,13 @@ if(paperrs.next()){
 				<span class="login100-form-title p-b-53">
 					會員登入
 					<%if (request.getParameter("status")!="" && request.getParameter("status")!=null){
-						if(request.getParameter("status").equals("loginerror")){ %>
-						<p><font color="red">帳號或密碼錯誤，請重新輸入!</font></p>
-					<%}else if(request.getParameter("status").equals("newmember")){%>
-						<p><font color="blue">成功加入會員!請使用您的帳密登入</font></p>
-					<%}else{} }%>					
+    if(request.getParameter("status").equals("loginerror")){ %>
+    <p><font color="red">帳號或密碼錯誤，請重新輸入!</font></p>
+<%}else if(request.getParameter("status").equals("newmember")){%>
+    <p><font color="blue">成功加入會員!請使用您的帳密登入</font></p>
+<%}else if(request.getParameter("status").equals("blacklisted")){%>
+    <p><font color="red">⚠️ 該帳號已被停權封禁<br>請聯繫系統管理員進行帳號解鎖</font></p>
+<%}else{} }%>					
 				</span>   
 			    <!--
 				<a href="#" class="btn-face m-b-20">

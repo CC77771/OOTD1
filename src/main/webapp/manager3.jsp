@@ -213,56 +213,14 @@ table img:hover {
     <li class="nav-item">
        <a class="nav-link" href="commentManagement.jsp">💬 評論審核</a>
     </li>
-    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#users">👥 使用者管理</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#analytics">📊 點擊率分析</button></li>
+    <li class="nav-item">
+       <a class="nav-link" href="userManagement.jsp">👥 使用者管理</a>
+    </li>    
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#analytics">📊 點擊率分析</button></li>    
 </ul>
 
-  <div class="tab-content" id="adminTabContent">
-
-        <!-- 評論審核
-        <div class="tab-pane fade show active" id="comments">
-            <div class="d-flex justify-content-between mb-3">
-                <div class="search-box">
-                    <input type="text" id="commentSearch" placeholder="搜尋評論...">
-                </div>
-            </div>
-            <table class="table table-hover">
-                <thead class="table-light">
-                    <tr><th>編號</th><th>評論者</th><th>貼文標題</th><th>評論內容</th><th>狀態</th><th>操作</th></tr>
-                </thead>
-                <tbody id="commentTable"></tbody>
-            </table>
-        </div>-->
-
-        <!-- 使用者管理 -->
-       <div class="tab-pane fade show active" id="users">
-            <div class="d-flex justify-content-between mb-3">
-                <div class="search-box">
-                    <input type="text" id="userSearch" placeholder="搜尋使用者...">
-                </div>
-            </div>
-            <table class="table table-hover">
-                <thead class="table-light">
-                    <tr><th>編號</th><th>使用者名稱</th><th>電子郵件</th><th>註冊日期</th><th>狀態</th><th>操作</th></tr>
-                </thead>
-                <tbody id="userTable"></tbody>
-            </table>
-        </div>
-
-        <!-- 客服支援 -->
-        <div class="tab-pane fade" id="feedback">
-            <div class="d-flex justify-content-between mb-3">
-                <div class="search-box">
-                    <input type="text" id="feedbackSearch" placeholder="搜尋回饋...">
-                </div>
-            </div>
-            <table class="table table-hover">
-                <thead class="table-light">
-                    <tr><th>編號</th><th>使用者</th><th>問題類型</th><th>內容</th><th>狀態</th><th>操作</th></tr>
-                </thead>
-                <tbody id="feedbackTable"></tbody>
-            </table>
-        </div>
+  <div class="tab-content" id="adminTabContent">   
+       
 
 <!-- 點擊率分析 -->
 <div class="tab-pane fade" id="analytics">
