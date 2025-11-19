@@ -394,11 +394,15 @@
                                 rs = pstmt.executeQuery();
                                 
                                 while (rs.next()) {
-                                    String userId = rs.getString("memberId");
-                                    String userNickName = rs.getString("nickName");
-                                    String userEmail = rs.getString("Email");
-                                    String userRegisterDate = rs.getString("register_date");
-                                    boolean userBlacklist = rs.getBoolean("blacklist");
+                                	String userId = rs.getString("memberId");
+                                	String userNickName = rs.getString("nickName");
+                                	String userEmail = rs.getString("Email");
+                                	String userRegisterDate = rs.getString("register_date");
+                                	// 格式化日期,只顯示日期部分
+                                	if (userRegisterDate != null && userRegisterDate.contains(" ")) {
+                                	    userRegisterDate = userRegisterDate.split(" ")[0];
+                                	}
+                                	boolean userBlacklist = rs.getBoolean("blacklist");
                                     
                                     String rowClass = userBlacklist ? "blacklisted" : "";
                                     String displayName = (userNickName != null && !userNickName.trim().isEmpty()) ? userNickName : "未設定";
