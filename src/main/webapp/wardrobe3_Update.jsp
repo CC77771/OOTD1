@@ -27,6 +27,7 @@ String clothing_code = multi.getParameter("clothing_code");
 String text_description = multi.getParameter("text_description");
 String brand = multi.getParameter("brand");
 String color_code = multi.getParameter("color_code");
+String size_code = multi.getParameter("size_code");
 
 // 連接資料庫
 String dbPath = objDBConfig.FilePath();
@@ -128,18 +129,21 @@ System.out.println("clothing_code: " + clothing_code);
 System.out.println("text_description: " + text_description);
 System.out.println("brand: " + brand);
 System.out.println("color_code: " + color_code);
+System.out.println("size_code: " + size_code);
 System.out.println("pic: " + pic);
 
 // 更新資料
-String sql = "UPDATE my_wardrobe SET text_description = ?, brand = ?, pic = ?, color_code = ? WHERE clothing_number = ? AND memberId = ? AND clothing_code = ?";
+String sql = "UPDATE my_wardrobe SET text_description = ?, brand = ?, pic = ?, color_code = ?, size_code = ? WHERE clothing_number = ? AND memberId = ? AND clothing_code = ?";
 PreparedStatement pstmt = con.prepareStatement(sql);
 pstmt.setString(1, text_description);
 pstmt.setString(2, brand);
 pstmt.setString(3, pic);
 pstmt.setString(4, color_code);
-pstmt.setLong(5, clothingNumberLong);
-pstmt.setString(6, memberId);
-pstmt.setString(7, clothing_code);
+pstmt.setString(5, size_code);
+pstmt.setLong(6, clothingNumberLong);
+pstmt.setString(7, memberId);
+pstmt.setString(8, clothing_code);
+
 
 // 執行 SQL
 int result = pstmt.executeUpdate();
@@ -147,7 +151,7 @@ System.out.println("\n✅ 受影響的資料筆數: " + result);
 
 // ✅ 驗證更新結果
 if(result > 0) {
-    String verifySql = "SELECT text_description, brand, pic, color_code FROM my_wardrobe WHERE clothing_number = ? AND memberId = ? AND clothing_code = ?";
+    String verifySql = "SELECT text_description, brand, pic, color_code, size_code FROM my_wardrobe WHERE clothing_number = ? AND memberId = ? AND clothing_code = ?";
     PreparedStatement verifyStmt = con.prepareStatement(verifySql);
     verifyStmt.setLong(1, clothingNumberLong);
     verifyStmt.setString(2, memberId);
@@ -160,6 +164,7 @@ if(result > 0) {
         System.out.println("brand: " + verifyRs.getString("brand"));
         System.out.println("pic: " + verifyRs.getString("pic"));
         System.out.println("color_code: " + verifyRs.getString("color_code"));
+        System.out.println("size_code: " + verifyRs.getString("size_code"));
     }
     verifyRs.close();
     verifyStmt.close();

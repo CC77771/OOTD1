@@ -61,6 +61,7 @@ String clothing_code = "";
 String text_description = "";
 String brand = "";
 String color_code = "";
+String size_code = "";
 %>
 <div class="form-group">
 <label class="form-label">衣物名稱</label>
@@ -100,6 +101,22 @@ String color_code = "";
 <option value="W">白</option>
 <option value="Y">黃</option>
 <option value="O">其他</option>
+</select>
+</div>
+
+<div class="form-group">
+<label class="form-label">衣物尺寸</label>
+<select name="size_code" class="form-select" required>
+<option value="">請選擇尺寸</option>
+<option value="XS">XS</option>
+<option value="S">S</option>
+<option value="M">M</option>
+<option value="L">L</option>
+<option value="XL">XL</option>
+<option value="2L">XXL</option>
+<option value="3L">XXXL</option>
+<option value="4L">XXXXL</option>
+<option value="5L">XXXXXL</option>
 </select>
 </div>
 

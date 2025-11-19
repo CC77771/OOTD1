@@ -26,6 +26,7 @@ String clothing_code = multi.getParameter("clothing_code");
 String text_description = multi.getParameter("text_description");
 String brand = multi.getParameter("brand");
 String color_code = multi.getParameter("color_code");
+String size_code = multi.getParameter("size_code");
 
 System.out.println("memberId: " + memberId);
 System.out.println("clothing_code: " + clothing_code);
@@ -40,7 +41,7 @@ Class.forName("net.ucanaccess.jdbc.UcanaccessDriver");
 Connection con = DriverManager.getConnection("jdbc:ucanaccess://" + dbPath);
 
 // 使用 PreparedStatement 防止 SQL Injection
-String sql = "INSERT INTO my_wardrobe (memberId, clothing_code, text_description, brand, pic, color_code) VALUES(?, ?, ?, ?, ?, ?)";
+String sql = "INSERT INTO my_wardrobe (memberId, clothing_code, text_description, brand, pic, color_code, size_code) VALUES(?, ?, ?, ?, ?, ?, ?)";
 PreparedStatement pstmt = con.prepareStatement(sql);
 pstmt.setString(1, memberId);
 pstmt.setString(2, clothing_code);
@@ -48,6 +49,7 @@ pstmt.setString(3, text_description);
 pstmt.setString(4, brand);
 pstmt.setString(5, pic);
 pstmt.setString(6, color_code);
+pstmt.setString(7, size_code);
 
 // 執行 SQL
 pstmt.executeUpdate();
