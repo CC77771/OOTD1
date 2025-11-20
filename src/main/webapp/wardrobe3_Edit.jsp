@@ -11,7 +11,7 @@
     String text_description = "";
     String brand = "";
     String color_code = "";
-    String size_code = "";
+    String size = "";
     String pic = "";
     
     if(clothing_number != null) {
@@ -31,7 +31,7 @@
                 text_description = rs.getString("text_description");
                 brand = rs.getString("brand");
                 color_code = rs.getString("color_code");
-                color_code = rs.getString("size_code");
+                size = rs.getString("size");
                 pic = rs.getString("pic");
             }
             
@@ -92,7 +92,7 @@
         <form action="wardrobe3_Update.jsp" method="post" enctype="multipart/form-data">
             <input type="hidden" name="memberId" value="<%= memberId %>">
             <input type="hidden" name="oldClothingCode" value="<%= clothing_code %>">
-            <input type="hidden" name="oldSizeCode" value="<%= size_code %>">
+            <input type="hidden" name="oldSize" value="<%= size %>">
             <input type="hidden" name="clothing_number" value="<%= clothing_number %>">
             <div class="form-group">
                 <label class="form-label">衣物圖片</label>                
@@ -147,18 +147,7 @@
             
             <div class="form-group">
                 <label class="form-label">尺寸</label>
-                <select name="size_code" class="form-select">
-                    <option value="">請選擇尺寸</option>
-                    <option value="XS" <%= "XS".equals(size_code) ? "selected" : "" %>>XS</option>
-                    <option value="S" <%= "S".equals(size_code) ? "selected" : "" %>>S</option>
-                    <option value="M" <%= "M".equals(size_code) ? "selected" : "" %>>M</option>
-                    <option value="L" <%= "L".equals(size_code) ? "selected" : "" %>>L</option>
-                    <option value="XL" <%= "XL".equals(size_code) ? "selected" : "" %>>XL</option>
-                    <option value="2L" <%= "2L".equals(size_code) ? "selected" : "" %>>XXL</option>
-                    <option value="3L" <%= "3L".equals(size_code) ? "selected" : "" %>>XXXL</option>
-                    <option value="4L" <%= "4L".equals(size_code) ? "selected" : "" %>>XXXXL</option>
-                    <option value="5L" <%= "5L".equals(size_code) ? "selected" : "" %>>XXXXXL</option>                  
-                </select>
+                <input type="text" name="size" class="form-input" placeholder="例如:例如:衣物尺碼M、40、鞋碼25cm" value="<%= size != null ? size : "" %>">
             </div>
             
             <div class="form-actions">

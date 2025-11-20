@@ -66,7 +66,7 @@ response.setDateHeader("Expires", 0);
                 item.put("brand", rs.getString("brand"));
                 item.put("pic", rs.getString("pic"));
                 item.put("color_code", rs.getString("color_code"));
-                item.put("size_code", rs.getString("size_code"));
+                item.put("size", rs.getString("size"));             
                 
                 // 根據 clothing_code 分類
                 String type = rs.getString("clothing_code");
@@ -276,7 +276,7 @@ response.setDateHeader("Expires", 0);
                         String textDescription = item.get("text_description");
                         String pic = item.get("pic");
                         String colorCode = item.get("color_code");
-                        String size_code = item.get("size_code");
+                        String size = item.get("size");
                         String colorName = colorMap.get(colorCode);
                         if(colorName == null) colorName = colorCode;
                 %>
@@ -291,8 +291,8 @@ response.setDateHeader("Expires", 0);
                             <% if(colorCode != null && !colorCode.isEmpty()) { %>
                                 <div class="item-details">顏色: <%= colorName %></div>
                             <% } %>
-                            <% if(size_code != null && !size_code.isEmpty()) { %>
-                                <div class="item-details">尺寸: <%= size_code %></div>
+                            <% if(size != null && !size.isEmpty()) { %>
+                                <div class="item-details">尺寸: <%= size %></div>
                             <% } %>
                         </div>
                         <div class="item-actions">
