@@ -225,7 +225,7 @@ function initData() {
     analyticsData = [
         {id: 1, title: '秋季OOTD分享', author: 'user_01', totalClicks: 2580, todayClicks: 156, avgTime: '2:45', engagement: '8.5%'},
         {id: 2, title: '街頭風穿搭', author: 'user_02', totalClicks: 1920, todayClicks: 98, avgTime: '2:12', engagement: '6.8%'},
-        {id: 3, title: '冬季大衣推薦', author: 'user_03', totalClicks: 3150, todayClicks: 203, avgTime: '3:20', engagement: '9.2%'},
+        {id: 3, title: '冬季衣服推薦', author: 'user_03', totalClicks: 3150, todayClicks: 203, avgTime: '3:20', engagement: '9.2%'},
         {id: 4, title: '極簡風格穿搭', author: 'user_01', totalClicks: 1650, todayClicks: 87, avgTime: '1:55', engagement: '5.4%'},
         {id: 5, title: '約會穿搭分享', author: 'user_04', totalClicks: 2340, todayClicks: 142, avgTime: '2:30', engagement: '7.6%'},
         {id: 6, title: '韓系穿搭教學', author: 'user_02', totalClicks: 2890, todayClicks: 178, avgTime: '2:58', engagement: '8.9%'},
