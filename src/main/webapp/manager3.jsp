@@ -1,6 +1,14 @@
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
-<%@ page import="java.util.*, java.text.*" %>
-<%@include file ="menu.jsp" %>
+<%@ page import="java.util.*, java.text.*, java.sql.Connection, java.sql.PreparedStatement, java.sql.ResultSet, java.sql.DriverManager" %>
+<jsp:useBean id="objDBConfig" scope="session" class="CZ.group.tool.database.DBConfig" />
+
+<%!
+    // 資料庫連線方法
+    public Connection getConnection(String dbPath) throws Exception {
+        Class.forName("net.ucanaccess.jdbc.UcanaccessDriver");
+        return DriverManager.getConnection("jdbc:ucanaccess://" + dbPath);
+    }
+%>
 
 <%
     // === 模擬 Session 登入資料 ===
@@ -10,7 +18,57 @@
     // 取得當前日期
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
     String currentDate = sdf.format(new Date());
+    
+    // === 資料庫連線 ===
+    String dbPath = objDBConfig.FilePath();
+    
+    Connection conn = null;
+    PreparedStatement pstmt = null;
+    ResultSet rs = null;
+    
+    // 儲存資料的 ArrayList
+    ArrayList<Map<String, Object>> analyticsDataList = new ArrayList<>();
+    
+    try {
+        conn = getConnection(dbPath);
+        
+        // 使用 GROUP BY 確保每個貼文只出現一次，同時統計留言數
+        String sql = "SELECT p.postid, " +
+                     "       MAX(p.memberid) as memberid, " +
+                     "       MAX(p.wearId) as wearId, " +
+                     "       MAX(p.view) as view, " +
+                     "       SUM(CASE WHEN p.message IS NOT NULL AND p.message <> '' THEN 1 ELSE 0 END) as commentCount " +
+                     "FROM personal_wear p " +
+                     "WHERE p.post_state = True " +
+                     "GROUP BY p.postid " +
+                     "ORDER BY MAX(p.view) DESC";
+        
+        pstmt = conn.prepareStatement(sql);
+        rs = pstmt.executeQuery();
+        
+        while(rs.next()) {
+            Map<String, Object> data = new HashMap<>();
+            
+            data.put("id", rs.getInt("postid"));
+            data.put("title", rs.getString("wearId"));
+            data.put("author", rs.getString("memberid"));
+            data.put("totalClicks", rs.getInt("view"));
+            data.put("totalComments", rs.getInt("commentCount"));
+            
+            analyticsDataList.add(data);
+        }
+        
+    } catch(Exception e) {
+        out.println("<div class='alert alert-danger'>資料庫錯誤: " + e.getMessage() + "</div>");
+        e.printStackTrace();
+    } finally {
+        if(rs != null) try { rs.close(); } catch(Exception e) {}
+        if(pstmt != null) try { pstmt.close(); } catch(Exception e) {}
+        if(conn != null) try { conn.close(); } catch(Exception e) {}
+    }
 %>
+
+<%@include file ="menu.jsp" %>
 
 <!DOCTYPE html>
 <html>
@@ -203,38 +261,36 @@ body {
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-// 從 JSP 傳入的當前日期
-var currentDate = '<%= currentDate %>';
+// 從資料庫獲取的真實數據
+var analyticsData = [
+    <%
+    for(int i = 0; i < analyticsDataList.size(); i++) {
+        Map<String, Object> data = analyticsDataList.get(i);
+        String title = data.get("title") != null ? data.get("title").toString().replace("'", "\\'").replace("\n", " ").replace("\r", " ") : "";
+    %>
+    {
+        id: <%= data.get("id") %>,
+        title: '<%= title %>',
+        author: '<%= data.get("author") %>',
+        totalClicks: <%= data.get("totalClicks") %>,
+        totalComments: <%= data.get("totalComments") %>
+    }<%= (i < analyticsDataList.size() - 1) ? "," : "" %>
+    <%
+    }
+    %>
+];
 
-// 資料儲存
-var analyticsData = [];
-
-// 初始化資料
-function initData() {
-    console.log('開始初始化資料...');
-
-    // 點擊率分析模擬數據
-    analyticsData = [
-        {id: 1, title: '秋季OOTD分享', author: 'user_01', totalClicks: 2580, totalComments: 156},
-        {id: 2, title: '街頭風穿搭', author: 'user_02', totalClicks: 1920, totalComments: 98},
-        {id: 3, title: '冬季衣服推薦', author: 'user_03', totalClicks: 3150, totalComments: 203},
-        {id: 4, title: '極簡風格穿搭', author: 'user_01', totalClicks: 1650, totalComments: 87},
-        {id: 5, title: '約會穿搭分享', author: 'user_04', totalClicks: 2340, totalComments: 142},
-        {id: 6, title: '韓系穿搭教學', author: 'user_02', totalClicks: 2890, totalComments: 178},
-        {id: 7, title: '復古風搭配', author: 'user_03', totalClicks: 1480, totalComments: 76},
-        {id: 8, title: '運動休閒風', author: 'user_01', totalClicks: 2120, totalComments: 125},
-        {id: 9, title: '職場穿搭分享', author: 'user_04', totalClicks: 1850, totalComments: 95},
-        {id: 10, title: '夏日清新風格', author: 'user_02', totalClicks: 3420, totalComments: 215}
-    ];
-    console.log('點擊率資料:', analyticsData);
-
-    renderAnalytics();
-    console.log('初始化完成！');
-}
+console.log('從資料庫載入 ' + analyticsData.length + ' 筆資料');
 
 // 渲染點擊率分析
 function renderAnalytics() {
     console.log('開始渲染點擊率分析...');
+    
+ // 檢查是否有資料
+    if(analyticsData.length === 0) {
+        console.log('沒有資料可以渲染');
+        return;
+    }
     
     // 渲染數據表格
     var tbody = document.getElementById('analyticsTable');
@@ -265,29 +321,35 @@ function renderAnalytics() {
     }
     
     var topPosts = analyticsData.slice().sort(function(a, b) { return b.totalClicks - a.totalClicks; }).slice(0, 10);
+
+    if(topPosts.length === 0) {
+        topPostsDiv.innerHTML = '<div style="text-align:center;padding:40px;color:#6c757d;">目前沒有貼文資料</div>';
+        return;
+    }
+
     var maxClicks = topPosts[0].totalClicks;
     var topPostsHTML = '';
     
     topPosts.forEach(function(post, index) {
         var percentage = (post.totalClicks / maxClicks * 100).toFixed(1);
         topPostsHTML += '<div class="rank-item">' +
-            '<div class="rank-number">' + (index + 1) + '</div>' +
-            '<div class="rank-info">' +
-            '<div><strong>' + post.title + '</strong></div>' +
-            '<div class="rank-bar"><div class="rank-bar-fill" style="width: ' + percentage + '%"></div></div>' +
-            '<small class="text-muted">' + post.totalClicks.toLocaleString() + ' 次點擊</small>' +
-            '</div></div>';
+        '<div class="rank-number">' + (index + 1) + '</div>' +
+        '<div class="rank-info">' +
+        '<div><strong>' + post.title + '</strong></div>' +
+        '<div class="rank-bar"><div class="rank-bar-fill" style="width: ' + percentage + '%"></div></div>' +
+        '<small class="text-muted">' + post.totalClicks.toLocaleString() + ' 次點擊</small>' +
+        '</div></div>';
     });
     topPostsDiv.innerHTML = topPostsHTML;
     console.log('熱門貼文排行渲染完成！');
 }
 
-// 頁面載入時初始化
+//頁面載入時初始化
 console.log('準備初始化...');
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initData);
+    document.addEventListener('DOMContentLoaded', renderAnalytics);
 } else {
-    initData();
+    renderAnalytics();
 }
 </script>
 </body>

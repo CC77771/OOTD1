@@ -371,10 +371,12 @@
                 <div class="swiper main-swiper py-4" data-aos="fade-up" data-aos-delay="600">
                     <div class="swiper-wrapper d-flex border-animation-left">
                         <% int num=1;                       
-                        while(rs.next()){ 
-                        	String wearId = rs.getString("wearId");%>
+while(rs.next()){ 
+    String postid = rs.getString("postid");  // 改用小寫 postid
+    int viewCount = rs.getInt("view"); // 取得瀏覽次數
+%>
                             <!-- 帖子1 -->
-                            <div class="swiper-slide">
+                             <div class="swiper-slide" data-postid="<%= postid %>">
                                 <div class="post-item">
                                     <div class="image-holder">
                                         <a href="#">
@@ -412,11 +414,12 @@
                                                 <span class="likes-count"><%=rs.getInt("like") %></span>&nbsp;                                                  
                                               <span class="comments-count">
                                 <% 
-                                    // 查詢留言數量
-                                    String messageQuery = "SELECT COUNT(*) AS message_count FROM personal_wear WHERE wearId = ? AND message IS NOT NULL AND TRIM(message) != ''";
-                                    PreparedStatement pstmt2 = con.prepareStatement(messageQuery);
-                                    pstmt2.setString(1, wearId);  // 使用取得的 wearId
-                                    ResultSet messageRs = pstmt2.executeQuery();
+                             // 查詢留言數量
+                                String messageQuery = "SELECT COUNT(*) AS message_count FROM personal_wear WHERE postid = ? AND message IS NOT NULL AND TRIM(message) != ''";
+                                PreparedStatement pstmt2 = con.prepareStatement(messageQuery);
+                                pstmt2.setString(1, postid);  // ✅ 改用 postid
+                                ResultSet messageRs = pstmt2.executeQuery();
+
 
                                     // 顯示留言數量
                                     if (messageRs.next()) {
@@ -430,6 +433,9 @@
                                 %>
                             </span>                                            
                        &nbsp;&nbsp;&nbsp;<span class="stars-count"><%=rs.getInt("collect") %></span>     <!-- 收藏數量 -->
+                        <!-- 新增瀏覽數顯示 -->
+                        <br>
+                          👁️&nbsp;<span class="view-count"><%= viewCount %></span>
                                             </div>
                                         </div>
                                     </div>
@@ -445,15 +451,12 @@
                         <div class="modal-content">
                             <span class="close" onclick="closeModal()">&times;</span>
  <% 
-    // 從請求中獲取 wearId
-    String wearId = request.getParameter("wearId");
+    String postid2 = request.getParameter("postid");  // ✅ 改成 postid
 
-    // 確保 wearId 存在，避免 SQL 查詢錯誤
-    if (wearId != null && !wearId.isEmpty()) {
-        // 查詢此 wearId 的留言
-        String commentQuery = "SELECT message FROM personal_wear WHERE wearId = ?";
+    if (postid2 != null && !postid2.isEmpty()) {
+        String commentQuery = "SELECT message FROM personal_wear WHERE postid = ?";  // ✅ 改成 postid
         PreparedStatement mes = con.prepareStatement(commentQuery);
-        mes.setString(1, wearId);  // 確保每次查詢設置新的 wearId
+        mes.setString(1, postid2);  // ✅ 改成 postid
         ResultSet commentRs = mes.executeQuery();
 %>
 
@@ -483,15 +486,16 @@
                             <!-- 已提交留言顯示區域 -->
 
 <%
-String newWearId = null;
-String newQuery = "SELECT * FROM personal_wear"; // 替换条件
+String newPostid = null;  // ✅ 改成 postid
+String newQuery = "SELECT * FROM personal_wear";
 
 Statement newStmt = con.createStatement();
 ResultSet newRs = newStmt.executeQuery(newQuery);
 
 if (newRs.next()) {
-    newWearId = newRs.getString("wearId"); // 获取新的 wearId
+    newPostid = newRs.getString("postid");  // ✅ 改成 postid
 }
+
 
 // 关闭资源
 if (newRs != null) newRs.close();
@@ -503,9 +507,9 @@ if (newStmt != null) newStmt.close();
                             <!-- 输入留言 -->
                             <form name="form" action="update.jsp" method="post">                          
             <textarea name="text" id="commentText" placeholder="請輸入您的留言..." rows="5"></textarea>
-            <!-- 隱藏 wearId -->
+            <!-- 隱藏  -->
                <input type="hidden" name="memberId" value="<%= member %>">
-            <input type="hidden" name="wearId" value="<%= newWearId %>"> <!-- 傳遞正確的 wearId -->
+               <input type="hidden" name="postid" id="hiddenPostid" value="">
             <button type="submit" name="submitButton" onclick="submitComment()">提交留言</button>
         </form>
                             
@@ -524,18 +528,106 @@ if (newStmt != null) newStmt.close();
 <!-- JS -->
 <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
 <script>
-    var swiper = new Swiper('.main-swiper', {
-        slidesPerView: 1,
-        spaceBetween: 10,
-        navigation: {
-            nextEl: '.icon-arrow-right',
-            prevEl: '.icon-arrow-left'
-        },
-        pagination: {
-            el: '.swiper-pagination',
-            clickable: true,
-        },
-    });
+// Swiper 初始化
+var swiper = new Swiper('.main-swiper', {
+    slidesPerView: 1,
+    spaceBetween: 10,
+    navigation: {
+        nextEl: '.icon-arrow-right',
+        prevEl: '.icon-arrow-left'
+    },
+    pagination: {
+        el: '.swiper-pagination',
+        clickable: true,
+    },
+});
+
+console.log('Swiper 初始化完成');
+console.log('總共有 ' + swiper.slides.length + ' 張投影片');
+
+// 記錄已經計數過的貼文
+var viewedPosts = new Set();
+
+// 監聽 Swiper 滑動事件
+swiper.on('slideChange', function () {
+    console.log('=== 投影片切換 ===');
+    console.log('當前索引: ' + swiper.activeIndex);
+    
+    var activeSlide = swiper.slides[swiper.activeIndex];
+    var postid = activeSlide.getAttribute('data-postid');
+    
+    console.log('當前 postid: ' + postid);
+    console.log('是否已計數: ' + viewedPosts.has(postid));
+    
+    if (postid && !viewedPosts.has(postid)) {
+        viewedPosts.add(postid);
+        updateViewCount(postid, activeSlide);
+    }
+});
+
+// 頁面載入時，計算第一張可見的貼文
+window.addEventListener('load', function() {
+    console.log('=== 頁面載入完成 ===');
+    setTimeout(function() {
+        if (swiper.slides && swiper.slides.length > 0) {
+            var firstSlide = swiper.slides[0];
+            var postid = firstSlide.getAttribute('data-postid');
+            
+            console.log('第一張投影片 postid: ' + postid);
+            
+            if (postid && !viewedPosts.has(postid)) {
+                viewedPosts.add(postid);
+                updateViewCount(postid, firstSlide);
+            } else {
+                console.log('無法取得 postid 或已計數');
+            }
+        } else {
+            console.log('找不到投影片');
+        }
+    }, 500);
+});
+
+// 更新瀏覽次數的函數
+function updateViewCount(postid, slideElement) {
+    console.log('=== 呼叫 updateViewCount ===');
+    console.log('postid: ' + postid);
+    console.log('fetch URL: updateView.jsp?postid=' + postid);
+    
+    fetch('updateView.jsp?postid=' + postid)
+        .then(response => {
+            console.log('收到回應');
+            return response.text();
+        })
+        .then(data => {
+            console.log('回應內容: ' + data);
+            var newCount = data.trim();
+            if (newCount !== 'error' && !isNaN(newCount)) {
+                var viewCountElement = slideElement.querySelector('.view-count');
+                if (viewCountElement) {
+                    viewCountElement.textContent = newCount;
+                    console.log('✅ 瀏覽次數已更新為: ' + newCount);
+                } else {
+                    console.log('❌ 找不到 .view-count 元素');
+                }
+            } else {
+                console.error('❌ 更新失敗，收到: ' + data);
+            }
+        })
+        .catch(error => {
+            console.error('❌ Fetch 錯誤:', error);
+        });
+}
+    // ========== 瀏覽次數追蹤程式碼結束 ==========
+
+    // 你原本的其他函數（點讚、留言、收藏等）
+    function toggleLike(element) {
+        const icon = element.querySelector('svg path');
+        icon.style.fill = icon.style.fill === 'red' ? 'none' : 'red';
+        
+        const likeCountElement = element.closest('.post-actions').querySelector('.likes-count');
+        let likeCount = parseInt(likeCountElement.textContent);
+        likeCountElement.textContent = (icon.style.fill === 'red') ? likeCount + 1 : likeCount - 1;
+    }
 
     // 点赞功能
     function toggleLike(element) {
@@ -550,7 +642,15 @@ if (newStmt != null) newStmt.close();
 
     // 留言功能
     function toggleComment(element) {
-        document.getElementById('commentModal').style.display = 'flex'; // 打開留言模態框
+    	// 找到當前貼文的 postid
+        var postSlide = element.closest('.swiper-slide');
+        var postid = postSlide.getAttribute('data-postid');
+        
+        // 設置隱藏欄位的值
+        document.getElementById('hiddenPostid').value = postid;
+        
+        // 打開留言模態框
+        document.getElementById('commentModal').style.display = 'flex';
     }
 
     // 關閉留言模態框
