@@ -166,18 +166,12 @@ body {
 
     <!-- 點擊率分析內容 -->
     <div class="analytics-content">
-        <!-- 第一行：兩個排行榜並排 -->
+        <!-- 第一行：熱門貼文排行 -->
         <div class="row">
-            <div class="col-md-6">
+            <div class="col-md-12">
                 <div class="analytics-card">
                     <h5>🏆 熱門貼文排行 TOP 10</h5>
                     <div id="topPostsRanking"></div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="analytics-card">
-                    <h5>👤 活躍用戶排行 TOP 10</h5>
-                    <div id="topUsersRanking"></div>
                 </div>
             </div>
         </div>
@@ -195,9 +189,7 @@ body {
                                     <th>標題</th>
                                     <th>發布者</th>
                                     <th>總點擊</th>
-                                    <th>今日點擊</th>
-                                    <th>平均停留時間</th>
-                                    <th>互動率</th>
+                                    <th>總留言數</th>
                                 </tr>
                             </thead>
                             <tbody id="analyticsTable"></tbody>
@@ -223,16 +215,16 @@ function initData() {
 
     // 點擊率分析模擬數據
     analyticsData = [
-        {id: 1, title: '秋季OOTD分享', author: 'user_01', totalClicks: 2580, todayClicks: 156, avgTime: '2:45', engagement: '8.5%'},
-        {id: 2, title: '街頭風穿搭', author: 'user_02', totalClicks: 1920, todayClicks: 98, avgTime: '2:12', engagement: '6.8%'},
-        {id: 3, title: '冬季衣服推薦', author: 'user_03', totalClicks: 3150, todayClicks: 203, avgTime: '3:20', engagement: '9.2%'},
-        {id: 4, title: '極簡風格穿搭', author: 'user_01', totalClicks: 1650, todayClicks: 87, avgTime: '1:55', engagement: '5.4%'},
-        {id: 5, title: '約會穿搭分享', author: 'user_04', totalClicks: 2340, todayClicks: 142, avgTime: '2:30', engagement: '7.6%'},
-        {id: 6, title: '韓系穿搭教學', author: 'user_02', totalClicks: 2890, todayClicks: 178, avgTime: '2:58', engagement: '8.9%'},
-        {id: 7, title: '復古風搭配', author: 'user_03', totalClicks: 1480, todayClicks: 76, avgTime: '1:48', engagement: '5.1%'},
-        {id: 8, title: '運動休閒風', author: 'user_01', totalClicks: 2120, todayClicks: 125, avgTime: '2:22', engagement: '7.2%'},
-        {id: 9, title: '職場穿搭分享', author: 'user_04', totalClicks: 1850, todayClicks: 95, avgTime: '2:05', engagement: '6.3%'},
-        {id: 10, title: '夏日清新風格', author: 'user_02', totalClicks: 3420, todayClicks: 215, avgTime: '3:35', engagement: '9.8%'}
+        {id: 1, title: '秋季OOTD分享', author: 'user_01', totalClicks: 2580, totalComments: 156},
+        {id: 2, title: '街頭風穿搭', author: 'user_02', totalClicks: 1920, totalComments: 98},
+        {id: 3, title: '冬季衣服推薦', author: 'user_03', totalClicks: 3150, totalComments: 203},
+        {id: 4, title: '極簡風格穿搭', author: 'user_01', totalClicks: 1650, totalComments: 87},
+        {id: 5, title: '約會穿搭分享', author: 'user_04', totalClicks: 2340, totalComments: 142},
+        {id: 6, title: '韓系穿搭教學', author: 'user_02', totalClicks: 2890, totalComments: 178},
+        {id: 7, title: '復古風搭配', author: 'user_03', totalClicks: 1480, totalComments: 76},
+        {id: 8, title: '運動休閒風', author: 'user_01', totalClicks: 2120, totalComments: 125},
+        {id: 9, title: '職場穿搭分享', author: 'user_04', totalClicks: 1850, totalComments: 95},
+        {id: 10, title: '夏日清新風格', author: 'user_02', totalClicks: 3420, totalComments: 215}
     ];
     console.log('點擊率資料:', analyticsData);
 
@@ -259,9 +251,7 @@ function renderAnalytics() {
             '<td>' + data.title + '</td>' +
             '<td>' + data.author + '</td>' +
             '<td><strong>' + data.totalClicks.toLocaleString() + '</strong></td>' +
-            '<td><span class="badge bg-info">' + data.todayClicks + '</span></td>' +
-            '<td>' + data.avgTime + '</td>' +
-            '<td><span class="badge bg-success">' + data.engagement + '</span></td>' +
+            '<td><span class="badge bg-primary">' + data.totalComments + '</span></td>' +
             '</tr>';
         tbody.innerHTML += row;
     });
@@ -290,41 +280,6 @@ function renderAnalytics() {
     });
     topPostsDiv.innerHTML = topPostsHTML;
     console.log('熱門貼文排行渲染完成！');
-
-    // 渲染活躍用戶排行
-    var topUsersDiv = document.getElementById('topUsersRanking');
-    if (!topUsersDiv) {
-        console.error('找不到 topUsersRanking 元素！');
-        return;
-    }
-    
-    var userClicks = {};
-    analyticsData.forEach(function(data) {
-        if (!userClicks[data.author]) {
-            userClicks[data.author] = 0;
-        }
-        userClicks[data.author] += data.totalClicks;
-    });
-    
-    var topUsers = Object.keys(userClicks).map(function(username) {
-        return {username: username, clicks: userClicks[username]};
-    }).sort(function(a, b) { return b.clicks - a.clicks; }).slice(0, 10);
-    
-    var maxUserClicks = topUsers[0].clicks;
-    var topUsersHTML = '';
-    
-    topUsers.forEach(function(user, index) {
-        var percentage = (user.clicks / maxUserClicks * 100).toFixed(1);
-        topUsersHTML += '<div class="rank-item">' +
-            '<div class="rank-number">' + (index + 1) + '</div>' +
-            '<div class="rank-info">' +
-            '<div><strong>' + user.username + '</strong></div>' +
-            '<div class="rank-bar"><div class="rank-bar-fill" style="width: ' + percentage + '%"></div></div>' +
-            '<small class="text-muted">' + user.clicks.toLocaleString() + ' 總點擊</small>' +
-            '</div></div>';
-    });
-    topUsersDiv.innerHTML = topUsersHTML;
-    console.log('活躍用戶排行渲染完成！');
 }
 
 // 頁面載入時初始化
