@@ -3,12 +3,21 @@
 <%@include file ="menu.jsp" %>
 <jsp:useBean id='objDBConfig' scope='session' class='CZ.group.tool.database.DBConfig' />
 <%	
-	Class.forName("net.ucanaccess.jdbc.UcanaccessDriver");
-	Connection con=DriverManager.getConnection("jdbc:ucanaccess://"+objDBConfig.FilePath()+";");
-	Statement smt= con.createStatement();
-	String sql = "SELECT * FROM personal_wear;";
-	ResultSet rs = smt.executeQuery(sql);
-	%>	
+Class.forName("net.ucanaccess.jdbc.UcanaccessDriver");
+Connection con=DriverManager.getConnection("jdbc:ucanaccess://"+objDBConfig.FilePath()+";");
+Statement smt= con.createStatement();
+String sql = "SELECT postid, " +
+             "       MAX(memberId) as memberId, " +
+             "       MAX(wearId) as wearId, " +
+             "       MAX(pic) as pic, " +
+             "       MAX([like]) as [like], " +
+             "       MAX(collect) as collect, " +
+             "       MAX(view) as view " +
+             "FROM personal_wear " +
+             "WHERE post_state = True " +
+             "GROUP BY postid " +
+             "ORDER BY MAX(view) DESC";
+ResultSet rs = smt.executeQuery(sql);	%>	
 	<%
     String member = (String) session.getAttribute("accessId");
 %>

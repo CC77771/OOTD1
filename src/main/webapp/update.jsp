@@ -5,49 +5,84 @@
 <html>
 <body>
 <%
-String wearId = request.getParameter("wearId"); // 獲取 wearId
+String postid = request.getParameter("postid"); // 獲取 postid
 String commentText = request.getParameter("text"); // 獲取留言文本
-String memberId = request.getParameter("memberId");
-if (wearId != null && commentText != null && !commentText.trim().isEmpty()) {
+String memberId = request.getParameter("memberId"); // 獲取會員ID
+
+if (postid != null && commentText != null && !commentText.trim().isEmpty() && memberId != null) {
     Connection con = null;
     PreparedStatement pstmt = null;
+    ResultSet rs = null;
+    
     try {
         // 創建數據庫連接
         con = DriverManager.getConnection("jdbc:ucanaccess://" + objDBConfig.FilePath() + ";");
 
-        // SQL 插入語句
-        String insertCommentQuery = "INSERT INTO personal_wear (wearId, message,memberId) VALUES (?, ?, ?)";
-        pstmt = con.prepareStatement(insertCommentQuery);
-
-        // 設定參數
-        pstmt.setString(1, wearId);
-        pstmt.setString(2, commentText);
-        pstmt.setString(3, memberId);
-        // 執行更新操作
-        pstmt.executeUpdate();
+        // 先查詢該 postid 的原始貼文資料
+        String selectQuery = "SELECT memberid, wearId, pic, [like], collect, view, post_state FROM personal_wear WHERE postid = ? AND message IS NULL";
+        pstmt = con.prepareStatement(selectQuery);
+        pstmt.setInt(1, Integer.parseInt(postid));
+        rs = pstmt.executeQuery();
+        
+        if (rs.next()) {
+            int originalMemberId = rs.getInt("memberid");
+            String wearId = rs.getString("wearId");
+            String pic = rs.getString("pic");
+            int likeCount = rs.getInt("like");
+            int collectCount = rs.getInt("collect");
+            int viewCount = rs.getInt("view");
+            boolean postState = rs.getBoolean("post_state");
+            
+            // 關閉第一個查詢
+            rs.close();
+            pstmt.close();
+            
+            // SQL 插入語句：插入留言
+            String insertCommentQuery = "INSERT INTO personal_wear (postid, memberid, wearId, message, pic, [like], collect, view, post_state) " +
+                                       "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            pstmt = con.prepareStatement(insertCommentQuery);
+            
+            // 設定參數
+            pstmt.setInt(1, Integer.parseInt(postid));  // postid（相同）
+            pstmt.setInt(2, originalMemberId);          // 原始貼文的 memberid
+            pstmt.setString(3, wearId);                 // wearId（相同）
+            pstmt.setString(4, commentText);            // 留言內容
+            pstmt.setString(5, pic);                    // pic（相同）
+            pstmt.setInt(6, likeCount);                 // like（相同）
+            pstmt.setInt(7, collectCount);              // collect（相同）
+            pstmt.setInt(8, viewCount);                 // view（相同）
+            pstmt.setBoolean(9, postState);             // post_state（相同）
+            
+            // 執行插入操作
+            int result = pstmt.executeUpdate();
+            
+            if (result > 0) {
+                out.println("<script>alert('留言提交成功！');</script>");
+            }
+        } else {
+            out.println("<script>alert('找不到該貼文！');</script>");
+        }
 
     } catch (SQLException e) {
-        // 捕獲並顯示錯誤
-        e.printStackTrace(); // 可以記錄到日志或顯示具體錯誤信息
-        response.getWriter().println("發生錯誤，請稍後再試。"); // 顯示友好的錯誤信息給用戶
+        e.printStackTrace();
+        out.println("<script>alert('發生錯誤：" + e.getMessage() + "');</script>");
+    } catch (NumberFormatException e) {
+        out.println("<script>alert('postid 格式錯誤！');</script>");
     } finally {
-        // 確保資源在使用後被關閉
         try {
+            if (rs != null) rs.close();
             if (pstmt != null) pstmt.close();
             if (con != null) con.close();
         } catch (SQLException e) {
-            e.printStackTrace(); // 處理資源關閉時的異常
+            e.printStackTrace();
         }
     }
+} else {
+    out.println("<script>alert('請輸入完整資訊！');</script>");
 }
 
-// URL 編碼 wearId 和 accessId 參數
-String encodedWearId = URLEncoder.encode(wearId, "UTF-8");
-String accessId = (String) session.getAttribute("accessId");
-String encodedAccessId = URLEncoder.encode(accessId, "UTF-8");
-
-// 重定向到 index1.jsp，使用 URL 編碼後的參數
-response.sendRedirect("index1.jsp?wearId=" + encodedWearId + "&accessId=" + encodedAccessId);
+// 重定向回 index1.jsp
+out.println("<script>window.location.href='index1.jsp';</script>");
 %>
 </body>
 </html>
