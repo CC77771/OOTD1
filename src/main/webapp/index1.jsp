@@ -379,151 +379,119 @@ ResultSet rs = smt.executeQuery(sql);	%>
             <div class="row">
                 <div class="swiper main-swiper py-4" data-aos="fade-up" data-aos-delay="600">
                     <div class="swiper-wrapper d-flex border-animation-left">
-                        <% int num=1;                       
+                        <% 
+int num=1;
+StringBuilder commentsDataJS = new StringBuilder();
+commentsDataJS.append("var allComments = {");
+
 while(rs.next()){ 
-    String postid = rs.getString("postid");  // 改用小寫 postid
-    int viewCount = rs.getInt("view"); // 取得瀏覽次數
+    String postid = rs.getString("postid");
+    int viewCount = rs.getInt("view");
+    
+    // 查詢該貼文的所有留言
+    String commentQuery = "SELECT message FROM personal_wear WHERE postid = ? AND message IS NOT NULL AND TRIM(message) != '' ORDER BY recordid ASC";
+    PreparedStatement pstmtComment = con.prepareStatement(commentQuery);
+    pstmtComment.setInt(1, Integer.parseInt(postid));
+    ResultSet rsComment = pstmtComment.executeQuery();
+    
+    // 建立該貼文的留言陣列
+    commentsDataJS.append("'").append(postid).append("': [");
+    boolean hasComment = false;
+    while(rsComment.next()) {
+        if(hasComment) commentsDataJS.append(",");
+        String message = rsComment.getString("message");
+        message = message.replace("'", "\\'").replace("\n", "\\n").replace("\r", "");
+        commentsDataJS.append("'").append(message).append("'");
+        hasComment = true;
+    }
+    commentsDataJS.append("],");
+    
+    rsComment.close();
+    pstmtComment.close();
 %>
-                            <!-- 帖子1 -->
-                             <div class="swiper-slide" data-postid="<%= postid %>">
-                                <div class="post-item">
-                                    <div class="image-holder">
-                                        <a href="#">
-                                            <img src="<%= rs.getString("pic")%>?t=<%= System.currentTimeMillis() %>" 
-     alt="product" 
-     class="img-fluid" 
-     style="width: 600px; height: 500px;">
-
-                                        </a>
-                                    </div>
-                                    <div class="post-content py-4">
-                                        <p class="post-description"><%=rs.getString("memberId") %><%=rs.getString("wearId") %></p>
-                                        <div class="post-actions">
-                                            <div class="action-icons">
-                                                <a href="#" class="action-icon like-icon" onclick="toggleLike(this)">
-                                                    <!-- 点赞按钮 -->
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" class="feather feather-heart">
-                                                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>
-                                                    </svg>
-                                                </a>
-                                                <a href="#" class="action-icon comment-icon" onclick="toggleComment(this)">
-                                                    <!-- 评论按钮 -->
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" class="feather feather-message-circle">
-                                                        <path d="M21 11.5a8.5 8.5 0 1 0-13.971 6.607l-3.75 3.75a1 1 0 0 0-.23 1.082A1 1 0 0 0 4 21h4.582a8.5 8.5 0 0 0 12.418-9.5z"></path>
-                                                    </svg>
-                                                </a>
-                                                <a href="#" class="action-icon star-icon" onclick="toggleStar(this)">
-                                                    <!-- 收藏按钮 -->
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" class="feather feather-star">
-                                                        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path>
-                                                    </svg>
-                                                </a>
-                                            </div>
-                                            <div class="action-text">
-                                                <span class="likes-count"><%=rs.getInt("like") %></span>&nbsp;                                                  
-                                              <span class="comments-count">
-                                <% 
-                             // 查詢留言數量
-                                String messageQuery = "SELECT COUNT(*) AS message_count FROM personal_wear WHERE postid = ? AND message IS NOT NULL AND TRIM(message) != ''";
-                                PreparedStatement pstmt2 = con.prepareStatement(messageQuery);
-                                pstmt2.setString(1, postid);  // ✅ 改用 postid
-                                ResultSet messageRs = pstmt2.executeQuery();
-
-
-                                    // 顯示留言數量
-                                    if (messageRs.next()) {
-                                        int messageCount = messageRs.getInt("message_count");
-                                        out.println(messageCount); // 顯示留言數量
-                                    }
-
-                                    // 關閉資源
-                                    if (messageRs != null) messageRs.close();
-                                    if (pstmt2 != null) pstmt2.close();
-                                %>
-                            </span>                                            
-                       &nbsp;&nbsp;&nbsp;<span class="stars-count"><%=rs.getInt("collect") %></span>     <!-- 收藏數量 -->
-                        <!-- 新增瀏覽數顯示 -->
+    <!-- 帖子 -->
+    <div class="swiper-slide" data-postid="<%= postid %>">
+        <div class="post-item">
+            <div class="image-holder">
+                <a href="#">
+                    <img src="<%= rs.getString("pic")%>?t=<%= System.currentTimeMillis() %>" 
+                         alt="product" 
+                         class="img-fluid" 
+                         style="width: 600px; height: 500px;">
+                </a>
+            </div>
+            <div class="post-content py-4">
+                <p class="post-description"><%=rs.getString("memberId") %> <%=rs.getString("wearId") %></p>
+                <div class="post-actions">
+                    <div class="action-icons">
+                        <a href="#" class="action-icon like-icon" onclick="toggleLike(this)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" class="feather feather-heart">
+                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>
+                            </svg>
+                        </a>
+                        <a href="#" class="action-icon comment-icon" onclick="toggleComment(this)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" class="feather feather-message-circle">
+                                <path d="M21 11.5a8.5 8.5 0 1 0-13.971 6.607l-3.75 3.75a1 1 0 0 0-.23 1.082A1 1 0 0 0 4 21h4.582a8.5 8.5 0 0 0 12.418-9.5z"></path>
+                            </svg>
+                        </a>
+                        <a href="#" class="action-icon star-icon" onclick="toggleStar(this)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" class="feather feather-star">
+                                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path>
+                            </svg>
+                        </a>
+                    </div>
+                    <div class="action-text">
+                        <span class="likes-count"><%=rs.getInt("like") %></span>&nbsp;                                                  
+                        <span class="comments-count">
+                        <% 
+                            String messageQuery = "SELECT COUNT(*) AS message_count FROM personal_wear WHERE postid = ? AND message IS NOT NULL AND TRIM(message) != ''";
+                            PreparedStatement pstmt2 = con.prepareStatement(messageQuery);
+                            pstmt2.setString(1, postid);
+                            ResultSet messageRs = pstmt2.executeQuery();
+                            if (messageRs.next()) {
+                                int messageCount = messageRs.getInt("message_count");
+                                out.println(messageCount);
+                            }
+                            if (messageRs != null) messageRs.close();
+                            if (pstmt2 != null) pstmt2.close();
+                        %>
+                        </span>                                            
+                        &nbsp;&nbsp;&nbsp;<span class="stars-count"><%=rs.getInt("collect") %></span>
                         <br>
-                          👁️&nbsp;<span class="view-count"><%= viewCount %></span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                             
-                        <%}%>
+                        👁️&nbsp;<span class="view-count"><%= viewCount %></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+<%
+}
+commentsDataJS.append("};");
+%>
                     </div>
                     
-                    <!-- 留言模态框 -->
-                    <div class="modal" id="commentModal" style="display: none;">
-                        <div class="modal-content">
-                            <span class="close" onclick="closeModal()">&times;</span>
- <% 
-    String postid2 = request.getParameter("postid");  // ✅ 改成 postid
+                   <!-- 留言模态框 -->
+<div class="modal" id="commentModal" style="display: none;">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        
+        <!-- 顯示留言區域 -->
+        <div id="commentDisplay" class="comment-display">
+            <h3>留言內容：</h3>
+            <ul id="commentList">
+                <!-- 留言會動態載入到這裡 -->
+            </ul>
+        </div>
 
-    if (postid2 != null && !postid2.isEmpty()) {
-        String commentQuery = "SELECT message FROM personal_wear WHERE postid = ?";  // ✅ 改成 postid
-        PreparedStatement mes = con.prepareStatement(commentQuery);
-        mes.setString(1, postid2);  // ✅ 改成 postid
-        ResultSet commentRs = mes.executeQuery();
-%>
-
-<!-- 顯示留言區域 -->
-<div id="commentDisplay" class="comment-display">
-    <h3>留言內容：</h3>
-    <ul id="commentList">
-        <% 
-            // 顯示每條留言
-            while (commentRs.next()) {
-        %>
-            <li>
-                <%= commentRs.getString("message") %>
-            </li>
-        <% 
-            } 
-        %>
-    </ul>
-</div>
-
-<% 
-        // 關閉結果集和聲明
-        if (commentRs != null) commentRs.close();
-        if (mes != null) mes.close();
-    }
-%>
-                            <!-- 已提交留言顯示區域 -->
-
-<%
-String newPostid = null;  // ✅ 改成 postid
-String newQuery = "SELECT * FROM personal_wear";
-
-Statement newStmt = con.createStatement();
-ResultSet newRs = newStmt.executeQuery(newQuery);
-
-if (newRs.next()) {
-    newPostid = newRs.getString("postid");  // ✅ 改成 postid
-}
-
-
-// 关闭资源
-if (newRs != null) newRs.close();
-if (newStmt != null) newStmt.close();
-%>
-
-
-
-                            <!-- 输入留言 -->
-                            <form name="form" action="update.jsp" method="post">                          
+        <!-- 输入留言 -->
+        <form name="form" action="update.jsp" method="post">                          
             <textarea name="text" id="commentText" placeholder="請輸入您的留言..." rows="5"></textarea>
-            <!-- 隱藏  -->
-               <input type="hidden" name="memberId" value="<%= member %>">
-               <input type="hidden" name="postid" id="hiddenPostid" value="">
-            <button type="submit" name="submitButton" onclick="submitComment()">提交留言</button>
+            <input type="hidden" name="memberId" value="<%= member %>">
+            <input type="hidden" name="postid" id="hiddenPostid" value="">
+            <button type="submit" name="submitButton">提交留言</button>
         </form>
-                            
-                        </div>
-                    </div>
+    </div>
+</div>
 
                     <div class="swiper-button-next icon-arrow-right"></div>
                     <div class="swiper-button-prev icon-arrow-left"></div>
@@ -537,6 +505,9 @@ if (newStmt != null) newStmt.close();
 <!-- JS -->
 <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
 <script>
+// 載入留言數據
+<%= commentsDataJS.toString() %>
+
 // Swiper 初始化
 var swiper = new Swiper('.main-swiper', {
     slidesPerView: 1,
@@ -550,6 +521,7 @@ var swiper = new Swiper('.main-swiper', {
         clickable: true,
     },
 });
+
 
 console.log('Swiper 初始化完成');
 console.log('總共有 ' + swiper.slides.length + ' 張投影片');
@@ -649,14 +621,28 @@ function updateViewCount(postid, slideElement) {
         likeCountElement.textContent = (icon.style.fill === 'red') ? likeCount + 1 : likeCount - 1;
     }
 
-    // 留言功能
+ // 留言功能 - 修改這個函數
     function toggleComment(element) {
-    	// 找到當前貼文的 postid
+        // 找到當前貼文的 postid
         var postSlide = element.closest('.swiper-slide');
         var postid = postSlide.getAttribute('data-postid');
         
         // 設置隱藏欄位的值
         document.getElementById('hiddenPostid').value = postid;
+        
+        // 清空並載入該貼文的留言
+        var commentList = document.getElementById('commentList');
+        commentList.innerHTML = '';
+        
+        if (allComments[postid] && allComments[postid].length > 0) {
+            allComments[postid].forEach(function(comment) {
+                var li = document.createElement('li');
+                li.textContent = comment;
+                commentList.appendChild(li);
+            });
+        } else {
+            commentList.innerHTML = '<li style="color: #999;">目前還沒有留言，快來搶沙發吧！</li>';
+        }
         
         // 打開留言模態框
         document.getElementById('commentModal').style.display = 'flex';
@@ -664,7 +650,7 @@ function updateViewCount(postid, slideElement) {
 
     // 關閉留言模態框
     function closeModal() {
-        document.getElementById('commentModal').style.display = 'none'; // 關閉留言模態框
+        document.getElementById('commentModal').style.display = 'none';
     }
 
     // 提交留言功能（會顯示留言內容在列表中）
