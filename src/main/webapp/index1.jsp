@@ -473,7 +473,7 @@ commentsDataJS.append("};");
                    <!-- 留言模态框 -->
 <div class="modal" id="commentModal" style="display: none;">
     <div class="modal-content">
-        <span class="close" onclick="closeModal()">&times;</span>
+        <span class="close" onclick="closeCommentModal()">&times;</span>
         
         <!-- 顯示留言區域 -->
         <div id="commentDisplay" class="comment-display">
@@ -648,8 +648,8 @@ function updateViewCount(postid, slideElement) {
         document.getElementById('commentModal').style.display = 'flex';
     }
 
-    // 關閉留言模態框
-    function closeModal() {
+ // 關閉留言模態框
+    function closeCommentModal() {
         document.getElementById('commentModal').style.display = 'none';
     }
 
