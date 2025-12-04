@@ -1,6 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
 <%@ page import="java.util.*, java.text.*" %>
 <%@include file ="menu.jsp" %>
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -605,12 +606,47 @@
 
         // 初始化
         window.onload = function() {
-            loadFromStorage();
-            updateStats();
-            renderOrders();
-            renderCommodities();
-            checkShopeeBinding();
-        };
+    loadFromStorage();
+    updateStats();
+    renderOrders();
+    renderCommodities();
+    checkShopeeBinding();
+    
+ // 從後端取得綁定資訊
+   // 從後端取得綁定資訊
+async function fetchShopeeBindingInfo() {
+    try {
+        const response = await fetch('?api_action=getBindingInfo');
+        const data = await response.json();
+        
+        if (data.isBound) {
+            shopeeBinding.isBound = true;
+            shopeeBinding.shopId = data.shopId;
+            shopeeBinding.accountName = data.shopName || 'shop_' + data.shopId;
+            shopeeBinding.lastSyncTime = new Date().toLocaleString('zh-TW');
+            
+            localStorage.setItem('shopeeBinding', JSON.stringify(shopeeBinding));
+            updateShopeeStatus();
+            
+            alert('🎉 蝦皮帳號綁定成功！\n\n即將開始同步訂單...');
+            setTimeout(() => {
+                syncShopeeOrders();
+            }, 1000);
+        }
+    } catch (error) {
+        console.error('取得綁定資訊失敗:', error);
+    }
+}
+    
+    // ===== 新增：檢查是否從蝦皮返回 =====
+    const urlParams = new URLSearchParams(window.location.search);
+    const shopeeBound = urlParams.get('shopee_bound');
+    
+    if (shopeeBound === 'success') {
+        localStorage.removeItem('shopee_binding_in_progress');
+        fetchShopeeBindingInfo();
+    }
+};
 
         // 檢查蝦皮綁定狀態
         function checkShopeeBinding() {
@@ -665,26 +701,45 @@
         }
 
         // 下一步
-        function nextShopeeStep() {
-            // 如果在步驟3，檢查授權碼
-            if (shopeeBinding.currentStep === 2) {
-                const authCode = document.getElementById('shopeeAuthCodeInput').value.trim();
-                if (!authCode) {
-                    alert('請輸入授權碼');
-                    return;
-                }
-                shopeeBinding.authCode = authCode;
-                shopeeBinding.accountName = 'shop_user_2024';
-            }
-
-            if (shopeeBinding.currentStep < shopeeSteps.length - 1) {
-                shopeeBinding.currentStep++;
-                showShopeeStep();
+       // 步驟 1:準備跳轉到蝦皮授權頁面
+    if (currentStep === 1) {
+        const nextBtn = document.getElementById('shopeeNextBtn');
+        nextBtn.textContent = '正在跳轉到蝦皮...';
+        nextBtn.disabled = true;
+        
+        try {
+            // 呼叫 JSP 內的處理邏輯取得授權 URL
+            const response = await fetch('?api_action=getAuthUrl');
+            const data = await response.json();
+            
+            if (data.authUrl) {
+                // 儲存目前狀態
+                localStorage.setItem('shopee_binding_in_progress', 'true');
+                
+                // 跳轉到蝦皮授權頁面
+                window.location.href = data.authUrl;
+                return;
             } else {
-                // 完成綁定
-                completeShopeeBinding();
+                alert('取得授權 URL 失敗');
             }
+        } catch (error) {
+            console.error('取得授權 URL 失敗:', error);
+            alert('無法連接到蝦皮授權服務,請稍後再試');
         }
+        
+        nextBtn.textContent = '同意並繼續';
+        nextBtn.disabled = false;
+        return;
+    }
+    
+    // 其他步驟的處理
+    if (currentStep < shopeeSteps.length - 1) {
+        shopeeBinding.currentStep++;
+        showShopeeStep();
+    } else {
+        completeShopeeBinding();
+    }
+}
 
         // 完成綁定
         function completeShopeeBinding() {
@@ -710,24 +765,26 @@
             shopeeBinding.currentStep = 0;
         }
 
-        // 同步蝦皮訂單
-        function syncShopeeOrders() {
+     // 同步蝦皮訂單
+        async function syncShopeeOrders() {
             if (!shopeeBinding.isBound) {
                 alert('請先綁定蝦皮帳號');
                 return;
             }
 
-            // 顯示同步中提示
             const syncBtn = document.getElementById('shopeeSyncBtn');
             const originalText = syncBtn.innerHTML;
             syncBtn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg><span class="ml-2">同步中...</span>';
             syncBtn.disabled = true;
 
-            // 模擬 API 呼叫延遲
-            setTimeout(() => {
-                // 將蝦皮訂單加入到系統中
+            try {
+                const response = await fetch('?api_action=syncOrders');
+                const data = await response.json();
+             // 因為蝦皮 API 回傳的格式複雜,這裡用模擬資料
+                // 實際使用時需要解析 data.response.order_list
+                
+                // 暫時使用模擬資料
                 mockShopeeOrders.forEach(shopeeOrder => {
-                    // 檢查是否已存在
                     const exists = orders.some(order => order.orderCode === shopeeOrder.orderCode);
                     if (!exists) {
                         orders.push({...shopeeOrder});
@@ -744,30 +801,39 @@
                 updateStats();
                 renderOrders();
 
-                // 恢復按鈕
+                alert(`✅ 同步完成！\n\n已匯入 ${mockShopeeOrders.length} 筆蝦皮訂單`);
+                
+            } catch (error) {
+                console.error('同步訂單錯誤:', error);
+                alert('❌ 同步失敗,請稍後再試');
+            } finally {
                 syncBtn.innerHTML = originalText;
                 syncBtn.disabled = false;
-
-                alert(`✅ 同步完成！\n\n已匯入 ${mockShopeeOrders.length} 筆蝦皮訂單`);
-            }, 2000);
-        }
-
-        // 解除綁定
-        function unbindShopee() {
-            if (confirm('確定要解除蝦皮帳號綁定嗎？\n\n解除後將無法自動同步訂單。')) {
-                shopeeBinding = {
-                    isBound: false,
-                    currentStep: 0,
-                    accountName: '',
-                    authCode: '',
-                    lastSyncTime: null
-                };
-                localStorage.removeItem('shopeeBinding');
-                updateShopeeStatus();
-                alert('已成功解除綁定');
             }
         }
 
+     // 解除綁定
+        async function unbindShopee() {
+            if (confirm('確定要解除蝦皮帳號綁定嗎？\n\n解除後將無法自動同步訂單。')) {
+                try {
+                    await fetch('?api_action=unbind');
+                    
+                    shopeeBinding = {
+                        isBound: false,
+                        currentStep: 0,
+                        accountName: '',
+                        authCode: '',
+                        lastSyncTime: null
+                    };
+                    localStorage.removeItem('shopeeBinding');
+                    updateShopeeStatus();
+                    alert('已成功解除綁定');
+                } catch (error) {
+                    console.error('解除綁定失敗:', error);
+                    alert('解除綁定失敗,請稍後再試');
+                }
+            }
+        }
         // 切換分頁
         function switchTab(tab) {
             currentTab = tab;
