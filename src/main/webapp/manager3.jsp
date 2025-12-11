@@ -111,13 +111,13 @@
     background: #f9f9f9;
 }
 
-/* Active 卡片 */
+/* 移除 Active 卡片的特殊樣式，讓它跟其他的一樣 */
 .nav-tabs .nav-link.active {
-    background: #0d6efd;
-    color: #fff !important;
-    border: 1px solid #0d6efd;
-    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-    transform: translateY(-5px);
+    background: #ffffff;
+    color: #333 !important;
+    border: 1px solid #ddd;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transform: none;
 }
 
 /* 移除底線 */
@@ -212,14 +212,21 @@ body {
         <li class="nav-item">
             <a class="nav-link" href="commentManagement.jsp">💬 評論審核</a>
         </li>
+        
+        <li class="nav-item">
+            <a class="nav-link" href="postManagement.jsp">📝 貼文管理</a>
+        </li>
 
         <li class="nav-item">
             <a class="nav-link" href="userManagement.jsp">👥 使用者管理</a>
         </li>
+        
+		<li class="nav-item">
+    <a class="nav-link active" style="background-color: #0d6efd; color: #000;">
+        📊 點擊率分析
+    </a>
+</li>
 
-        <li class="nav-item">
-            <a class="nav-link active" href="analytics.jsp">📊 點擊率分析</a>
-        </li>
     </ul>
 
     <!-- 點擊率分析內容 -->
