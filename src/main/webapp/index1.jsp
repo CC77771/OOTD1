@@ -353,7 +353,356 @@ ResultSet rs = smt.executeQuery(sql);	%>
     from { opacity: 1; }
     to { opacity: 0; }
 }
-</style>   
+</style>  
+<style>
+/* 商品詳情彈窗樣式 */
+.product-modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+}
+
+.product-modal-overlay.active {
+    display: flex;
+}
+
+.product-modal-content {
+    background: white;
+    border-radius: 20px;
+    max-width: 900px;
+    width: 95%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    animation: slideUp 0.4s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.product-modal-close {
+    position: sticky;
+    top: 0;
+    right: 0;
+    background: white;
+    border-bottom: 1px solid #eee;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 10;
+}
+
+.product-modal-close button {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid #ddd;
+    background: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.product-modal-close button:hover {
+    background: #a89f91;
+    border-color: #a89f91;
+    color: white;
+    transform: rotate(90deg);
+}
+
+.product-modal-body {
+    padding: 30px;
+}
+
+.product-gallery {
+    margin-bottom: 30px;
+}
+
+.product-main-image {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    background: #f5f5f5;
+    border-radius: 15px;
+    overflow: hidden;
+    margin-bottom: 15px;
+}
+
+.product-main-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.product-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    z-index: 5;
+}
+
+.product-nav-btn:hover {
+    background: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.product-nav-btn.prev {
+    left: 15px;
+}
+
+.product-nav-btn.next {
+    right: 15px;
+}
+
+.product-image-counter {
+    position: absolute;
+    bottom: 15px;
+    right: 15px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+}
+
+.product-thumbnails {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 5px 0;
+}
+
+.product-thumbnails::-webkit-scrollbar {
+    height: 6px;
+}
+
+.product-thumbnails::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.product-thumbnails::-webkit-scrollbar-thumb {
+    background: #a89f91;
+    border-radius: 10px;
+}
+
+.product-thumbnail {
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 3px solid transparent;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.product-thumbnail:hover {
+    border-color: #ddd;
+}
+
+.product-thumbnail.active {
+    border-color: #a89f91;
+}
+
+.product-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.product-info {
+    margin-bottom: 30px;
+}
+
+.product-info h2 {
+    font-size: 28px;
+    color: #333;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.product-price {
+    font-size: 32px;
+    color: #a89f91;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.product-meta {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 15px;
+    color: #666;
+    font-size: 14px;
+}
+
+.product-description {
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: #f9f9f9;
+    border-radius: 10px;
+}
+
+.product-variants {
+    margin-top: 30px;
+}
+
+.product-variants h3 {
+    font-size: 20px;
+    color: #333;
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+.variants-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.variant-item {
+    border: 2px solid #eee;
+    border-radius: 12px;
+    padding: 15px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.variant-item:hover {
+    border-color: #a89f91;
+    background: #fafafa;
+}
+
+.variant-image {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.variant-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.variant-info {
+    flex: 1;
+}
+
+.variant-name {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.variant-size {
+    color: #666;
+    font-size: 13px;
+    margin-bottom: 4px;
+}
+
+.variant-stock {
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.variant-stock.high {
+    color: #10b981;
+}
+
+.variant-stock.medium {
+    color: #f59e0b;
+}
+
+.variant-stock.low {
+    color: #ef4444;
+}
+
+.shopee-link-btn {
+    display: inline-block;
+    background: linear-gradient(135deg, #ee4d2d 0%, #ff6b4a 100%);
+    color: white;
+    padding: 15px 40px;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(238, 77, 45, 0.3);
+    margin-top: 20px;
+}
+
+.shopee-link-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(238, 77, 45, 0.4);
+    color: white;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .product-modal-content {
+        width: 100%;
+        max-height: 100vh;
+        border-radius: 0;
+    }
+
+    .product-main-image {
+        height: 300px;
+    }
+
+    .variants-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .product-info h2 {
+        font-size: 22px;
+    }
+
+    .product-price {
+        font-size: 26px;
+    }
+}
+</style>
+
+
 </head>
 <body class="homepage">
 <button id="backToTop" class="back-to-top" onclick="scrollToTop()">
@@ -825,98 +1174,103 @@ function updateViewCount(postid, slideElement) {
     <div class="swiper product-swiper open-up" data-aos="zoom-out">
       <div class="swiper-wrapper d-flex">
 
-        <div class="swiper-slide">
-          <div class="product-item image-zoom-effect link-effect">
-            <div class="image-holder position-relative">
-              <a href="index1.jsp">
-                <img src="images/M.jpg" alt="Outfit 1" class="product-image img-fluid">
-              </a>
-              <a href="https://reurl.cc/eGdpqM" class="product-link" style="position: absolute; top: 65%; left: 35%;">
-                <div class="product-tag">咖啡外套<br>$750</div>
-              </a>
-              <a href="https://reurl.cc/eGdpqM" class="product-link" style="position: absolute; top: 80%; left: 70%;">
-                <div class="product-tag">咖啡百褶裙<br>$410</div>
-              </a>
-            </div>
-          </div>
-        </div>
+       <div class="swiper-slide">
+  <div class="product-item image-zoom-effect link-effect">
+    <div class="image-holder position-relative">
+      <a href="javascript:void(0)" onclick="openProductModal('outfit1')" style="cursor: pointer;">
+        <img src="images/M.jpg" alt="Outfit 1" class="product-image img-fluid">
+      </a>
+      <a href="https://reurl.cc/eGdpqM" class="product-link" style="position: absolute; top: 65%; left: 35%;">
+        <div class="product-tag">咖啡外套<br>$750</div>
+      </a>
+      <a href="https://reurl.cc/eGdpqM" class="product-link" style="position: absolute; top: 80%; left: 70%;">
+        <div class="product-tag">咖啡百褶裙<br>$410</div>
+      </a>
+    </div>
+  </div>
+</div>
 
-        <div class="swiper-slide">
-          <div class="product-item image-zoom-effect link-effect">
-            <div class="image-holder position-relative">
-              <a href="index2.jsp">
-                <img src="images/W.jpg" alt="Outfit 2" class="product-image img-fluid">
-              </a>
-              <a href="https://reurl.cc/WAvzvL" class="product-link" style="position: absolute; top: 60%; left: 40%;">
-                <div class="product-tag">西裝外套-灰<br>$1180</div>
-              </a>
-              <a href="https://reurl.cc/oV5mRg" class="product-link" style="position: absolute; top: 75%; left: 65%;">
-                <div class="product-tag">水桶包-黑<br>$600</div>
-              </a>
-            </div>
-          </div>
-        </div>
+<!-- 商品 2：西裝外套 -->
+<div class="swiper-slide">
+  <div class="product-item image-zoom-effect link-effect">
+    <div class="image-holder position-relative">
+      <a href="javascript:void(0)" onclick="openProductModal('outfit2')" style="cursor: pointer;">
+        <img src="images/W.jpg" alt="Outfit 2" class="product-image img-fluid">
+      </a>
+      <a href="https://reurl.cc/WAvzvL" class="product-link" style="position: absolute; top: 60%; left: 40%;">
+        <div class="product-tag">西裝外套-灰<br>$1180</div>
+      </a>
+      <a href="https://reurl.cc/oV5mRg" class="product-link" style="position: absolute; top: 75%; left: 65%;">
+        <div class="product-tag">水桶包-黑<br>$600</div>
+      </a>
+    </div>
+  </div>
+</div>
 
-        <div class="swiper-slide">
-          <div class="product-item image-zoom-effect link-effect">
-            <div class="image-holder position-relative">
-              <a href="index3.jsp">
-                <img src="images/S.jpg" alt="Outfit 3" class="product-image img-fluid">
-              </a>
-              <a href="https://reurl.cc/26E734" class="product-link" style="position: absolute; top: 65%; left: 40%;">
-                <div class="product-tag">排釦上衣<br>$430</div>
-              </a>
-              <a href="https://tw.shp.ee/D5aeBeq" class="product-link" style="position: absolute; top: 80%; left: 60%;">
-                <div class="product-tag">深藍黑牛仔短裙<br>$525</div>
-              </a>
-            </div>
-          </div>
-        </div>
+<!-- 商品 3：排釦上衣 -->
+<div class="swiper-slide">
+  <div class="product-item image-zoom-effect link-effect">
+    <div class="image-holder position-relative">
+      <a href="javascript:void(0)" onclick="openProductModal('outfit3')" style="cursor: pointer;">
+        <img src="images/S.jpg" alt="Outfit 3" class="product-image img-fluid">
+      </a>
+      <a href="https://reurl.cc/26E734" class="product-link" style="position: absolute; top: 65%; left: 40%;">
+        <div class="product-tag">排釦上衣<br>$430</div>
+      </a>
+      <a href="https://tw.shp.ee/D5aeBeq" class="product-link" style="position: absolute; top: 80%; left: 60%;">
+        <div class="product-tag">深藍黑牛仔短裙<br>$525</div>
+      </a>
+    </div>
+  </div>
+</div>
 
-        <div class="swiper-slide">
-          <div class="product-item image-zoom-effect link-effect">
-            <div class="image-holder position-relative">
-              <a href="index4.jsp">
-                <img src="images\C.jpg" alt="Outfit 4" class="product-image img-fluid">
-              </a>
-              <a href="https://reurl.cc/kMakNq" class="product-link" style="position: absolute; top: 60%; left: 35%;">
-                <div class="product-tag">連帽棉外套-黑<br>$880</div>
-              </a>
-            </div>
-          </div>
-        </div>
+<!-- 商品 4：連帽外套 -->
+<div class="swiper-slide">
+  <div class="product-item image-zoom-effect link-effect">
+    <div class="image-holder position-relative">
+      <a href="javascript:void(0)" onclick="openProductModal('outfit4')" style="cursor: pointer;">
+        <img src="images/C.jpg" alt="Outfit 4" class="product-image img-fluid">
+      </a>
+      <a href="https://reurl.cc/kMakNq" class="product-link" style="position: absolute; top: 60%; left: 35%;">
+        <div class="product-tag">連帽棉外套-黑<br>$880</div>
+      </a>
+    </div>
+  </div>
+</div>
 
-        <div class="swiper-slide">
-          <div class="product-item image-zoom-effect link-effect">
-            <div class="image-holder position-relative">
-              <a href="index5.jsp">
-                <img src="images/X.jpg" alt="Outfit 5" class="product-image img-fluid">
-              </a>
-              <a href="https://reurl.cc/vp6omj" class="product-link" style="position: absolute; top: 65%; left: 40%;">
-                <div class="product-tag">帽T-淺灰色<br>$609</div>
-              </a>
-              <a href="https://reurl.cc/Q5ZmXZ" class="product-link" style="position: absolute; top: 80%; left: 70%;">
-                <div class="product-tag">日系工裝褲-灰<br>$550</div>
-              </a>
-            </div>
-          </div>
-        </div>
-       
-        <div class="swiper-slide">
-          <div class="product-item image-zoom-effect link-effect">
-            <div class="image-holder position-relative">
-              <a href="index6.jsp">
-                <img src="images/O.jpg" alt="Outfit 6" class="product-image img-fluid">
-              </a>
-              <a href="https://tw.shp.ee/tjJueee" class="product-link" style="position: absolute; top: 65%; left: 35%;">
-                <div class="product-tag">風衣-黑<br>$2240</div>
-              </a>
-              <a href="https://tw.shp.ee/LhYjBBQ" class="product-link" style="position: absolute; top: 80%; left: 65%;">
-                <div class="product-tag">西裝褲-灰<br>$350</div>
-              </a>
-            </div>
-          </div>
-        </div>
+<!-- 商品 5：帽T -->
+<div class="swiper-slide">
+  <div class="product-item image-zoom-effect link-effect">
+    <div class="image-holder position-relative">
+      <a href="javascript:void(0)" onclick="openProductModal('outfit5')" style="cursor: pointer;">
+        <img src="images/X.jpg" alt="Outfit 5" class="product-image img-fluid">
+      </a>
+      <a href="https://reurl.cc/vp6omj" class="product-link" style="position: absolute; top: 65%; left: 40%;">
+        <div class="product-tag">帽T-淺灰色<br>$609</div>
+      </a>
+      <a href="https://reurl.cc/Q5ZmXZ" class="product-link" style="position: absolute; top: 80%; left: 70%;">
+        <div class="product-tag">日系工裝褲-灰<br>$550</div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- 商品 6：風衣 -->
+<div class="swiper-slide">
+  <div class="product-item image-zoom-effect link-effect">
+    <div class="image-holder position-relative">
+      <a href="javascript:void(0)" onclick="openProductModal('outfit6')" style="cursor: pointer;">
+        <img src="images/O.jpg" alt="Outfit 6" class="product-image img-fluid">
+      </a>
+      <a href="https://tw.shp.ee/tjJueee" class="product-link" style="position: absolute; top: 65%; left: 35%;">
+        <div class="product-tag">風衣-黑<br>$2240</div>
+      </a>
+      <a href="https://tw.shp.ee/LhYjBBQ" class="product-link" style="position: absolute; top: 80%; left: 65%;">
+        <div class="product-tag">西裝褲-灰<br>$350</div>
+      </a>
+    </div>
+  </div>
+</div>
 
       </div>
       <div class="swiper-pagination"></div>
@@ -1052,7 +1406,7 @@ function updateViewCount(postid, slideElement) {
             </div>
            <div class="social-links">
               <ul class="list-unstyled d-flex flex-wrap gap-3">
-                <a href="index1.jsp">
+                 <a href="javascript:void(0)" onclick="openProductModal('outfit1')" style="cursor: pointer;">
                 <img src="images/main-logo.png" alt="logo" width="300" height="60">
                  </a>
               </ul>
@@ -1174,6 +1528,354 @@ document.addEventListener('keydown', function(e) {
     }
 });
 </script>
+
+<!-- 商品詳情彈窗 -->
+<div class="product-modal-overlay" id="productModal">
+    <div class="product-modal-content">
+        <div class="product-modal-close">
+            <h3 id="modalProductName" style="margin: 0; color: #333; font-size: 20px;"></h3>
+            <button onclick="closeProductModal()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        
+        <div class="product-modal-body">
+            <!-- 圖片展示區 -->
+            <div class="product-gallery">
+                <div class="product-main-image">
+                    <img id="modalMainImage" src="" alt="">
+                    <button class="product-nav-btn prev" onclick="prevProductImage()">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M15 18l-6-6 6-6"/>
+                        </svg>
+                    </button>
+                    <button class="product-nav-btn next" onclick="nextProductImage()">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 18l6-6-6-6"/>
+                        </svg>
+                    </button>
+                    <div class="product-image-counter" id="imageCounter">1 / 4</div>
+                </div>
+                
+                <div class="product-thumbnails" id="productThumbnails">
+                    <!-- 縮圖會動態生成 -->
+                </div>
+            </div>
+            
+            <!-- 商品資訊 -->
+            <div class="product-info">
+                <h2 id="modalProductTitle"></h2>
+                <div class="product-price" id="modalProductPrice"></div>
+                <div class="product-meta">
+                    <span id="modalVariantCount"></span>
+                    <span id="modalTotalStock"></span>
+                </div>
+                <div class="product-description" id="modalProductDesc"></div>
+                
+                <!-- 蝦皮連結按鈕 -->
+                <a id="modalShopeeLink" href="#" target="_blank" class="shopee-link-btn">
+                    🛒 前往蝦皮購買
+                </a>
+            </div>
+            
+
+        </div>
+    </div>
+</div>
+            
+            
+
+        </div>
+
+<script>
+// 商品資料庫 - 使用真實蝦皮商品連結
+const productsData = {
+    'outfit1': {
+        name: 'ATTENTION 初雪!水貂毛柔軟毛衣(附繫脖)',
+        price: 790,
+        description: 'ATTENTION att-made! 初雪系列，水貂毛柔軟舒適，附可拆式繫脖設計，展現優雅氣質。',
+        shopeeLink: 'https://shopee.tw/ATTENTION-att-made!%E5%88%9D%E9%9B%AA!%E6%B0%B4%E8%B2%82%E6%AF%9B%E6%9F%94%E8%BB%9F%E6%AF%9B%E8%A1%A3(%E9%99%84%E7%B9%9E%E8%84%96)-i.11304279.50152742814',
+        images: [
+            'https://cf.shopee.tw/file/tw-11134207-7r98o-m24b68bkh5ky1e',
+            'https://cf.shopee.tw/file/tw-11134207-7r98z-m24b68bkiqae41',
+            'https://cf.shopee.tw/file/tw-11134207-7r990-m24b68bkk4uu80',
+            'https://cf.shopee.tw/file/tw-11134207-7r98u-m24b68bkljff64'
+        ]
+    },
+    'outfit2': {
+        name: 'ATTENTION 國民男友立領拉鍊大學TEE',
+        price: 590,
+        description: 'ATTENTION att-made! 國民男友系列，立領拉鍊設計，大學風格休閒百搭。',
+        shopeeLink: 'https://shopee.tw/ATTENTION-att-made!%E5%9C%8B%E6%B0%91%E7%94%B7%E5%8F%8B%E7%AB%8B%E9%A0%98%E6%8B%89%E9%8D%8A%E5%A4%A7%E5%AD%B8TEE-i.11304279.26315496029',
+        images: [
+            'https://cf.shopee.tw/file/tw-11134207-7r98y-lvxezaswwk2ee9',
+            'https://cf.shopee.tw/file/tw-11134207-7r990-lvxezaswyemg97',
+            'https://cf.shopee.tw/file/tw-11134207-7r98v-lvxezaswxf8wce',
+            'https://cf.shopee.tw/file/tw-11134207-7r98y-lvxezaswyzvw4a'
+        ]
+    },
+    'outfit3': {
+        name: 'ATTENTION 新色回歸!愛款質感西褲',
+        price: 890,
+        description: 'ATTENTION 愛款質感西褲，新色上市！俐落剪裁展現專業氣質，適合各種正式場合。',
+        shopeeLink: 'https://shopee.tw/ATTENTION-%E6%96%B0%E8%89%B2%E5%9B%9E%E6%AD%B8!%E6%84%9B%E6%AC%BE%E8%B3%AA%E6%84%9F%E8%A5%BF%E8%A4%B2-i.11304279.16441442858',
+        images: [
+            'https://cf.shopee.tw/file/tw-11134207-7r98w-lue5jdtl2v2ud2',
+            'https://cf.shopee.tw/file/tw-11134207-7r98u-lue5jdtl49n6e7',
+            'https://cf.shopee.tw/file/tw-11134207-7r98v-lue5jdtl5o7m51',
+            'https://cf.shopee.tw/file/tw-11134207-7r991-lue5jdtl72s265'
+        ]
+    },
+    'outfit4': {
+        name: '復古藍寬鬆彎刀牛仔褲（現貨）',
+        price: 750,
+        description: '復古藍寬鬆彎刀牛仔褲，經典復古設計，寬鬆版型舒適自在，展現個性街頭風格。',
+        shopeeLink: 'https://shopee.tw/%E5%BE%A9%E5%8F%A4%E8%97%8D%E5%AF%AC%E9%AC%86%E5%BD%8E%E5%88%80%E7%89%9B%E4%BB%94%E8%A4%B2%EF%BC%88%E7%8F%BE%E8%B2%A8)-i.3112818.44462968339',
+        images: [
+            'https://cf.shopee.tw/file/tw-11134207-7r990-m1a6wy27mf9f75',
+            'https://cf.shopee.tw/file/tw-11134207-7r98s-m1a6wy27nttpbc',
+            'https://cf.shopee.tw/file/tw-11134207-7r98x-m1a6wy27p8e549',
+            'https://cf.shopee.tw/file/tw-11134207-7r98z-m1a6wy27qmyl6f'
+        ]
+    },
+    'outfit5': {
+        name: '大V領條紋毛衣（現+預購）',
+        price: 680,
+        description: '大V領條紋毛衣，經典條紋設計，V領修飾臉型，溫柔知性風格必備單品。',
+        shopeeLink: 'https://shopee.tw/%E5%A4%A7V%E9%A0%98%E6%A2%9D%E7%B4%8B%E6%AF%9B%E8%A1%A3%EF%BC%88%E7%8F%BE-%E9%A0%90%E8%B3%BC)-i.3112818.26420658795',
+        images: [
+            'https://cf.shopee.tw/file/tw-11134207-7r98x-lweorh15ld7w75',
+            'https://cf.shopee.tw/file/tw-11134207-7r98z-lweorh15mrsca4',
+            'https://cf.shopee.tw/file/tw-11134207-7r98u-lweorh15o6cs6d',
+            'https://cf.shopee.tw/file/tw-11134207-7r98v-lweorh15pl1822'
+        ]
+    },
+    'outfit6': {
+        name: '版型極好顯瘦五分褲（現貨）',
+        price: 590,
+        description: '版型極好顯瘦五分褲，精心設計的版型修飾腿型，顯瘦效果極佳，夏日必備單品。',
+        shopeeLink: 'https://shopee.tw/%E7%89%88%E5%9E%8B%E6%A5%B5%E5%A5%BD%E9%A1%AF%E7%98%A6%E4%BA%94%E5%88%86%E8%A4%B2%EF%BC%88%E7%8F%BE%E8%B2%A8%EF%BC%89-i.3112818.26907648064',
+        images: [
+            'https://cf.shopee.tw/file/tw-11134207-7r990-lweoq82iw8xsd7',
+            'https://cf.shopee.tw/file/tw-11134207-7r98s-lweoq82ixni86e',
+            'https://cf.shopee.tw/file/tw-11134207-7r98x-lweoq82iz22o2f',
+            'https://cf.shopee.tw/file/tw-11134207-7r98z-lweoq82j0gn455'
+        ]
+    }
+};
+
+// 當前顯示的商品和圖片索引
+let currentProduct = null;
+let currentImageIndex = 0;
+
+// 打開商品詳情彈窗
+function openProductModal(productId) {
+    currentProduct = productsData[productId];
+    if (!currentProduct) return;
+    
+    currentImageIndex = 0;
+    
+    // 設置商品基本資訊
+    document.getElementById('modalProductName').textContent = currentProduct.name;
+    document.getElementById('modalProductTitle').textContent = currentProduct.name;
+    document.getElementById('modalProductPrice').textContent = 'NT$ ' + currentProduct.price.toLocaleString();
+    document.getElementById('modalProductDesc').textContent = currentProduct.description;
+    document.getElementById('modalShopeeLink').href = currentProduct.shopeeLink;
+    
+    // 設置主圖片
+    updateMainImage();
+    
+    // 生成縮圖
+    generateThumbnails();
+    
+    // 顯示彈窗
+    document.getElementById('productModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+// 關閉商品詳情彈窗
+function closeProductModal() {
+    document.getElementById('productModal').classList.remove('active');
+    document.body.style.overflow = '';
+    currentProduct = null;
+    currentImageIndex = 0;
+}
+
+// 更新主圖片
+function updateMainImage() {
+    if (!currentProduct) return;
+    
+    document.getElementById('modalMainImage').src = currentProduct.images[currentImageIndex];
+    document.getElementById('imageCounter').textContent = (currentImageIndex + 1) + ' / ' + currentProduct.images.length;
+    
+    // 更新縮圖選中狀態
+    document.querySelectorAll('.product-thumbnail').forEach((thumb, index) => {
+        if (index === currentImageIndex) {
+            thumb.classList.add('active');
+        } else {
+            thumb.classList.remove('active');
+        }
+    });
+}
+
+// 上一張圖片
+function prevProductImage() {
+    if (!currentProduct) return;
+    currentImageIndex = (currentImageIndex - 1 + currentProduct.images.length) % currentProduct.images.length;
+    updateMainImage();
+}
+
+// 下一張圖片
+function nextProductImage() {
+    if (!currentProduct) return;
+    currentImageIndex = (currentImageIndex + 1) % currentProduct.images.length;
+    updateMainImage();
+}
+
+// 選擇特定圖片
+function selectProductImage(index) {
+    currentImageIndex = index;
+    updateMainImage();
+}
+
+// 生成縮圖
+function generateThumbnails() {
+    if (!currentProduct) return;
+    
+    const container = document.getElementById('productThumbnails');
+    container.innerHTML = '';
+    
+    currentProduct.images.forEach((img, index) => {
+        const thumb = document.createElement('div');
+        thumb.className = 'product-thumbnail' + (index === 0 ? ' active' : '');
+        thumb.onclick = () => selectProductImage(index);
+        thumb.innerHTML = '<img src="' + img + '" alt="圖片 ' + (index + 1) + '">';
+        container.appendChild(thumb);
+    });
+}
+
+
+
+// 點擊彈窗外部關閉
+document.getElementById('productModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeProductModal();
+    }
+});
+
+// ESC 鍵關閉
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && currentProduct) {
+        closeProductModal();
+    }
+});
+</script>
+
+<!-- ==================== 第四部分：修改原有的同款服飾區塊 ==================== -->
+<!-- 將原本的 <a href="index1.jsp"> 改成 onclick 觸發彈窗 -->
+
+<!-- 完整的 6 個商品修改代碼，複製替換你的同款服飾區塊 -->
+
+<!-- 商品 1：咖啡外套 -->
+<div class="swiper-slide">
+  <div class="product-item image-zoom-effect link-effect">
+    <div class="image-holder position-relative">
+      <a href="javascript:void(0)" onclick="openProductModal('outfit1')" style="cursor: pointer;">
+        <img src="images/M.jpg" alt="Outfit 1" class="product-image img-fluid">
+      </a>
+      <a href="https://reurl.cc/eGdpqM" class="product-link" style="position: absolute; top: 65%; left: 35%;">
+        <div class="product-tag">咖啡外套<br>$750</div>
+      </a>
+      <a href="https://reurl.cc/eGdpqM" class="product-link" style="position: absolute; top: 80%; left: 70%;">
+        <div class="product-tag">咖啡百褶裙<br>$410</div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- 商品 2：西裝外套 -->
+<div class="swiper-slide">
+  <div class="product-item image-zoom-effect link-effect">
+    <div class="image-holder position-relative">
+      <a href="javascript:void(0)" onclick="openProductModal('outfit2')" style="cursor: pointer;">
+        <img src="images/W.jpg" alt="Outfit 2" class="product-image img-fluid">
+      </a>
+      <a href="https://reurl.cc/WAvzvL" class="product-link" style="position: absolute; top: 60%; left: 40%;">
+        <div class="product-tag">西裝外套-灰<br>$1180</div>
+      </a>
+      <a href="https://reurl.cc/oV5mRg" class="product-link" style="position: absolute; top: 75%; left: 65%;">
+        <div class="product-tag">水桶包-黑<br>$600</div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- 商品 3：排釦上衣 -->
+<div class="swiper-slide">
+  <div class="product-item image-zoom-effect link-effect">
+    <div class="image-holder position-relative">
+      <a href="javascript:void(0)" onclick="openProductModal('outfit3')" style="cursor: pointer;">
+        <img src="images/S.jpg" alt="Outfit 3" class="product-image img-fluid">
+      </a>
+      <a href="https://reurl.cc/26E734" class="product-link" style="position: absolute; top: 65%; left: 40%;">
+        <div class="product-tag">排釦上衣<br>$430</div>
+      </a>
+      <a href="https://tw.shp.ee/D5aeBeq" class="product-link" style="position: absolute; top: 80%; left: 60%;">
+        <div class="product-tag">深藍黑牛仔短裙<br>$525</div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- 商品 4：連帽外套 -->
+<div class="swiper-slide">
+  <div class="product-item image-zoom-effect link-effect">
+    <div class="image-holder position-relative">
+      <a href="javascript:void(0)" onclick="openProductModal('outfit4')" style="cursor: pointer;">
+        <img src="images/C.jpg" alt="Outfit 4" class="product-image img-fluid">
+      </a>
+      <a href="https://reurl.cc/kMakNq" class="product-link" style="position: absolute; top: 60%; left: 35%;">
+        <div class="product-tag">連帽棉外套-黑<br>$880</div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- 商品 5：帽T -->
+<div class="swiper-slide">
+  <div class="product-item image-zoom-effect link-effect">
+    <div class="image-holder position-relative">
+      <a href="javascript:void(0)" onclick="openProductModal('outfit5')" style="cursor: pointer;">
+        <img src="images/X.jpg" alt="Outfit 5" class="product-image img-fluid">
+      </a>
+      <a href="https://reurl.cc/vp6omj" class="product-link" style="position: absolute; top: 65%; left: 40%;">
+        <div class="product-tag">帽T-淺灰色<br>$609</div>
+      </a>
+      <a href="https://reurl.cc/Q5ZmXZ" class="product-link" style="position: absolute; top: 80%; left: 70%;">
+        <div class="product-tag">日系工裝褲-灰<br>$550</div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- 商品 6：風衣 -->
+<div class="swiper-slide">
+  <div class="product-item image-zoom-effect link-effect">
+    <div class="image-holder position-relative">
+      <a href="javascript:void(0)" onclick="openProductModal('outfit6')" style="cursor: pointer;">
+        <img src="images/O.jpg" alt="Outfit 6" class="product-image img-fluid">
+      </a>
+      <a href="https://tw.shp.ee/tjJueee" class="product-link" style="position: absolute; top: 65%; left: 35%;">
+        <div class="product-tag">風衣-黑<br>$2240</div>
+      </a>
+      <a href="https://tw.shp.ee/LhYjBBQ" class="product-link" style="position: absolute; top: 80%; left: 65%;">
+        <div class="product-tag">西裝褲-灰<br>$350</div>
+      </a>
+    </div>
+  </div>
+</div>
 </body>
 
 </html>
