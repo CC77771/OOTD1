@@ -17,7 +17,49 @@ String sql = "SELECT postid, " +
              "WHERE post_state = True " +
              "GROUP BY postid " +
              "ORDER BY MAX(view) DESC";
-ResultSet rs = smt.executeQuery(sql);	%>	
+ResultSet rs = smt.executeQuery(sql);
+//====== 新增：查詢已上架的穿搭組合 ======
+String styleSql = "SELECT commodity_code, commodity_title, pic, commodity_name, price " +
+               "FROM commodity_information " +
+               "WHERE authorization = True " +
+               "GROUP BY commodity_code, commodity_title, pic, commodity_name, price " +
+               "ORDER BY commodity_code DESC";
+Statement styleStmt = con.createStatement();
+ResultSet styleRs = styleStmt.executeQuery(styleSql);
+
+//儲存穿搭組合資料
+java.util.ArrayList<java.util.HashMap<String, String>> styleList = new java.util.ArrayList<>();
+while(styleRs.next()) {
+ java.util.HashMap<String, String> style = new java.util.HashMap<>();
+ style.put("title", styleRs.getString("commodity_title"));
+ style.put("pic", styleRs.getString("pic"));
+ 
+ // 查詢該穿搭組合的所有商品標籤
+ String tagSql = "SELECT commodity_name, price FROM commodity_information " +
+                 "WHERE commodity_title = ? AND pic = ? AND authorization = True";
+ PreparedStatement tagPstmt = con.prepareStatement(tagSql);
+ tagPstmt.setString(1, styleRs.getString("commodity_title"));
+ tagPstmt.setString(2, styleRs.getString("pic"));
+ ResultSet tagRs = tagPstmt.executeQuery();
+ 
+ StringBuilder tags = new StringBuilder();
+ int tagCount = 0;
+ while(tagRs.next()) {
+     if(tagCount > 0) tags.append("|");
+     tags.append(tagRs.getString("commodity_name")).append(",").append(tagRs.getString("price"));
+     tagCount++;
+ }
+ style.put("tags", tags.toString());
+ style.put("tagCount", String.valueOf(tagCount));
+ 
+ tagRs.close();
+ tagPstmt.close();
+ 
+ styleList.add(style);
+}
+styleRs.close();
+styleStmt.close();
+%>	
 	<%
     String member = (String) session.getAttribute("accessId");
 %>
@@ -1174,6 +1216,100 @@ function updateViewCount(postid, slideElement) {
     <div class="swiper product-swiper open-up" data-aos="zoom-out">
       <div class="swiper-wrapper d-flex">
 
+<%
+  // 顯示資料庫中的穿搭組合
+  for(int i = 0; i < styleList.size(); i++) {
+      java.util.HashMap<String, String> style = styleList.get(i);
+      String[] tagArray = style.get("tags").split("\\|");
+  %>
+  <div class="swiper-slide">
+    <div class="product-item image-zoom-effect link-effect">
+      <div class="image-holder position-relative">
+        <a href="javascript:void(0)" onclick="openStyleModal('<%= i %>')" style="cursor: pointer;">
+          <img src="<%= style.get("pic") %>" alt="<%= style.get("title") %>" class="product-image img-fluid">
+        </a>
+        <%
+        // 顯示標籤（這裡簡化顯示，實際位置需要從資料庫讀取）
+        int topPosition = 65;
+        int leftPosition = 35;
+        for(String tag : tagArray) {
+            if(tag.trim().isEmpty()) continue;
+            String[] tagInfo = tag.split(",");
+            if(tagInfo.length == 2) {
+        %>
+        <div class="product-link" style="position: absolute; top: <%= topPosition %>%; left: <%= leftPosition %>%;">
+          <div class="product-tag"><%= tagInfo[0] %><br>$<%= tagInfo[1] %></div>
+        </div>
+        <%
+                topPosition += 15;
+                leftPosition += 10;
+            }
+        }
+        %>
+      </div>
+    </div>
+  </div>
+  <%
+  }
+  %>
+  <script>
+  // 從資料庫載入的穿搭組合資料
+  const styleSetData = [
+	  <%
+	  for(int i = 0; i < styleList.size(); i++) {
+	      java.util.HashMap<String, String> style = styleList.get(i);
+	      if(i > 0) out.print(",");
+	  %>
+	  {
+	      title: '<%= style.get("title").replace("'", "\\'") %>',
+	      image: '<%= style.get("pic") %>',
+	      tags: '<%= style.get("tags") %>',
+	      tagCount: <%= style.get("tagCount") %>
+	  }
+	  <%
+	  }
+	  %>
+	  ];
+
+	  // 打開穿搭組合彈窗
+	  function openStyleModal(index) {
+	      const style = styleSetData[index];
+	      if (!style) return;
+	      
+	      // 使用相同的彈窗，但填入不同資料
+	      document.getElementById('modalProductName').textContent = style.title;
+	      document.getElementById('modalProductTitle').textContent = style.title;
+	      document.getElementById('modalProductDesc').textContent = '這是來自商家的穿搭組合，包含 ' + style.tagCount + ' 件商品';
+	      
+	      // 設置圖片
+	      document.getElementById('modalMainImage').src = style.image;
+	      document.getElementById('imageCounter').textContent = '1 / 1';
+	      
+	      // 隱藏縮圖區域（因為只有一張圖）
+	      document.getElementById('productThumbnails').style.display = 'none';
+	      document.querySelector('.product-nav-btn.prev').style.display = 'none';
+	      document.querySelector('.product-nav-btn.next').style.display = 'none';
+	      
+	      // 顯示標籤資訊
+	      const tags = style.tags.split('|');
+	      let tagHtml = '<h3>包含商品：</h3><ul>';
+	      tags.forEach(tag => {
+	          const [name, price] = tag.split(',');
+	          if(name && price) {
+	              tagHtml += '<li>' + name + ' - NT$' + price + '</li>';
+	          }
+	      });
+	      tagHtml += '</ul>';
+	      document.getElementById('modalProductDesc').innerHTML = tagHtml;
+	      
+	      // 隱藏蝦皮連結按鈕
+	      document.getElementById('modalShopeeLink').style.display = 'none';
+	      
+	      // 顯示彈窗
+	      document.getElementById('productModal').classList.add('active');
+	      document.body.style.overflow = 'hidden';
+	  }
+	  </script>
        <div class="swiper-slide">
   <div class="product-item image-zoom-effect link-effect">
     <div class="image-holder position-relative">

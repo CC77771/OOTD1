@@ -1,6 +1,60 @@
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
-<%@ page import="java.util.*, java.text.*" %>
+<%@ page import="java.util.*, java.text.*, java.sql.*" %>
 <%@include file ="menu.jsp" %>
+<jsp:useBean id="objDBConfig" scope="session" class="CZ.group.tool.database.DBConfig" />
+<jsp:useBean id="objFolderConfig" scope="session" class="CZ.group.tool.upload.FolderConfig2" />
+<%
+// 從資料庫讀取商品資料供標籤選擇使用
+ArrayList<HashMap<String, String>> commodityList = new ArrayList<>();
+try {
+    String dbPath = objDBConfig.FilePath();
+    Class.forName("net.ucanaccess.jdbc.UcanaccessDriver");
+    Connection con = DriverManager.getConnection("jdbc:ucanaccess://" + dbPath);
+    
+    // 更新 SQL 查詢以對應正確的欄位
+    String sql = "SELECT commodity_code, memberId, commodity_title, pic, commodity_name, price, website, authorization FROM commodity_information ORDER BY commodity_code";
+    Statement stmt = con.createStatement();
+    ResultSet rs = stmt.executeQuery(sql);
+    
+    while(rs.next()) {
+        HashMap<String, String> item = new HashMap<>();
+        item.put("code", rs.getString("commodity_code") != null ? rs.getString("commodity_code") : "");
+        item.put("memberId", rs.getString("memberId") != null ? rs.getString("memberId") : "");
+        item.put("title", rs.getString("commodity_title") != null ? rs.getString("commodity_title") : "");
+        item.put("pic", rs.getString("pic") != null ? rs.getString("pic") : "");
+        item.put("name", rs.getString("commodity_name") != null ? rs.getString("commodity_name") : "");
+        item.put("price", rs.getString("price") != null ? rs.getString("price") : "0");
+        item.put("website", rs.getString("website") != null ? rs.getString("website") : "");
+        item.put("authorization", rs.getString("authorization") != null ? rs.getString("authorization") : "0");
+        commodityList.add(item);
+    }
+    
+    rs.close();
+    stmt.close();
+    con.close();
+} catch(Exception e) {
+    out.println("資料庫錯誤: " + e.getMessage());
+    e.printStackTrace();
+}
+
+// 將資料轉換為 JavaScript 陣列格式
+StringBuilder jsonData = new StringBuilder("[");
+for(int i = 0; i < commodityList.size(); i++) {
+    HashMap<String, String> item = commodityList.get(i);
+    if(i > 0) jsonData.append(",");
+    jsonData.append("{");
+    jsonData.append("\"code\":\"").append(item.get("code").replace("\"", "\\\"")).append("\",");
+    jsonData.append("\"memberId\":\"").append(item.get("memberId").replace("\"", "\\\"")).append("\",");
+    jsonData.append("\"title\":\"").append(item.get("title").replace("\"", "\\\"")).append("\",");
+    jsonData.append("\"pic\":\"").append(item.get("pic").replace("\"", "\\\"").replace("\\", "/")).append("\",");
+    jsonData.append("\"name\":\"").append(item.get("name").replace("\"", "\\\"")).append("\",");
+    jsonData.append("\"price\":\"").append(item.get("price")).append("\",");
+    jsonData.append("\"website\":\"").append(item.get("website").replace("\"", "\\\"")).append("\",");
+    jsonData.append("\"authorization\":\"").append(item.get("authorization")).append("\"");
+    jsonData.append("}");
+}
+jsonData.append("]");
+%>
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -62,6 +116,9 @@
             { title: '個資使用同意', desc: '同意使用訂單資料進行管理' },
             { title: '資料撷取授權', desc: '授權自動同步訂單資料' }
         ];
+
+        // 從資料庫讀取的商品資料
+        const dbCommodities = <%= jsonData.toString() %>;
 
         let state = {
             isConnected: false,
@@ -180,14 +237,14 @@
             html += '<div class="p-6 text-white" style="background: linear-gradient(135deg, #a89f91 0%, #93897d 100%);"><div class="flex items-center justify-between">';
             html += '<h2 class="text-2xl font-bold">新增穿搭組合</h2><button onclick="closeStyleSetModal()"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button></div></div>';
             html += '<div class="p-8"><div class="mb-6"><label class="block text-gray-700 font-semibold mb-2">組合標題 <span class="text-red-500">*</span></label>';
-            html += '<input type="text" id="setTitle" placeholder="例如：秋冬簡約穿搭" class="w-full px-4 py-3 border rounded-lg" style="border-color: #d4cdc5;"></div>';
+            html += '<input type="text" id="setTitle" placeholder="例如:秋冬簡約穿搭" class="w-full px-4 py-3 border rounded-lg" style="border-color: #d4cdc5;"></div>';
             html += '<div class="mb-6"><label class="block text-gray-700 font-semibold mb-2">上傳穿搭圖片 <span class="text-red-500">*</span></label>';
             html += '<input type="file" id="styleImage" accept="image/*" onchange="previewImage(event)" class="w-full px-4 py-3 border rounded-lg" style="border-color: #d4cdc5;">';
-            html += '<p class="text-sm text-gray-500 mt-2">建議尺寸：800x1000 像素</p></div>';
+            html += '<p class="text-sm text-gray-500 mt-2">建議尺寸:800x1000 像素</p></div>';
             html += '<div id="imagePreview" class="mb-6 hidden"><label class="block text-gray-700 font-semibold mb-2">圖片預覽</label>';
             html += '<div class="border rounded-lg p-4" style="border-color: #d4cdc5;"><img id="previewImg" src="" class="max-w-full h-auto mx-auto"></div></div>';
             html += '<div class="flex gap-3"><button onclick="closeStyleSetModal()" class="flex-1 px-6 py-3 border-2 text-gray-700 rounded-lg" style="border-color: #d4cdc5;">取消</button>';
-            html += '<button onclick="saveStyleSet()" class="flex-1 px-6 py-3 text-white rounded-lg" style="background-color: #a89f91;">下一步：添加商品標籤</button></div></div></div></div>';
+            html += '<button onclick="saveStyleSet()" class="flex-1 px-6 py-3 text-white rounded-lg" style="background-color: #a89f91;">下一步:添加商品標籤</button></div></div></div></div>';
             return html;
         }
 
@@ -216,7 +273,7 @@
             html += '<div><label class="block text-gray-700 text-sm font-medium mb-2">商品名稱</label><input type="text" id="tagName" placeholder="咖啡外套" class="w-full px-3 py-2 border rounded-lg" style="border-color: #d4cdc5;"></div>';
             html += '<div><label class="block text-gray-700 text-sm font-medium mb-2">價格</label><input type="text" id="tagPrice" placeholder="750" class="w-full px-3 py-2 border rounded-lg" style="border-color: #d4cdc5;"></div>';
             html += '<div><label class="block text-gray-700 text-sm font-medium mb-2">蝦皮連結</label><input type="url" id="tagUrl" placeholder="https://shopee.tw/..." class="w-full px-3 py-2 border rounded-lg" style="border-color: #d4cdc5;"></div>';
-            html += '</div><p class="text-sm text-gray-500 mt-3">填寫完成後，點擊圖片上的位置即可添加標籤</p></div>';
+            html += '</div><p class="text-sm text-gray-500 mt-3">填寫完成後,點擊圖片上的位置即可添加標籤</p></div>';
             html += '<div class="flex gap-3 mt-6"><button onclick="closeEditTagModal()" class="flex-1 px-6 py-3 border-2 text-gray-700 rounded-lg" style="border-color: #d4cdc5;">取消</button>';
             html += '<button onclick="saveTagsAndClose()" class="flex-1 px-6 py-3 text-white rounded-lg" style="background-color: #a89f91;">完成編輯</button></div></div></div></div>';
             return html;
@@ -346,7 +403,7 @@
                     state.loading = false;
                     saveData();
                     render();
-                    alert('🎉 授權成功！');
+                    alert('🎉 授權成功!');
                 }, 2000);
             }
         }
@@ -411,27 +468,82 @@
         }
 
         function saveTagsAndClose() {
-            saveData();
-            closeEditTagModal();
-            alert('✅ 穿搭組合已儲存！');
+            if (!state.currentEditingSet || state.currentEditingSet.tags.length === 0) {
+                alert('請至少添加一個商品標籤');
+                return;
+            }
+            
+            // 準備表單資料
+            const formData = new FormData();
+            formData.append('styleTitle', state.currentEditingSet.title);
+            formData.append('tagsData', JSON.stringify(state.currentEditingSet.tags));
+            formData.append('memberId', '<%= session.getAttribute("memberId") %>');  // 加入這行
+            
+            // 從 base64 轉換為 Blob
+            const base64Data = state.currentEditingSet.image.split(',')[1];
+            const byteCharacters = atob(base64Data);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], {type: 'image/jpeg'});
+            formData.append('styleImage', blob, 'style_' + Date.now() + '.jpg');
+            
+            // 顯示載入中提示
+            const originalBtn = event.target;
+            originalBtn.disabled = true;
+            originalBtn.textContent = '儲存中...';
+            
+            // 發送請求
+            fetch('style_set_insert.jsp', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(data => {
+                console.log('Response:', data);
+                if(data.indexOf('SUCCESS') !== -1 || data.indexOf('成功') !== -1) {
+                    saveData();
+                    alert('✅ 穿搭組合已儲存至資料庫！');
+                    location.reload();
+                } else {
+                    alert('❌ 儲存失敗，請稍後再試');
+                    console.error('Error response:', data);
+                    originalBtn.disabled = false;
+                    originalBtn.textContent = '完成編輯';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ 儲存失敗：' + error.message);
+                originalBtn.disabled = false;
+                originalBtn.textContent = '完成編輯';
+            });
         }
 
         function toggleStyleSet(index) {
             state.styleSets[index].isActive = !state.styleSets[index].isActive;
             saveData();
             render();
+            alert(state.styleSets[index].isActive ? '✅ 已上架' : '📦 已下架');
         }
 
         function deleteStyleSet(index) {
-            if (confirm('確定要刪除這個穿搭組合嗎？')) {
+            if (confirm('確定要刪除這個穿搭組合嗎？此操作無法復原。')) {
                 state.styleSets.splice(index, 1);
                 saveData();
                 render();
+                alert('🗑️ 已刪除穿搭組合');
             }
         }
 
+        // 頁面載入時初始化
         loadData();
         render();
+        
+        // 在控制台輸出資料庫商品資料供除錯
+        console.log('資料庫商品資料:', dbCommodities);
     </script>
 </body>
 </html>
