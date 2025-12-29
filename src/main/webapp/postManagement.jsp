@@ -420,7 +420,7 @@ table img:hover {
     <div class="admin-header">
         <div class="d-flex justify-content-between align-items-center">
             <div>
-                <h1>🛠️ 管理者控制台</h1>
+                <h1>🛠️ 貼文審核</h1>
                 <p>歡迎回來 | 管理 CZ_OOTD 平台內容與使用者</p>
             </div>
             <a href="manager3.jsp" class="back-btn">← 返回控制台</a>
@@ -438,7 +438,7 @@ table img:hover {
         </li>
 
         <li class="nav-item">
-            <a class="nav-link" href="userManagement.jsp">👥 使用者管理</a>
+            <a class="nav-link" href="userManagement.jsp">👥 一般會員管理</a>
         </li>
 
         <li class="nav-item">

@@ -218,7 +218,7 @@ body {
         </li>
 
         <li class="nav-item">
-            <a class="nav-link" href="userManagement.jsp">👥 使用者管理</a>
+            <a class="nav-link" href="userManagement.jsp">👥 一般會員管理</a>
         </li>
         
 		<li class="nav-item">

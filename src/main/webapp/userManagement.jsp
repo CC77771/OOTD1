@@ -324,7 +324,7 @@
         <div class="admin-header">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h1>👥 使用者管理</h1>
+                    <h1>👥 一般會員管理</h1>
                     <p>管理會員帳號狀態，設定黑名單以限制登入權限</p>
                 </div>
                 <a href="manager3.jsp" class="back-btn">← 返回控制台</a>
