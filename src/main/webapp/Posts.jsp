@@ -2,28 +2,25 @@
 <%@page import="java.sql.*"%>
 <%@page import="java.io.*"%>
 <%@page import="java.util.*"%>
-<%@page import="jakarta.servlet.http.Part"%>
-<%@include file="menu.jsp" %>
 <jsp:useBean id='objDBConfig' scope='session' class='CZ.group.tool.database.DBConfig' />
 
 <%
 // 處理表單提交
-if("POST".equals(request.getMethod()) && request.getContentType() != null && request.getContentType().startsWith("multipart/form-data")) {
+if("POST".equals(request.getMethod())) {
     try {
         // 獲取表單數據
-        String memberId = request.getParameter("memberId");
+        String memberId = (String) session.getAttribute("accessId");
         String wearId = request.getParameter("wearId");
         String tags = request.getParameter("tags");
         
-        // 獲取上傳的圖片
-        Part filePart = request.getPart("pic");
-        byte[] imageData = null;
-        
-        if(filePart != null && filePart.getSize() > 0) {
-            InputStream fileContent = filePart.getInputStream();
-            imageData = fileContent.readAllBytes();
-            fileContent.close();
+        // 檢查數據
+        if(memberId == null || memberId.trim().isEmpty()) {
+            response.sendRedirect("login.jsp");
+            return;
         }
+        
+        // 暫時使用預設圖片
+        String picPath = "images/default-post.jpg";
         
         // 存入資料庫
         Class.forName("net.ucanaccess.jdbc.UcanaccessDriver");
@@ -32,41 +29,46 @@ if("POST".equals(request.getMethod()) && request.getContentType() != null && req
         String sql = "INSERT INTO personal_wear (memberId, wearId, pic, [like], collect, view, post_state) VALUES (?, ?, ?, 0, 0, 0, True)";
         PreparedStatement pstmt = con.prepareStatement(sql);
         pstmt.setString(1, memberId);
-        pstmt.setString(2, wearId);
+        pstmt.setString(2, wearId != null ? wearId : "");
+        pstmt.setString(3, picPath);
         
-        // 將圖片轉為 Base64 存入
-        if(imageData != null) {
-            String base64Image = "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(imageData);
-            pstmt.setString(3, base64Image);
-        } else {
-            pstmt.setString(3, "");
-        }
-        
-        int result = pstmt.executeUpdate();
+        pstmt.executeUpdate();
         pstmt.close();
         con.close();
         
-        if(result > 0) {
-            response.sendRedirect("index1.jsp");
-            return;
-        } else {
-            out.println("<script>alert('上傳失敗！');</script>");
-        }
+        // 成功後直接重定向
+        response.sendRedirect("index1.jsp");
+        return;
         
     } catch(Exception e) {
-        out.println("<script>alert('錯誤: " + e.getMessage().replace("'", "\\'") + "');</script>");
+        // 發生錯誤時顯示錯誤訊息
+        request.setAttribute("errorMessage", e.getMessage());
         e.printStackTrace();
     }
 }
 %>
 
+<%@include file="menu.jsp" %>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Responsive Post Upload</title>
+    
+    <%
+    // 如果有錯誤訊息，顯示出來
+    String errorMsg = (String) request.getAttribute("errorMessage");
+    if(errorMsg != null) {
+    %>
+    <script>
+        alert('發布失敗: <%= errorMsg.replace("'", "\\'") %>');
+    </script>
+    <%
+    }
+    %>
+    
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -353,7 +355,7 @@ if("POST".equals(request.getMethod()) && request.getContentType() != null && req
             <div class="upload-container">
                 <div class="upload-header">上傳貼文</div>
                 <div class="upload-body">
-                    <form name="form" action="uploadPicToDatabase.jsp" method="post" enctype="multipart/form-data">
+                    <form name="form" action="Posts.jsp" method="post" enctype="multipart/form-data">
                         <!-- Image Upload -->
                         <div class="upload-image" onclick="document.getElementById('fileInput').click()">
                             <span id="filePlaceholder">點擊上傳圖片</span>
@@ -416,7 +418,7 @@ if("POST".equals(request.getMethod()) && request.getContentType() != null && req
         let suggestedTagsList = [];
 
         // 預設標籤庫
-        const popularTags = ['風景', '美食', '旅遊', '日常', '寵物', '藝術', '攝影', '設計', '時尚', '運動', '音樂', '科技'];
+       const popularTags = ['休閒風', '正式風', '韓系', '日系', '復古風', '運動風', '甜美風', '帥氣風', '簡約風', '波西米亞', '龐克風', '學院風'];
 
         // 圖片上傳預覽
         fileInput.addEventListener("change", function () {
