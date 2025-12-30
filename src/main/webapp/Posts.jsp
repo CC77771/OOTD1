@@ -1,10 +1,70 @@
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
 <%@page import="java.sql.*"%>
+<%@page import="java.io.*"%>
+<%@page import="java.util.*"%>
+<%@page import="jakarta.servlet.http.Part"%>
 <%@include file="menu.jsp" %>
+<jsp:useBean id='objDBConfig' scope='session' class='CZ.group.tool.database.DBConfig' />
+
+<%
+// 處理表單提交
+if("POST".equals(request.getMethod()) && request.getContentType() != null && request.getContentType().startsWith("multipart/form-data")) {
+    try {
+        // 獲取表單數據
+        String memberId = request.getParameter("memberId");
+        String wearId = request.getParameter("wearId");
+        String tags = request.getParameter("tags");
+        
+        // 獲取上傳的圖片
+        Part filePart = request.getPart("pic");
+        byte[] imageData = null;
+        
+        if(filePart != null && filePart.getSize() > 0) {
+            InputStream fileContent = filePart.getInputStream();
+            imageData = fileContent.readAllBytes();
+            fileContent.close();
+        }
+        
+        // 存入資料庫
+        Class.forName("net.ucanaccess.jdbc.UcanaccessDriver");
+        Connection con = DriverManager.getConnection("jdbc:ucanaccess://" + objDBConfig.FilePath() + ";");
+        
+        String sql = "INSERT INTO personal_wear (memberId, wearId, pic, [like], collect, view, post_state) VALUES (?, ?, ?, 0, 0, 0, True)";
+        PreparedStatement pstmt = con.prepareStatement(sql);
+        pstmt.setString(1, memberId);
+        pstmt.setString(2, wearId);
+        
+        // 將圖片轉為 Base64 存入
+        if(imageData != null) {
+            String base64Image = "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(imageData);
+            pstmt.setString(3, base64Image);
+        } else {
+            pstmt.setString(3, "");
+        }
+        
+        int result = pstmt.executeUpdate();
+        pstmt.close();
+        con.close();
+        
+        if(result > 0) {
+            response.sendRedirect("index1.jsp");
+            return;
+        } else {
+            out.println("<script>alert('上傳失敗！');</script>");
+        }
+        
+    } catch(Exception e) {
+        out.println("<script>alert('錯誤: " + e.getMessage().replace("'", "\\'") + "');</script>");
+        e.printStackTrace();
+    }
+}
+%>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Responsive Post Upload</title>
     <style>
