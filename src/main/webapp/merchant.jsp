@@ -168,14 +168,19 @@ jsonData.append("]");
                 return;
             }
             
-            console.log('開始載入穿搭組合,memberId:', memberId);
+            console.log('開始載入穿搭組合, memberId:', memberId);
             
             fetch('load_style_sets.jsp?memberId=' + encodeURIComponent(memberId))
                 .then(response => response.json())
                 .then(data => {
                     console.log('載入的資料:', data);
                     if (data.success) {
-                        state.styleSets = data.styleSets;
+                        // 確保每個項目都有 title 欄位
+                        state.styleSets = data.styleSets.map(set => ({
+                            ...set,
+                            title: set.title || set.commodity_title || '未命名穿搭'
+                        }));
+                        console.log('處理後的穿搭組合:', state.styleSets);
                         render();
                     } else {
                         console.error('載入失敗:', data.message);
@@ -515,23 +520,23 @@ jsonData.append("]");
                 alert('請至少添加一個商品標籤');
                 return;
             }
+            
+            // ✅ 統一使用 accessId
             const memberId = '<%= session.getAttribute("accessId") %>';
-         
             
             // 驗證 memberId
             if (!memberId || memberId === 'null' || memberId.trim() === '') {
-                alert('❌ 無法取得會員資訊，請重新登入');
+                alert('❌ 無法取得會員資訊,請重新登入');
                 return;
             }
             
-            console.log('準備送出的 memberId:', memberId); // 除錯用
-            
+            console.log('準備送出的 memberId:', memberId);
             
             // 準備表單資料
             const formData = new FormData();
             formData.append('styleTitle', state.currentEditingSet.title);
             formData.append('tagsData', JSON.stringify(state.currentEditingSet.tags));
-            formData.append('memberId', '<%= session.getAttribute("memberId") %>');  // 加入這行
+            formData.append('memberId', memberId);  // ✅ 改用變數,保持一致
             
             // 從 base64 轉換為 Blob
             const base64Data = state.currentEditingSet.image.split(',')[1];
@@ -544,10 +549,12 @@ jsonData.append("]");
             const blob = new Blob([byteArray], {type: 'image/jpeg'});
             formData.append('styleImage', blob, 'style_' + Date.now() + '.jpg');
             
-            // 顯示載入中提示
-            const originalBtn = event.target;
-            originalBtn.disabled = true;
-            originalBtn.textContent = '儲存中...';
+            // 發送請求前先取得按鈕
+            const saveBtn = document.querySelector('button[onclick="saveTagsAndClose()"]');
+            if (saveBtn) {
+                saveBtn.disabled = true;
+                saveBtn.textContent = '儲存中...';
+            }
             
             // 發送請求
             fetch('style_set_insert.jsp', {
@@ -562,57 +569,49 @@ jsonData.append("]");
                     alert('✅ 穿搭組合已儲存至資料庫！');
                     location.reload();
                 } else {
-                    alert('❌ 儲存失敗，請稍後再試');
+                    alert('❌ 儲存失敗,請稍後再試');
                     console.error('Error response:', data);
-                    originalBtn.disabled = false;
-                    originalBtn.textContent = '完成編輯';
+                    if (saveBtn) {
+                        saveBtn.disabled = false;
+                        saveBtn.textContent = '完成編輯';
+                    }
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
                 alert('❌ 儲存失敗：' + error.message);
-                originalBtn.disabled = false;
-                originalBtn.textContent = '完成編輯';
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = '完成編輯';
+                }
             });
         }
 
        
 
         function deleteStyleSet(index) {
-            if (confirm('確定要刪除這個穿搭組合嗎？')) {
-                const styleSet = state.styleSets[index];
-                const memberId = '<%= session.getAttribute("accessId") %>';
-                
-                // 準備刪除請求
-                const formData = new FormData();
-                formData.append('memberId', memberId);
-                formData.append('styleTitle', styleSet.title);
-                formData.append('action', 'delete');
-                
-                // 發送刪除請求到伺服器
-                fetch('delete_style_set.jsp', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.text())
-                .then(data => {
-                    console.log('Delete response:', data);
-                    if(data.indexOf('SUCCESS') !== -1 || data.indexOf('成功') !== -1) {
-                        // 從前端移除
-                        state.styleSets.splice(index, 1);
-                        saveData();
-                        render();
-                        alert('🗑️ 已刪除穿搭組合');
-                    } else {
-                        alert('❌ 刪除失敗，請稍後再試');
-                        console.error('Delete error:', data);
-                    }
-                })
-                .catch(error => {
-                    console.error('Delete error:', error);
-                    alert('❌ 刪除失敗：' + error.message);
-                });
+            const styleSet = state.styleSets[index];
+            const memberId = '<%= session.getAttribute("accessId") %>';
+            const styleTitle = styleSet.title || styleSet.commodity_title;
+            
+            // 驗證參數
+            if (!memberId || memberId === 'null' || memberId.trim() === '') {
+                alert('❌ 無法取得會員資訊，請重新登入');
+                return;
             }
+            
+            if (!styleTitle || styleTitle.trim() === '') {
+                alert('❌ 無法取得穿搭組合標題');
+                return;
+            }
+            
+            // 確認刪除
+            if (!confirm('確定要刪除這個穿搭組合嗎？\n\n標題: ' + styleTitle)) {
+                return;
+            }
+            
+            // 直接導向刪除頁面（使用 GET 方式）
+            window.location.href = 'delete_style_set.jsp?memberId=' + encodeURIComponent(memberId) + '&styleTitle=' + encodeURIComponent(styleTitle);
         }
 
         // 頁面載入時初始化
