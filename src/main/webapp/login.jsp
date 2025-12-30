@@ -13,6 +13,7 @@ String getpaperdata = "SELECT memberid, positionId FROM personal_information;WHE
 ResultSet paperrs = smt.executeQuery(getpaperdata);
 if(paperrs.next()){
 	session.setAttribute("accessId",request.getParameter("memberid"));
+	session.setAttribute("memberId", request.getParameter("memberId"));
 	session.setAttribute("positionId", paperrs.getString("positionId"));
 	//session.setMaxInactiveInterval(20); 自動登出
 	response.sendRedirect("index1.jsp");

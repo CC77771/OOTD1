@@ -1210,7 +1210,7 @@ function updateViewCount(postid, slideElement) {
   <div class="container">
     <div class="section-header text-center mt-5">
     <section id="Same style">
-      <h3 class="text-uppercase">同款服飾</h3>     
+      <h3 class="text-uppercase">穿搭推薦</h3>     
     </div>
 
     <div class="swiper product-swiper open-up" data-aos="zoom-out">

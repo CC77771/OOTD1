@@ -4,6 +4,20 @@
 <jsp:useBean id="objDBConfig" scope="session" class="CZ.group.tool.database.DBConfig" />
 <jsp:useBean id="objFolderConfig" scope="session" class="CZ.group.tool.upload.FolderConfig2" />
 <%
+// 改成 accessId
+String testMemberId = (String) session.getAttribute("accessId");  // ✅ 改這裡
+out.println("<!-- Session accessId: " + testMemberId + " -->");
+%>
+<%
+String accessId = (String) session.getAttribute("accessId");
+String memberId = (String) session.getAttribute("memberId");
+
+out.println("<!-- Debug Info -->");
+out.println("<!-- Session accessId: " + accessId + " -->");
+out.println("<!-- Session memberId: " + memberId + " -->");
+out.println("<!-- Session ID: " + session.getId() + " -->");
+%>
+<%
 // 從資料庫讀取商品資料供標籤選擇使用
 ArrayList<HashMap<String, String>> commodityList = new ArrayList<>();
 try {
@@ -139,9 +153,39 @@ jsonData.append("]");
                 const data = JSON.parse(saved);
                 state.isConnected = data.isConnected || false;
                 state.shopInfo = data.shopInfo || null;
-                state.styleSets = data.styleSets || [];
+            }
+            
+            if(state.isConnected) {
+                loadStyleSetsFromDB();
             }
         }
+
+        function loadStyleSetsFromDB() {
+            const memberId = '<%= session.getAttribute("accessId") %>';
+            
+            if (!memberId || memberId === 'null') {
+                console.log('無法取得 memberId');
+                return;
+            }
+            
+            console.log('開始載入穿搭組合,memberId:', memberId);
+            
+            fetch('load_style_sets.jsp?memberId=' + encodeURIComponent(memberId))
+                .then(response => response.json())
+                .then(data => {
+                    console.log('載入的資料:', data);
+                    if (data.success) {
+                        state.styleSets = data.styleSets;
+                        render();
+                    } else {
+                        console.error('載入失敗:', data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('載入穿搭組合失敗:', error);
+                });
+        }
+        
 
         function saveData() {
             localStorage.setItem('shopeeAuthData', JSON.stringify({
@@ -199,8 +243,7 @@ jsonData.append("]");
                         html += '<div class="p-4"><h3 class="font-semibold text-lg text-gray-800 mb-3">' + set.title + '</h3>';
                         html += '<div class="flex gap-2">';
                         html += '<button onclick="editStyleSet(' + index + ')" class="flex-1 px-4 py-2 text-white text-sm rounded transition" style="background-color: #a89f91;">編輯</button>';
-                        html += '<button onclick="toggleStyleSet(' + index + ')" class="flex-1 px-4 py-2 ' + (set.isActive ? 'bg-orange-500' : 'bg-green-500') + ' text-white text-sm rounded">' + (set.isActive ? '下架' : '上架') + '</button>';
-                        html += '<button onclick="deleteStyleSet(' + index + ')" class="px-4 py-2 bg-red-500 text-white text-sm rounded">刪除</button></div></div></div>';
+                        html += '<button onclick="deleteStyleSet(' + index + ')" class="flex-1 px-4 py-2 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition">刪除</button></div></div></div>';
                     });
                     html += '</div>';
                 }
@@ -472,6 +515,17 @@ jsonData.append("]");
                 alert('請至少添加一個商品標籤');
                 return;
             }
+            const memberId = '<%= session.getAttribute("accessId") %>';
+         
+            
+            // 驗證 memberId
+            if (!memberId || memberId === 'null' || memberId.trim() === '') {
+                alert('❌ 無法取得會員資訊，請重新登入');
+                return;
+            }
+            
+            console.log('準備送出的 memberId:', memberId); // 除錯用
+            
             
             // 準備表單資料
             const formData = new FormData();
@@ -522,19 +576,42 @@ jsonData.append("]");
             });
         }
 
-        function toggleStyleSet(index) {
-            state.styleSets[index].isActive = !state.styleSets[index].isActive;
-            saveData();
-            render();
-            alert(state.styleSets[index].isActive ? '✅ 已上架' : '📦 已下架');
-        }
+       
 
         function deleteStyleSet(index) {
-            if (confirm('確定要刪除這個穿搭組合嗎？此操作無法復原。')) {
-                state.styleSets.splice(index, 1);
-                saveData();
-                render();
-                alert('🗑️ 已刪除穿搭組合');
+            if (confirm('確定要刪除這個穿搭組合嗎？')) {
+                const styleSet = state.styleSets[index];
+                const memberId = '<%= session.getAttribute("accessId") %>';
+                
+                // 準備刪除請求
+                const formData = new FormData();
+                formData.append('memberId', memberId);
+                formData.append('styleTitle', styleSet.title);
+                formData.append('action', 'delete');
+                
+                // 發送刪除請求到伺服器
+                fetch('delete_style_set.jsp', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.text())
+                .then(data => {
+                    console.log('Delete response:', data);
+                    if(data.indexOf('SUCCESS') !== -1 || data.indexOf('成功') !== -1) {
+                        // 從前端移除
+                        state.styleSets.splice(index, 1);
+                        saveData();
+                        render();
+                        alert('🗑️ 已刪除穿搭組合');
+                    } else {
+                        alert('❌ 刪除失敗，請稍後再試');
+                        console.error('Delete error:', data);
+                    }
+                })
+                .catch(error => {
+                    console.error('Delete error:', error);
+                    alert('❌ 刪除失敗：' + error.message);
+                });
             }
         }
 
