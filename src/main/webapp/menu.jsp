@@ -409,18 +409,15 @@
                     <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
                 </svg>
                 熱門搜尋
-            </div>
+             </div>
             <ul class="dropdown-list">
-                <li onclick="selectSearchFromModal('零碼優惠專區')">零碼優惠專區</li>
-                <li onclick="selectSearchFromModal('針織衫')">針織衫</li>
-                <li onclick="selectSearchFromModal('溫差外套')">溫差外套</li>
-                <li onclick="selectSearchFromModal('牛仔系列')">牛仔系列</li>
-                <li onclick="selectSearchFromModal('親子裝推薦')">親子裝推薦</li>
-                <li onclick="selectSearchFromModal('秋冬新品')">秋冬新品</li>
-                <li onclick="selectSearchFromModal('人氣排行')">人氣排行</li>
-                <li onclick="selectSearchFromModal('新尺碼XXL＆160＆XS')">新尺碼XXL＆160＆XS</li>
-                <li onclick="selectSearchFromModal('熱銷到貨')">熱銷到貨</li>
-                <li onclick="selectSearchFromModal('購場穿搭')">購場穿搭</li>
+                <li onclick="selectSearchFromModal('休閒')">🌿 休閒</li>
+                <li onclick="selectSearchFromModal('正式')">👔 正式</li>
+                <li onclick="selectSearchFromModal('運動')">⚽ 運動</li>
+                <li onclick="selectSearchFromModal('街頭')">🎨 街頭</li>
+                <li onclick="selectSearchFromModal('韓系')">🇰🇷 韓系</li>
+                <li onclick="selectSearchFromModal('日系')">🇯🇵 日系</li>
+                <li onclick="selectSearchFromModal('復古')">📻 復古</li>
             </ul>
         </div>
     </div>
