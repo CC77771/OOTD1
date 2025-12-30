@@ -244,7 +244,8 @@ jsonData.append("]");
                     state.styleSets.forEach(function(set, index) {
                         html += '<div class="border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition">';
                         html += '<div class="relative"><img src="' + set.image + '" class="w-full h-64 object-cover">';
-                        html += '<div class="absolute top-2 right-2 bg-white px-2 py-1 rounded text-sm font-medium">' + set.tags.length + ' 個商品</div></div>';
+                        const tagCount = (set.tags && Array.isArray(set.tags)) ? set.tags.length : 0;
+                        html += '<div class="absolute top-2 right-2 bg-white px-2 py-1 rounded text-sm font-medium">' + tagCount + ' 個商品</div></div>';
                         html += '<div class="p-4"><h3 class="font-semibold text-lg text-gray-800 mb-3">' + set.title + '</h3>';
                         html += '<div class="flex gap-2">';
                         html += '<button onclick="editStyleSet(' + index + ')" class="flex-1 px-4 py-2 text-white text-sm rounded transition" style="background-color: #a89f91;">編輯</button>';
@@ -307,7 +308,8 @@ jsonData.append("]");
             html += '<div class="p-8"><div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg"><p class="text-sm text-blue-800"><strong>💡 操作說明：</strong></p>';
             html += '<ul class="text-sm text-blue-700 mt-2 ml-4"><li>• 點擊圖片添加商品標籤</li><li>• 拖動標籤可調整位置</li><li>• 移到標籤上方可看到刪除按鈕</li></ul></div>';
             
-            html += '<div class="image-container" id="tagContainer" onclick="addTagAtClick(event)"><img src="' + set.image + '" id="editImage">';
+            // ✅ 移除 onclick，改用後面的事件監聽器
+            html += '<div class="image-container" id="tagContainer"><img src="' + set.image + '" id="editImage">';
             
             set.tags.forEach(function(tag, index) {
                 html += '<div class="tag-label" style="left: ' + tag.x + '%; top: ' + tag.y + '%;" onmousedown="startDrag(event, ' + index + ')">';
@@ -324,6 +326,13 @@ jsonData.append("]");
             html += '</div><p class="text-sm text-gray-500 mt-3">填寫完成後,點擊圖片上的位置即可添加標籤</p></div>';
             html += '<div class="flex gap-3 mt-6"><button onclick="closeEditTagModal()" class="flex-1 px-6 py-3 border-2 text-gray-700 rounded-lg" style="border-color: #d4cdc5;">取消</button>';
             html += '<button onclick="saveTagsAndClose()" class="flex-1 px-6 py-3 text-white rounded-lg" style="background-color: #a89f91;">完成編輯</button></div></div></div></div>';
+         // ✅ 在 render 後添加事件監聽器
+            setTimeout(function() {
+                const container = document.getElementById('tagContainer');
+                if (container) {
+                    container.addEventListener('click', addTagAtClick);
+                }
+            }, 0);
             return html;
         }
 
@@ -343,10 +352,13 @@ jsonData.append("]");
         let draggedIndex = null;
         let offsetX = 0;
         let offsetY = 0;
+        let isDragging = false;  // ✅ 新增拖動狀態
 
         function startDrag(event, index) {
             event.preventDefault();
+            event.stopPropagation();  // ✅ 防止事件冒泡
             draggedIndex = index;
+            isDragging = false;  // ✅ 初始化為未拖動
             const tag = event.currentTarget;
             const rect = tag.getBoundingClientRect();
             offsetX = event.clientX - rect.left;
@@ -358,6 +370,8 @@ jsonData.append("]");
 
         function onDrag(event) {
             if (draggedIndex === null) return;
+            
+            isDragging = true;  // ✅ 標記為正在拖動
             
             const container = document.getElementById('tagContainer');
             const img = document.getElementById('editImage');
@@ -375,12 +389,19 @@ jsonData.append("]");
 
         function stopDrag() {
             draggedIndex = null;
+            setTimeout(function() {
+                isDragging = false;  // ✅ 延遲重置狀態
+            }, 100);
             document.removeEventListener('mousemove', onDrag);
             document.removeEventListener('mouseup', stopDrag);
         }
 
         function addTagAtClick(event) {
-            if (event.target.id !== 'editImage') return;
+        	// ✅ 如果正在拖動或點擊的不是圖片，就不執行
+            if (isDragging || event.target.id !== 'editImage') {
+                return;
+            }
+
             
             const name = document.getElementById('tagName').value.trim();
             const price = document.getElementById('tagPrice').value.trim();
@@ -493,6 +514,7 @@ jsonData.append("]");
                 image: state.tempImageData,
                 tags: [],
                 isActive: false,
+                isEditing: false,  // ✅ 標記為新增
                 createdAt: new Date().toISOString()
             };
             
@@ -505,6 +527,7 @@ jsonData.append("]");
 
         function editStyleSet(index) {
             state.currentEditingSet = state.styleSets[index];
+            state.currentEditingSet.isEditing = true;  // ✅ 加入編輯標記
             state.showEditTagModal = true;
             render();
         }
@@ -521,52 +544,76 @@ jsonData.append("]");
                 return;
             }
             
-            // ✅ 統一使用 accessId
             const memberId = '<%= session.getAttribute("accessId") %>';
             
-            // 驗證 memberId
             if (!memberId || memberId === 'null' || memberId.trim() === '') {
                 alert('❌ 無法取得會員資訊,請重新登入');
                 return;
             }
             
             console.log('準備送出的 memberId:', memberId);
+            console.log('當前編輯的組合:', state.currentEditingSet);
             
             // 準備表單資料
             const formData = new FormData();
             formData.append('styleTitle', state.currentEditingSet.title);
             formData.append('tagsData', JSON.stringify(state.currentEditingSet.tags));
-            formData.append('memberId', memberId);  // ✅ 改用變數,保持一致
+            formData.append('memberId', memberId);
             
-            // 從 base64 轉換為 Blob
-            const base64Data = state.currentEditingSet.image.split(',')[1];
-            const byteCharacters = atob(base64Data);
-            const byteNumbers = new Array(byteCharacters.length);
-            for (let i = 0; i < byteCharacters.length; i++) {
-                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            // ✅ 改用更可靠的判斷方式
+            const isEditMode = state.currentEditingSet.isEditing === true;
+            
+            console.log('isEditMode:', isEditMode);
+            console.log('圖片格式:', state.currentEditingSet.image.substring(0, 50));
+            
+            // ✅ 處理圖片：區分 base64 和檔案路徑
+            if (state.currentEditingSet.image.startsWith('data:image')) {
+                // base64 格式
+                console.log('使用 base64 圖片');
+                const base64Data = state.currentEditingSet.image.split(',')[1];
+                const byteCharacters = atob(base64Data);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], {type: 'image/jpeg'});
+                formData.append('styleImage', blob, 'style_' + Date.now() + '.jpg');
+                sendFormData(formData, isEditMode, memberId);
+            } else {
+                // 檔案路徑格式（編輯模式）
+                console.log('使用伺服器圖片路徑:', state.currentEditingSet.image);
+                
+                fetch(state.currentEditingSet.image)
+                    .then(response => response.blob())
+                    .then(blob => {
+                        formData.append('styleImage', blob, 'style_' + Date.now() + '.jpg');
+                        sendFormData(formData, isEditMode, memberId);
+                    })
+                    .catch(error => {
+                        console.error('無法載入圖片:', error);
+                        alert('❌ 無法載入原始圖片，請重新上傳圖片');
+                    });
+                return;
             }
-            const byteArray = new Uint8Array(byteNumbers);
-            const blob = new Blob([byteArray], {type: 'image/jpeg'});
-            formData.append('styleImage', blob, 'style_' + Date.now() + '.jpg');
-            
-            // 發送請求前先取得按鈕
+        }
+
+        function sendFormData(formData, isEditMode, memberId) {
             const saveBtn = document.querySelector('button[onclick="saveTagsAndClose()"]');
             if (saveBtn) {
                 saveBtn.disabled = true;
                 saveBtn.textContent = '儲存中...';
             }
             
-            // 發送請求
-            fetch('style_set_insert.jsp', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.text())
-            .then(data => {
-                console.log('Response:', data);
+            function handleResponse(data) {
+                console.log('Server Response:', data);
                 if(data.indexOf('SUCCESS') !== -1 || data.indexOf('成功') !== -1) {
+                    // ✅ 清除編輯標記
+                    if (state.currentEditingSet) {
+                        delete state.currentEditingSet.isEditing;
+                    }
                     saveData();
-                    alert('✅ 穿搭組合已儲存至資料庫！');
+                    alert('✅ 穿搭組合已儲存！');
                     location.reload();
                 } else {
                     alert('❌ 儲存失敗,請稍後再試');
@@ -576,18 +623,72 @@ jsonData.append("]");
                         saveBtn.textContent = '完成編輯';
                     }
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('❌ 儲存失敗：' + error.message);
+            }
+            
+            if (isEditMode) {
+                console.log('執行更新模式：先刪除舊資料');
+                const deleteUrl = 'delete_style_set.jsp?memberId=' + encodeURIComponent(memberId) + 
+                                 '&styleTitle=' + encodeURIComponent(formData.get('styleTitle')) +
+                                 '&skipRedirect=true';
+                
+                fetch(deleteUrl)
+                    .then(response => response.text())
+                    .then(data => {
+                        console.log('刪除回應:', data);
+                        return fetch('style_set_insert.jsp', {
+                            method: 'POST',
+                            body: formData
+                        });
+                    })
+                    .then(response => response.text())
+                    .then(data => {
+                        handleResponse(data);
+                    })
+                    .catch(error => {
+                        console.error('更新失敗:', error);
+                        alert('❌ 更新失敗：' + error.message);
+                        if (saveBtn) {
+                            saveBtn.disabled = false;
+                            saveBtn.textContent = '完成編輯';
+                        }
+                    });
+            } else {
+                console.log('執行新增模式');
+                fetch('style_set_insert.jsp', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.text())
+                .then(data => {
+                    handleResponse(data);
+                })
+                .catch(error => {
+                    console.error('儲存失敗:', error);
+                    alert('❌ 儲存失敗：' + error.message);
+                    if (saveBtn) {
+                        saveBtn.disabled = false;
+                        saveBtn.textContent = '完成編輯';
+                    }
+                });
+            }
+        }
+        
+     // ✅ 新增：處理儲存回應的函數
+        function handleSaveResponse(data, saveBtn) {
+            console.log('Response:', data);
+            if(data.indexOf('SUCCESS') !== -1 || data.indexOf('成功') !== -1) {
+                saveData();
+                alert('✅ 穿搭組合已儲存至資料庫！');
+                location.reload();
+            } else {
+                alert('❌ 儲存失敗,請稍後再試');
+                console.error('Error response:', data);
                 if (saveBtn) {
                     saveBtn.disabled = false;
                     saveBtn.textContent = '完成編輯';
                 }
-            });
+            }
         }
-
-       
 
         function deleteStyleSet(index) {
             const styleSet = state.styleSets[index];
