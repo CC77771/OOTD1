@@ -1996,6 +1996,23 @@ document.addEventListener('keydown', function(e) {
   </div>
 </div>
 
+<!-- 商品 7895：帽T -->
+<div class="swiper-slide">
+  <div class="product-item image-zoom-effect link-effect">
+    <div class="image-holder position-relative">
+      <a href="javascript:void(0)" onclick="openProductModal('outfit5')" style="cursor: pointer;">
+        <img src="images/X.jpg" alt="Outfit 5" class="product-image img-fluid">
+      </a>
+      <a href="https://reurl.cc/vp6omj" class="product-link" style="position: absolute; top: 65%; left: 40%;">
+        <div class="product-tag">帽T-淺灰色<br>$609</div>
+      </a>
+      <a href="https://reurl.cc/Q5ZmXZ" class="product-link" style="position: absolute; top: 80%; left: 70%;">
+        <div class="product-tag">日系工裝褲-灰<br>$550</div>
+      </a>
+    </div>
+  </div>
+</div>
+
 <!-- 商品 6：風衣 -->
 <div class="swiper-slide">
   <div class="product-item image-zoom-effect link-effect">
