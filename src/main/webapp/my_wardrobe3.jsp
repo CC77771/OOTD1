@@ -159,7 +159,7 @@ response.setDateHeader("Expires", 0);
         .empty-title { font-size: 20px; margin-bottom: 12px; color: #666; font-weight: 600; }
         .empty-text { font-size: 15px; color: #999; }
      
-/* 圖片容器 - 可點擊放大 */
+/* 圖片容器 */
 .item-image-container { 
     position: relative; 
     overflow: hidden; 
@@ -168,16 +168,22 @@ response.setDateHeader("Expires", 0);
     cursor: pointer; 
 }
 
-/* 圖片容器 - 可點擊放大 */
-.item-image-container { 
-    position: relative; 
-    overflow: hidden; 
-    background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%); 
-    height: 300px; 
-    cursor: pointer; 
+/* 縮圖顯示（避免過度放大造成模糊） */
+.item-image { 
+    width: 100%; 
+    height: 100%; 
+    object-fit: cover; 
+    transition: transform 0.4s ease;
 }
 
+/* ✅ 放大倍率降低，畫質會明顯變好 */
+.item-card:hover .item-image { 
+    transform: scale(1.03);
+}
+
+/* ============================= */
 /* 圖片放大檢視器 */
+/* ============================= */
 .image-modal { 
     display: none; 
     position: fixed; 
@@ -185,7 +191,7 @@ response.setDateHeader("Expires", 0);
     left: 0; 
     width: 100%; 
     height: 100%; 
-    background: rgba(0, 0, 0, 0.92); 
+    background: rgba(0, 0, 0, 0.95); 
     z-index: 10000; 
     justify-content: center; 
     align-items: center; 
@@ -196,20 +202,48 @@ response.setDateHeader("Expires", 0);
     display: flex; 
 }
 
+/* 放大圖片容器 */
 .modal-content { 
-    position: relative; 
     max-width: 95%; 
     max-height: 95vh; 
-    pointer-events: none;  /* 👈 關鍵：讓點擊穿透 */
 }
 
+/* ============================= */
+/* ✅ 關鍵：真正清晰的放大圖片 */
+/* ============================= */
 .modal-image { 
     max-width: 100%; 
     max-height: 95vh; 
-    object-fit: contain; 
+    width: auto; 
+    height: auto; 
+    object-fit: contain;  /* 不裁切、不拉伸 */
     border-radius: 12px; 
-    pointer-events: auto;  /* 👈 關鍵：圖片本身可接收點擊 */
-    cursor: default;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+
+    /* ✅ 防止瀏覽器渲染模糊 */
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+/* 關閉按鈕 */
+.modal-close-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    background: rgba(255,255,255,0.9);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 24px;
+    color: #333;
+}
+
+
+.modal-close-btn:hover {
+    background: white;
+    transform: rotate(90deg);
 }
     </style>
 </head>
