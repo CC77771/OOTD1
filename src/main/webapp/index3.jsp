@@ -7,23 +7,24 @@ Class.forName("net.ucanaccess.jdbc.UcanaccessDriver");
 Connection con=DriverManager.getConnection("jdbc:ucanaccess://"+objDBConfig.FilePath()+";");
 Statement smt= con.createStatement();
 String sql = "SELECT postid, " +
-             "       MAX(memberId) as memberId, " +
-             "       MAX(wearId) as wearId, " +
-             "       MAX(pic) as pic, " +
-             "       MAX([like]) as [like], " +
-             "       MAX(collect) as collect, " +
-             "       MAX(view) as view " +
-             "FROM personal_wear " +
-             "WHERE post_state = True " +
-             "GROUP BY postid " +
-             "ORDER BY MAX(view) DESC";
+        "       MAX(memberId) as memberId, " +
+        "       MAX(wearId) as wearId, " +
+        "       MAX(pic) as pic, " +
+        "       MAX([like]) as [like], " +
+        "       MAX(collect) as collect, " +
+        "       MAX(view) as view, " +
+        "       MAX(tags) as tags " +  // ✅ 加這行
+        "FROM personal_wear " +
+        "WHERE post_state = True " +
+        "GROUP BY postid " +
+        "ORDER BY MAX(view) DESC";
 ResultSet rs = smt.executeQuery(sql);
 //====== 新增：查詢已上架的穿搭組合 ======
-String styleSql = "SELECT commodity_code, commodity_title, pic, commodity_name, price " +
+String styleSql = "SELECT commodity_title, pic " +
                "FROM commodity_information " +
                "WHERE authorization = True " +
-               "GROUP BY commodity_code, commodity_title, pic, commodity_name, price " +
-               "ORDER BY commodity_code DESC";
+               "GROUP BY commodity_title, pic " +
+               "ORDER BY MAX(commodity_code) DESC";
 Statement styleStmt = con.createStatement();
 ResultSet styleRs = styleStmt.executeQuery(styleSql);
 
@@ -34,21 +35,26 @@ while(styleRs.next()) {
  style.put("title", styleRs.getString("commodity_title"));
  style.put("pic", styleRs.getString("pic"));
  
- // 查詢該穿搭組合的所有商品標籤
- String tagSql = "SELECT commodity_name, price FROM commodity_information " +
-                 "WHERE commodity_title = ? AND pic = ? AND authorization = True";
- PreparedStatement tagPstmt = con.prepareStatement(tagSql);
- tagPstmt.setString(1, styleRs.getString("commodity_title"));
- tagPstmt.setString(2, styleRs.getString("pic"));
- ResultSet tagRs = tagPstmt.executeQuery();
- 
- StringBuilder tags = new StringBuilder();
- int tagCount = 0;
- while(tagRs.next()) {
-     if(tagCount > 0) tags.append("|");
-     tags.append(tagRs.getString("commodity_name")).append(",").append(tagRs.getString("price"));
-     tagCount++;
- }
+//查詢該穿搭組合的所有商品標籤
+String tagSql = "SELECT commodity_name, price, tag_x, tag_y, website, commodity_code FROM commodity_information " +
+              "WHERE commodity_title = ? AND pic = ? AND authorization = True";
+PreparedStatement tagPstmt = con.prepareStatement(tagSql);
+tagPstmt.setString(1, styleRs.getString("commodity_title"));
+tagPstmt.setString(2, styleRs.getString("pic"));
+ResultSet tagRs = tagPstmt.executeQuery();
+
+StringBuilder tags = new StringBuilder();
+int tagCount = 0;
+while(tagRs.next()) {
+  if(tagCount > 0) tags.append("|");
+  tags.append(tagRs.getString("commodity_name")).append(",")
+      .append(tagRs.getString("price")).append(",")
+      .append(tagRs.getDouble("tag_x")).append(",")
+      .append(tagRs.getDouble("tag_y")).append(",")
+      .append(tagRs.getString("website") != null ? tagRs.getString("website") : "").append(",")
+      .append(tagRs.getString("commodity_code"));
+  tagCount++;
+}
  style.put("tags", tags.toString());
  style.put("tagCount", String.valueOf(tagCount));
  
@@ -396,353 +402,6 @@ styleStmt.close();
     to { opacity: 0; }
 }
 </style>  
-<style>
-/* 商品詳情彈窗樣式 */
-.product-modal-overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.75);
-    backdrop-filter: blur(8px);
-    z-index: 10000;
-    align-items: center;
-    justify-content: center;
-    animation: fadeIn 0.3s ease;
-}
-
-.product-modal-overlay.active {
-    display: flex;
-}
-
-.product-modal-content {
-    background: white;
-    border-radius: 20px;
-    max-width: 900px;
-    width: 95%;
-    max-height: 90vh;
-    overflow-y: auto;
-    position: relative;
-    animation: slideUp 0.4s ease;
-}
-
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(50px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.product-modal-close {
-    position: sticky;
-    top: 0;
-    right: 0;
-    background: white;
-    border-bottom: 1px solid #eee;
-    padding: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    z-index: 10;
-}
-
-.product-modal-close button {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: 2px solid #ddd;
-    background: white;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-}
-
-.product-modal-close button:hover {
-    background: #a89f91;
-    border-color: #a89f91;
-    color: white;
-    transform: rotate(90deg);
-}
-
-.product-modal-body {
-    padding: 30px;
-}
-
-.product-gallery {
-    margin-bottom: 30px;
-}
-
-.product-main-image {
-    position: relative;
-    width: 100%;
-    height: 400px;
-    background: #f5f5f5;
-    border-radius: 15px;
-    overflow: hidden;
-    margin-bottom: 15px;
-}
-
-.product-main-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.product-nav-btn {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.9);
-    border: none;
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-    z-index: 5;
-}
-
-.product-nav-btn:hover {
-    background: white;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.product-nav-btn.prev {
-    left: 15px;
-}
-
-.product-nav-btn.next {
-    right: 15px;
-}
-
-.product-image-counter {
-    position: absolute;
-    bottom: 15px;
-    right: 15px;
-    background: rgba(0, 0, 0, 0.7);
-    color: white;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 14px;
-}
-
-.product-thumbnails {
-    display: flex;
-    gap: 10px;
-    overflow-x: auto;
-    padding: 5px 0;
-}
-
-.product-thumbnails::-webkit-scrollbar {
-    height: 6px;
-}
-
-.product-thumbnails::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 10px;
-}
-
-.product-thumbnails::-webkit-scrollbar-thumb {
-    background: #a89f91;
-    border-radius: 10px;
-}
-
-.product-thumbnail {
-    width: 80px;
-    height: 80px;
-    border-radius: 8px;
-    overflow: hidden;
-    cursor: pointer;
-    border: 3px solid transparent;
-    transition: all 0.3s ease;
-    flex-shrink: 0;
-}
-
-.product-thumbnail:hover {
-    border-color: #ddd;
-}
-
-.product-thumbnail.active {
-    border-color: #a89f91;
-}
-
-.product-thumbnail img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.product-info {
-    margin-bottom: 30px;
-}
-
-.product-info h2 {
-    font-size: 28px;
-    color: #333;
-    margin-bottom: 15px;
-    font-weight: 600;
-}
-
-.product-price {
-    font-size: 32px;
-    color: #a89f91;
-    font-weight: bold;
-    margin-bottom: 10px;
-}
-
-.product-meta {
-    display: flex;
-    gap: 20px;
-    margin-bottom: 15px;
-    color: #666;
-    font-size: 14px;
-}
-
-.product-description {
-    color: #666;
-    line-height: 1.6;
-    margin-bottom: 30px;
-    padding: 20px;
-    background: #f9f9f9;
-    border-radius: 10px;
-}
-
-.product-variants {
-    margin-top: 30px;
-}
-
-.product-variants h3 {
-    font-size: 20px;
-    color: #333;
-    margin-bottom: 20px;
-    font-weight: 600;
-}
-
-.variants-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 15px;
-}
-
-.variant-item {
-    border: 2px solid #eee;
-    border-radius: 12px;
-    padding: 15px;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.variant-item:hover {
-    border-color: #a89f91;
-    background: #fafafa;
-}
-
-.variant-image {
-    width: 60px;
-    height: 60px;
-    border-radius: 8px;
-    overflow: hidden;
-    flex-shrink: 0;
-}
-
-.variant-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.variant-info {
-    flex: 1;
-}
-
-.variant-name {
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 4px;
-}
-
-.variant-size {
-    color: #666;
-    font-size: 13px;
-    margin-bottom: 4px;
-}
-
-.variant-stock {
-    font-size: 13px;
-    font-weight: 500;
-}
-
-.variant-stock.high {
-    color: #10b981;
-}
-
-.variant-stock.medium {
-    color: #f59e0b;
-}
-
-.variant-stock.low {
-    color: #ef4444;
-}
-
-.shopee-link-btn {
-    display: inline-block;
-    background: linear-gradient(135deg, #ee4d2d 0%, #ff6b4a 100%);
-    color: white;
-    padding: 15px 40px;
-    border-radius: 25px;
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 16px;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(238, 77, 45, 0.3);
-    margin-top: 20px;
-}
-
-.shopee-link-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(238, 77, 45, 0.4);
-    color: white;
-}
-
-/* 響應式設計 */
-@media (max-width: 768px) {
-    .product-modal-content {
-        width: 100%;
-        max-height: 100vh;
-        border-radius: 0;
-    }
-
-    .product-main-image {
-        height: 300px;
-    }
-
-    .variants-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .product-info h2 {
-        font-size: 22px;
-    }
-
-    .product-price {
-        font-size: 26px;
-    }
-}
-</style>
 
 
 </head>
@@ -812,8 +471,30 @@ while(rs.next()){
                 </a>
             </div>
             <div class="post-content py-4">
-                <p class="post-description"><%=rs.getString("memberId") %> <%=rs.getString("wearId") %></p>
-                <div class="post-actions">
+    <p class="post-description"><%=rs.getString("memberId") %> <%=rs.getString("wearId") %></p>
+    
+    <!-- ✅ 新增標籤顯示 -->
+    <%
+    String tags = rs.getString("tags");
+    if(tags != null && !tags.trim().isEmpty()) {
+        String[] tagArray = tags.split(",");
+    %>
+    <div class="post-tags" style="margin: 10px 0;">
+        <%
+        for(String tag : tagArray) {
+            if(tag != null && !tag.trim().isEmpty()) {
+        %>
+        <span class="post-tag">#<%= tag.trim() %></span>
+        <%
+            }
+        }
+        %>
+    </div>
+    <%
+    }
+    %>
+    
+    <div class="post-actions">
                     <div class="action-icons">
                         <a href="#" class="action-icon like-icon" onclick="toggleLike(this)">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" class="feather feather-heart">
@@ -1229,23 +910,42 @@ function updateViewCount(postid, slideElement) {
           <img src="<%= style.get("pic") %>" alt="<%= style.get("title") %>" class="product-image img-fluid">
         </a>
         <%
-        // 顯示標籤（這裡簡化顯示，實際位置需要從資料庫讀取）
-        int topPosition = 65;
-        int leftPosition = 35;
-        for(String tag : tagArray) {
-            if(tag.trim().isEmpty()) continue;
-            String[] tagInfo = tag.split(",");
-            if(tagInfo.length == 2) {
-        %>
-        <div class="product-link" style="position: absolute; top: <%= topPosition %>%; left: <%= leftPosition %>%;">
-          <div class="product-tag"><%= tagInfo[0] %><br>$<%= tagInfo[1] %></div>
-        </div>
-        <%
-                topPosition += 15;
-                leftPosition += 10;
-            }
+for(String tag : tagArray) {
+    if(tag.trim().isEmpty()) continue;
+    String[] tagInfo = tag.split(",");
+    if(tagInfo.length >= 6) {
+        String tagName = tagInfo[0];
+        String tagPrice = tagInfo[1];
+        String tagX = tagInfo[2];
+        String tagY = tagInfo[3];
+        String tagWebsite = tagInfo[4];
+        String commodityCode = tagInfo[5];
+        
+        // 查詢該商品編號的所有圖片（從同一個 commodity_code 的所有記錄中獲取）
+        String imageQuery = "SELECT pic FROM commodity_information WHERE commodity_code = ?";
+        PreparedStatement pstmtImages = con.prepareStatement(imageQuery);
+        pstmtImages.setString(1, commodityCode);
+        ResultSet rsImages = pstmtImages.executeQuery();
+        
+        StringBuilder images = new StringBuilder();
+        int imgCount = 0;
+        while(rsImages.next() && imgCount < 4) {  // 最多4張圖片
+            if(imgCount > 0) images.append("|||");
+            images.append(rsImages.getString("pic"));
+            imgCount++;
         }
-        %>
+        rsImages.close();
+        pstmtImages.close();
+%>
+<div class="product-link" 
+     style="top: <%= tagY %>%; left: <%= tagX %>%;"
+     onclick="window.open('<%= tagWebsite %>', '_blank')">
+  <div class="product-tag"><%= tagName %><br>$<%= tagPrice %></div>
+</div>
+<%
+    }
+}
+%>
       </div>
     </div>
   </div>
@@ -1428,6 +1128,19 @@ function updateViewCount(postid, slideElement) {
 
 <style>
 
+.product-link {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.product-link:hover {
+  transform: translate(-50%, -50%) scale(1.05);
+  z-index: 20;
+}
+
 .product-tag {
   font-size: 12px; 
   padding: 4px 6px; 
@@ -1442,6 +1155,44 @@ function updateViewCount(postid, slideElement) {
 .product-tag:hover {
   background-color: #9b8e82; 
   transform: scale(1.05);
+}
+
+.product-item .image-holder {
+  position: relative;
+  width: 100%;
+  overflow: hidden;  /* 让标签不超出图片边界 */
+}
+
+.product-item .image-holder .product-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+/* 貼文標籤樣式 */
+.post-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.post-tag {
+    display: inline-block;
+    padding: 4px 12px;
+    background-color: #f0ebe5;
+    color: #6b5d52;
+    border-radius: 15px;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.post-tag:hover {
+    background-color: #a89f91;
+    color: white;
+    transform: translateY(-2px);
 }
 </style>
 
@@ -1664,64 +1415,7 @@ document.addEventListener('keydown', function(e) {
     }
 });
 </script>
-
-<!-- 商品詳情彈窗 -->
-<div class="product-modal-overlay" id="productModal">
-    <div class="product-modal-content">
-        <div class="product-modal-close">
-            <h3 id="modalProductName" style="margin: 0; color: #333; font-size: 20px;"></h3>
-            <button onclick="closeProductModal()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M18 6L6 18M6 6l12 12"/>
-                </svg>
-            </button>
-        </div>
-        
-        <div class="product-modal-body">
-            <!-- 圖片展示區 -->
-            <div class="product-gallery">
-                <div class="product-main-image">
-                    <img id="modalMainImage" src="" alt="">
-                    <button class="product-nav-btn prev" onclick="prevProductImage()">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M15 18l-6-6 6-6"/>
-                        </svg>
-                    </button>
-                    <button class="product-nav-btn next" onclick="nextProductImage()">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M9 18l6-6-6-6"/>
-                        </svg>
-                    </button>
-                    <div class="product-image-counter" id="imageCounter">1 / 4</div>
-                </div>
-                
-                <div class="product-thumbnails" id="productThumbnails">
-                    <!-- 縮圖會動態生成 -->
-                </div>
-            </div>
-            
-            <!-- 商品資訊 -->
-            <div class="product-info">
-                <h2 id="modalProductTitle"></h2>
-                <div class="product-price" id="modalProductPrice"></div>
-                <div class="product-meta">
-                    <span id="modalVariantCount"></span>
-                    <span id="modalTotalStock"></span>
-                </div>
-                <div class="product-description" id="modalProductDesc"></div>
-                
-                <!-- 蝦皮連結按鈕 -->
-                <a id="modalShopeeLink" href="#" target="_blank" class="shopee-link-btn">
-                    🛒 前往蝦皮購買
-                </a>
-            </div>
-            
-
-        </div>
-    </div>
-</div>
-            
-            
+          
 
         </div>
 
@@ -1831,82 +1525,6 @@ function openProductModal(productId) {
     document.body.style.overflow = 'hidden';
 }
 
-// 關閉商品詳情彈窗
-function closeProductModal() {
-    document.getElementById('productModal').classList.remove('active');
-    document.body.style.overflow = '';
-    currentProduct = null;
-    currentImageIndex = 0;
-}
-
-// 更新主圖片
-function updateMainImage() {
-    if (!currentProduct) return;
-    
-    document.getElementById('modalMainImage').src = currentProduct.images[currentImageIndex];
-    document.getElementById('imageCounter').textContent = (currentImageIndex + 1) + ' / ' + currentProduct.images.length;
-    
-    // 更新縮圖選中狀態
-    document.querySelectorAll('.product-thumbnail').forEach((thumb, index) => {
-        if (index === currentImageIndex) {
-            thumb.classList.add('active');
-        } else {
-            thumb.classList.remove('active');
-        }
-    });
-}
-
-// 上一張圖片
-function prevProductImage() {
-    if (!currentProduct) return;
-    currentImageIndex = (currentImageIndex - 1 + currentProduct.images.length) % currentProduct.images.length;
-    updateMainImage();
-}
-
-// 下一張圖片
-function nextProductImage() {
-    if (!currentProduct) return;
-    currentImageIndex = (currentImageIndex + 1) % currentProduct.images.length;
-    updateMainImage();
-}
-
-// 選擇特定圖片
-function selectProductImage(index) {
-    currentImageIndex = index;
-    updateMainImage();
-}
-
-// 生成縮圖
-function generateThumbnails() {
-    if (!currentProduct) return;
-    
-    const container = document.getElementById('productThumbnails');
-    container.innerHTML = '';
-    
-    currentProduct.images.forEach((img, index) => {
-        const thumb = document.createElement('div');
-        thumb.className = 'product-thumbnail' + (index === 0 ? ' active' : '');
-        thumb.onclick = () => selectProductImage(index);
-        thumb.innerHTML = '<img src="' + img + '" alt="圖片 ' + (index + 1) + '">';
-        container.appendChild(thumb);
-    });
-}
-
-
-
-// 點擊彈窗外部關閉
-document.getElementById('productModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeProductModal();
-    }
-});
-
-// ESC 鍵關閉
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && currentProduct) {
-        closeProductModal();
-    }
-});
 </script>
 
 </body>
