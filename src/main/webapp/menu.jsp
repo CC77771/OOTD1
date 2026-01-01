@@ -390,7 +390,7 @@ body {
 <div class="search-modal-overlay" id="searchModalOverlay">
     <div class="search-modal-content">
         <div class="search-modal-header">
-            <h3>搜索商品</h3>
+            <h3>搜索貼文</h3>
             <button class="close-search-modal" onclick="toggleSearchModal()">×</button>
         </div>
         
@@ -398,7 +398,7 @@ body {
             <input 
                 type="text" 
                 class="search-input" 
-                placeholder="搜尋商品、品牌或關鍵字..." 
+                placeholder="搜尋貼文關鍵字..." 
                 id="modalSearchInput"
             >
             <button class="search-button" onclick="performSearchFromModal()">
@@ -418,14 +418,14 @@ body {
                 熱門搜尋
              </div>
             <ul class="dropdown-list">
-    <li onclick="selectSearchFromModal('休閒風')">🌿 休閒風</li>
-    <li onclick="selectSearchFromModal('正式風')">👔 正式風</li>
-    <li onclick="selectSearchFromModal('運動風')">⚽ 運動風</li>
+    <li onclick="selectSearchFromModal('休閒')">🌿 休閒</li>
+    <li onclick="selectSearchFromModal('正式')">👔 正式</li>
+    <li onclick="selectSearchFromModal('美式')">⚽ 美式</li>
     <li onclick="selectSearchFromModal('韓系')">🇰🇷 韓系</li>
     <li onclick="selectSearchFromModal('日系')">🇯🇵 日系</li>
-    <li onclick="selectSearchFromModal('復古風')">📻 復古風</li>
-    <li onclick="selectSearchFromModal('甜美風')">💖 甜美風</li>
-    <li onclick="selectSearchFromModal('簡約風')">✨ 簡約風</li>
+    <li onclick="selectSearchFromModal('經典')">📻 經典</li>
+    <li onclick="selectSearchFromModal('學院風')">💖 學院風</li>
+    <li onclick="selectSearchFromModal('簡約')">✨ 簡約</li>
 </ul>
         </div>
     </div>
