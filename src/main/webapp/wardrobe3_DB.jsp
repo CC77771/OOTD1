@@ -8,7 +8,7 @@
 
 <%
 // 設定圖片上傳路徑
-String savePath = application.getRealPath("/") + "images\\my_wardrobe";
+String savePath = objFolderConfig.FilePath();
 File saveDir = new File(savePath);
 if (!saveDir.exists()) {
     saveDir.mkdirs();
@@ -18,7 +18,7 @@ if (!saveDir.exists()) {
 int maxSize = 5 * 1024 * 1024;
 
 // 處理檔案上傳
-MultipartRequest multi = new MultipartRequest(request, savePath, maxSize, "UTF-8", new DefaultFileRenamePolicy());
+MultipartRequest multi = new MultipartRequest(request, savePath, maxSize, "utf-8", new DefaultFileRenamePolicy());  // ✅ 改這裡:UTF-8 改 utf-8
 
 // 取得表單資料
 String memberId = multi.getParameter("memberId");
@@ -33,7 +33,9 @@ System.out.println("clothing_code: " + clothing_code);
 System.out.println("brand: " + brand);
 // 取得上傳的檔案名稱
 String fileName = multi.getFilesystemName("clothingImage");
-String pic = "images/my_wardrobe/" + fileName;
+String pic = (objFolderConfig.WebsiteRelativeFilePath() + fileName).replace("\\", "/");
+
+System.out.println("✅ 圖片路徑: " + pic);
 
 // 連接資料庫
 String dbPath = objDBConfig.FilePath();
@@ -51,16 +53,28 @@ pstmt.setString(5, pic);
 pstmt.setString(6, color_code);
 pstmt.setString(7, size);
 
-// 執行 SQL
+//執行 SQL
 pstmt.executeUpdate();
 
-// 除錯用：印出 SQL
+//除錯用:印出 SQL
 out.println("資料已成功新增");
 
-// 關閉連接
+//關閉連接
 pstmt.close();
 con.close();
 
-// 導向回衣櫥頁面
-response.sendRedirect("my_wardrobe3.jsp");
+//✅ 根據 clothing_code 判斷要導向哪個分類
+String category = "衣服";  // 預設
+switch(clothing_code) {
+ case "1": category = "衣服"; break;
+ case "2": category = "褲子"; break;
+ case "3": category = "裙子"; break;
+ case "4": category = "連身裙/褲"; break;
+ case "5": category = "配件"; break;
+ case "6": category = "鞋子"; break;
+}
+
+//✅ 加上時間戳記避免快取，導向正確的分類頁面
+response.sendRedirect("my_wardrobe3.jsp?category=" + java.net.URLEncoder.encode(category, "UTF-8") + "&t=" + System.currentTimeMillis());
+%>
 %>

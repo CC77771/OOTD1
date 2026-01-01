@@ -303,6 +303,7 @@ response.setDateHeader("Expires", 0);
                     </div>
                 <% 
                 } else {
+                    String displayPic = null;
                     for(Map<String, String> item : currentItems) {
                     	String clothing_number = item.get("clothing_number");  
                         String clothing_code = item.get("clothing_code");
@@ -316,7 +317,16 @@ response.setDateHeader("Expires", 0);
                 %>
                     <div class="item-card">
                         <div class="item-image-container" onclick="openImageModal('<%= pic %>')">
-    <img src="<%= pic %>" class="item-image" alt="<%= brand != null ? brand : "衣物" %>">
+    <% 
+    // ✅ 強制統一路徑格式,移除可能的 my_wardrobe 子資料夾
+     displayPic = pic;
+    if(pic != null) {
+        displayPic = pic.replace("\\", "/").replace("images/my_wardrobe/", "images/");
+    }
+ // ✅ 加上時間戳記,強制刷新圖片快取
+    String displayPicWithTimestamp = displayPic + "?t=" + System.currentTimeMillis();
+%>
+<img src="<%= displayPicWithTimestamp %>" class="item-image" alt="<%= brand != null ? brand : "衣物" %>" onerror="console.error('圖片載入失敗: <%= pic %>')">
 </div>                        <div class="item-info">
                             <div class="item-name"><%= brand != null && !brand.isEmpty() ? brand : "未命名" %></div>
                             <% if(textDescription != null && !textDescription.isEmpty()) { %>
