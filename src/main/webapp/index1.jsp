@@ -17,7 +17,7 @@ String sql = "SELECT postid, " +
         "FROM personal_wear " +
         "WHERE post_state = True " +
         "GROUP BY postid " +
-        "ORDER BY MAX(view) DESC";
+        "ORDER BY postid DESC";
 ResultSet rs = smt.executeQuery(sql);
 //====== 新增：查詢已上架的穿搭組合 ======
 String styleSql = "SELECT commodity_title, pic " +
@@ -1306,15 +1306,12 @@ for(String tag : tagArray) {
             <ul class="menu-list list-unstyled text-uppercase border-animation-left fs-6">
               <li class="menu-item">
                 <a href="#Inverted_Triangle" class="item-anchor">體型建議</a>
-              </li>              
+              </li>                            
               <li class="menu-item">
-                <a href="Posts.jsp" class="item-anchor">上傳貼文</a>
+                <a href="#Posts" class="item-anchor">穿搭展示區</a>
               </li>
               <li class="menu-item">
-                <a href="#Posts" class="item-anchor">貼文</a>
-              </li>
-              <li class="menu-item">
-                <a href="#Same style" class="item-anchor">同款服飾</a>
+                <a href="#Same style" class="item-anchor">穿搭推薦</a>
               </li>
               <li class="menu-item">
                 <a href="#Reward&Method" class="item-anchor">穿搭分享獎勵</a>

@@ -322,7 +322,7 @@ body {
                     <a class="nav-link dropdown-toggle" href="#" id="dropdownWearExhibitionArea" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">穿搭展示區</a>
                     <ul class="dropdown-menu" aria-labelledby="dropdownWearExhibitionArea">                     
                       <li><a href="index1.jsp#Posts" class="dropdown-item">貼文</a></li>
-                      <li><a href="index1.jsp#Same style" class="dropdown-item">同款服飾</a></li>
+                      <li><a href="index1.jsp#Same style" class="dropdown-item">穿搭推薦</a></li>
                     </ul>
                   </li>
 

@@ -3,15 +3,31 @@
 <%@page import="java.io.*"%>
 <%@page import="java.util.*"%>
 <jsp:useBean id='objDBConfig' scope='session' class='CZ.group.tool.database.DBConfig' />
+<jsp:useBean id="objFolderConfig" scope="session" class="CZ.group.tool.upload.FolderConfig2" />
+<%@page import="com.oreilly.servlet.MultipartRequest"%>
+<%@page import="com.oreilly.servlet.multipart.DefaultFileRenamePolicy"%>
 
 <%
 // 處理表單提交
 if("POST".equals(request.getMethod())) {
     try {
-        // 獲取表單數據
+        // ✅ 設定圖片上傳路徑
+        String savePath = objFolderConfig.FilePath();
+        File saveDir = new File(savePath);
+        if (!saveDir.exists()) {
+            saveDir.mkdirs();
+        }
+        
+        // ✅ 設定上傳檔案大小限制 (5MB)
+        int maxSize = 5 * 1024 * 1024;
+        
+        // ✅ 處理檔案上傳
+        MultipartRequest multi = new MultipartRequest(request, savePath, maxSize, "utf-8", new DefaultFileRenamePolicy());
+        
+        // ✅ 取得表單資料
         String memberId = (String) session.getAttribute("accessId");
-        String wearId = request.getParameter("wearId");
-        String tags = request.getParameter("tags");
+        String wearId = multi.getParameter("wearId");
+        String tags = multi.getParameter("tags");
         
         // 檢查數據
         if(memberId == null || memberId.trim().isEmpty()) {
@@ -19,20 +35,49 @@ if("POST".equals(request.getMethod())) {
             return;
         }
         
-        // 暫時使用預設圖片
-        String picPath = "images/default-post.jpg";
+        // ✅ 取得上傳的檔案名稱
+        String fileName = multi.getFilesystemName("pic");
+        String picPath = (fileName != null) ? (objFolderConfig.WebsiteRelativeFilePath() + fileName).replace("\\", "/") : "images/default-post.jpg";
+        
+        // ✅ 除錯訊息
+        System.out.println("========== 接收到的表單資料 ==========");
+        System.out.println("memberId: " + memberId);
+        System.out.println("wearId: " + wearId);
+        System.out.println("tags: " + tags);
+        System.out.println("圖片路徑: " + picPath);
+        System.out.println("=====================================");
+        
+     // ✅ 從資料庫取得最大的 postId，然後 +1
+        int postId = 8; // 預設從 008 開始
+        try {
+            Connection tempCon = DriverManager.getConnection("jdbc:ucanaccess://" + objDBConfig.FilePath() + ";");
+            Statement tempStmt = tempCon.createStatement();
+            ResultSet rs = tempStmt.executeQuery("SELECT MAX(postId) as maxId FROM personal_wear");
+            if (rs.next() && rs.getInt("maxId") > 0) {
+                postId = rs.getInt("maxId") + 1;
+            }
+            rs.close();
+            tempStmt.close();
+            tempCon.close();
+        } catch (Exception ex) {
+            System.out.println("查詢 postId 失敗，使用預設值: " + ex.getMessage());
+        }
+
+        
+     // 存入資料庫
         
      // 存入資料庫
         Class.forName("net.ucanaccess.jdbc.UcanaccessDriver");
         Connection con = DriverManager.getConnection("jdbc:ucanaccess://" + objDBConfig.FilePath() + ";");
 
         // ✅ 修正：加入 tags 欄位
-        String sql = "INSERT INTO personal_wear (memberId, wearId, pic, tags, [like], collect, view, post_state) VALUES (?, ?, ?, ?, 0, 0, 0, True)";
+        String sql = "INSERT INTO personal_wear (postId, memberId, wearId, pic, tags, [like], collect, view, post_state) VALUES (?, ?, ?, ?, ?, 0, 0, 0, True)";
         PreparedStatement pstmt = con.prepareStatement(sql);
-        pstmt.setString(1, memberId);
-        pstmt.setString(2, wearId != null ? wearId : "");
-        pstmt.setString(3, picPath);
-        pstmt.setString(4, tags != null ? tags : ""); // ✅ 加入標籤參數
+        pstmt.setInt(1, postId);
+        pstmt.setString(2, memberId);
+        pstmt.setString(3, wearId != null ? wearId : "");
+        pstmt.setString(4, picPath);
+        pstmt.setString(5, tags != null ? tags : "");
 
         pstmt.executeUpdate();
         pstmt.close();
