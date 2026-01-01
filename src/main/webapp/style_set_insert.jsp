@@ -11,7 +11,7 @@ try {
     request.setCharacterEncoding("UTF-8");
 
     // ✅ 修正 1：使用 File.separator 取代 \\
-    String savePath = application.getRealPath("/") + File.separator + "images";
+    String savePath = objFolderConfig.FilePath();
     
     // ✅ 修正 2：詳細的資料夾建立檢查
     File saveDir = new File(savePath);
@@ -58,7 +58,7 @@ try {
     out.println("<!-- 檔案大小: " + uploadedFile.length() + " bytes -->");
     
     // ✅ 修正 6：使用正斜線儲存到資料庫（網頁路徑）
-    String picPath = "images/" + fileName;
+    String picPath = (objFolderConfig.WebsiteRelativeFilePath() + fileName).replace("\\", "/");
     out.println("<!-- 資料庫儲存路徑: " + picPath + " -->");
 
     out.println("<!-- styleTitle: " + styleTitle + " -->");
