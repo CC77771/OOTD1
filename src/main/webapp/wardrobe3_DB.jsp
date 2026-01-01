@@ -33,7 +33,9 @@ System.out.println("clothing_code: " + clothing_code);
 System.out.println("brand: " + brand);
 // 取得上傳的檔案名稱
 String fileName = multi.getFilesystemName("clothingImage");
-String pic = objFolderConfig.WebsiteRelativeFilePath() + fileName;
+String pic = (objFolderConfig.WebsiteRelativeFilePath() + fileName).replace("\\", "/");
+
+System.out.println("✅ 圖片路徑: " + pic);
 
 // 連接資料庫
 String dbPath = objDBConfig.FilePath();

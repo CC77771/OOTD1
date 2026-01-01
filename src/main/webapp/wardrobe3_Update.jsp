@@ -55,56 +55,48 @@ String fileName = multi.getFilesystemName("clothingImage");
 if(fileName != null && !fileName.isEmpty()) {
     System.out.println("📤 偵測到新上傳的檔案: " + fileName);
     
+    // ✅ 直接使用原始檔名
+    String newFileName = fileName;
     
-    
-    
-   // ✅ 直接使用原始檔名
-String newFileName = fileName;
-    
-    
+    // ✅ 嘗試刪除舊圖片
+    if(oldPicFromDB != null && !oldPicFromDB.isEmpty()) {
+        // 處理可能的路徑格式
+        String oldPicPath = oldPicFromDB;
+        if(oldPicPath.startsWith("images/")) {
+            oldPicPath = oldPicPath; // 已經是相對路徑
+        }
         
-        // ✅ 嘗試刪除舊圖片
-        if(oldPicFromDB != null && !oldPicFromDB.isEmpty()) {
-            // 處理可能的路徑格式
-            String oldPicPath = oldPicFromDB;
-            if(oldPicPath.startsWith("images/")) {
-                oldPicPath = oldPicPath; // 已經是相對路徑
-            }
-            
-            File oldPicFile = new File(application.getRealPath("/"), oldPicPath);
-            System.out.println("🔍 嘗試刪除舊圖片: " + oldPicFile.getAbsolutePath());
-            System.out.println("   檔案是否存在: " + oldPicFile.exists());
-            
-            if(oldPicFile.exists()) {
-                boolean deleted = oldPicFile.delete();
-                if(deleted) {
-                    System.out.println("✅ 舊圖片已刪除: " + oldPicFromDB);
-                } else {
-                    System.out.println("⚠️ 舊圖片刪除失敗: " + oldPicFromDB);
-                }
+        File oldPicFile = new File(application.getRealPath("/"), oldPicPath);
+        System.out.println("🔍 嘗試刪除舊圖片: " + oldPicFile.getAbsolutePath());
+        System.out.println("   檔案是否存在: " + oldPicFile.exists());
+        
+        if(oldPicFile.exists()) {
+            boolean deleted = oldPicFile.delete();
+            if(deleted) {
+                System.out.println("✅ 舊圖片已刪除: " + oldPicFromDB);
             } else {
-                System.out.println("⚠️ 找不到舊圖片檔案(可能是亂碼檔名): " + oldPicFromDB);
-                
-                // 列出資料夾中的檔案供參考
-                File folder = new File(savePath);
-                System.out.println("📁 資料夾中實際存在的檔案:");
-                File[] files = folder.listFiles();
-                if(files != null) {
-                    for(File f : files) {
-                        if(f.isFile()) {
-                            System.out.println("   - " + f.getName());
-                        }
+                System.out.println("⚠️ 舊圖片刪除失敗: " + oldPicFromDB);
+            }
+        } else {
+            System.out.println("⚠️ 找不到舊圖片檔案(可能是亂碼檔名): " + oldPicFromDB);
+            
+            // 列出資料夾中的檔案供參考
+            File folder = new File(savePath);
+            System.out.println("📁 資料夾中實際存在的檔案:");
+            File[] files = folder.listFiles();
+            if(files != null) {
+                for(File f : files) {
+                    if(f.isFile()) {
+                        System.out.println("   - " + f.getName());
                     }
                 }
             }
         }
-        
-        // ✅ 更新為新檔名
-       pic = (objFolderConfig.WebsiteRelativeFilePath() + newFileName).replace("\\", "/");
-        System.out.println("✅ 新圖片路徑: " + pic);
-    } else {
-        System.out.println("❌ 檔案重新命名失敗!");
     }
+    
+    // ✅ 更新為新檔名
+    pic = (objFolderConfig.WebsiteRelativeFilePath() + newFileName).replace("\\", "/");
+    System.out.println("✅ 新圖片路徑: " + pic);
 } else {
     System.out.println("ℹ️ 沒有上傳新圖片,保持原圖片");
 }
