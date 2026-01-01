@@ -411,14 +411,15 @@
                 熱門搜尋
              </div>
             <ul class="dropdown-list">
-                <li onclick="selectSearchFromModal('休閒')">🌿 休閒</li>
-                <li onclick="selectSearchFromModal('正式')">👔 正式</li>
-                <li onclick="selectSearchFromModal('運動')">⚽ 運動</li>
-                <li onclick="selectSearchFromModal('街頭')">🎨 街頭</li>
-                <li onclick="selectSearchFromModal('韓系')">🇰🇷 韓系</li>
-                <li onclick="selectSearchFromModal('日系')">🇯🇵 日系</li>
-                <li onclick="selectSearchFromModal('復古')">📻 復古</li>
-            </ul>
+    <li onclick="selectSearchFromModal('休閒風')">🌿 休閒風</li>
+    <li onclick="selectSearchFromModal('正式風')">👔 正式風</li>
+    <li onclick="selectSearchFromModal('運動風')">⚽ 運動風</li>
+    <li onclick="selectSearchFromModal('韓系')">🇰🇷 韓系</li>
+    <li onclick="selectSearchFromModal('日系')">🇯🇵 日系</li>
+    <li onclick="selectSearchFromModal('復古風')">📻 復古風</li>
+    <li onclick="selectSearchFromModal('甜美風')">💖 甜美風</li>
+    <li onclick="selectSearchFromModal('簡約風')">✨ 簡約風</li>
+</ul>
         </div>
     </div>
 </div>
@@ -439,23 +440,26 @@ function toggleSearchModal() {
     }
 }
 
-// 从弹窗执行搜索
+//从弹窗执行搜索
 function performSearchFromModal() {
     const keyword = document.getElementById('modalSearchInput').value.trim();
     if (keyword) {
-        alert('搜尋: ' + keyword);
+        // 跳轉到搜索結果頁面
+        window.location.href = 'SearchResults.jsp?keyword=' + encodeURIComponent(keyword);
         toggleSearchModal();
-        // 这里可以添加实际的搜索逻辑
-        // 例如: window.location.href = 'search.jsp?keyword=' + encodeURIComponent(keyword);
+    } else {
+        alert('請輸入搜索關鍵字');
     }
 }
 
 // 从弹窗选择搜索项目
 function selectSearchFromModal(keyword) {
-    document.getElementById('modalSearchInput').value = keyword;
-    performSearchFromModal();
+    if (keyword) {
+        // 直接跳轉到搜索結果頁面
+        window.location.href = 'SearchResults.jsp?keyword=' + encodeURIComponent(keyword);
+        toggleSearchModal();
+    }
 }
-
 // 按下 Enter 键执行搜索
 document.addEventListener('DOMContentLoaded', function() {
     const input = document.getElementById('modalSearchInput');
