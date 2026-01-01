@@ -369,6 +369,9 @@ jsonData.append("]");
         function previewImage(event) {
             const file = event.target.files[0];
             if (file) {
+                // ✅ 儲存原始檔名
+                state.tempImageFileName = file.name;
+                console.log('上傳的檔案名稱:', file.name);  // ← 加這行除錯
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     state.tempImageData = e.target.result;
@@ -555,6 +558,7 @@ jsonData.append("]");
         function openStyleSetModal() {
             state.showStyleSetModal = true;
             state.tempImageData = null;
+            state.tempImageFileName = null;  // ✅ 清空檔名
             render();
         }
 
@@ -631,20 +635,27 @@ jsonData.append("]");
             console.log('isEditMode:', isEditMode);
             console.log('圖片格式:', state.currentEditingSet.image.substring(0, 50));
             
+            
             // ✅ 處理圖片：區分 base64 和檔案路徑
-            if (state.currentEditingSet.image.startsWith('data:image')) {
-                // base64 格式
-                console.log('使用 base64 圖片');
-                const base64Data = state.currentEditingSet.image.split(',')[1];
-                const byteCharacters = atob(base64Data);
-                const byteNumbers = new Array(byteCharacters.length);
-                for (let i = 0; i < byteCharacters.length; i++) {
-                    byteNumbers[i] = byteCharacters.charCodeAt(i);
-                }
-                const byteArray = new Uint8Array(byteNumbers);
-                const blob = new Blob([byteArray], {type: 'image/jpeg'});
-                formData.append('styleImage', blob, 'style_' + Date.now() + '.jpg');
-                sendFormData(formData, isEditMode, memberId);
+if (state.currentEditingSet.image.startsWith('data:image')) {
+    // base64 格式
+    console.log('使用 base64 圖片');
+    console.log('state.tempImageFileName 的值:', state.tempImageFileName);  // ⭐ 加這行
+    
+    const base64Data = state.currentEditingSet.image.split(',')[1];
+    const byteCharacters = atob(base64Data);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], {type: 'image/jpeg'});
+    // ✅ 使用儲存的原始檔名
+    const originalFileName = state.tempImageFileName || 'upload.jpg';
+    console.log('最終檔名:', originalFileName);  // ⭐ 加這行
+    
+    formData.append('styleImage', blob, originalFileName);
+    sendFormData(formData, isEditMode, memberId);
             } else {
                 // 檔案路徑格式（編輯模式）
                 console.log('使用伺服器圖片路徑:', state.currentEditingSet.image);
@@ -652,9 +663,11 @@ jsonData.append("]");
                 fetch(state.currentEditingSet.image)
                     .then(response => response.blob())
                     .then(blob => {
-                        formData.append('styleImage', blob, 'style_' + Date.now() + '.jpg');
-                        sendFormData(formData, isEditMode, memberId);
-                    })
+    // ✅ 從路徑提取檔名
+    const fileName = state.currentEditingSet.image.split('/').pop();
+    formData.append('styleImage', blob, fileName);
+    sendFormData(formData, isEditMode, memberId);
+})
                     .catch(error => {
                         console.error('無法載入圖片:', error);
                         alert('❌ 無法載入原始圖片，請重新上傳圖片');

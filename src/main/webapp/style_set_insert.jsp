@@ -36,7 +36,8 @@ try {
     }
 
     int maxSize = 5 * 1024 * 1024;
-    MultipartRequest multi = new MultipartRequest(request, savePath, maxSize, "UTF-8", new DefaultFileRenamePolicy());
+ // ✅ 移除 DefaultFileRenamePolicy,保留原始檔名
+ MultipartRequest multi = new MultipartRequest(request, savePath, maxSize, "utf-8");
 
     String styleTitle = multi.getParameter("styleTitle");
     String tagsData = multi.getParameter("tagsData");
@@ -57,8 +58,8 @@ try {
     out.println("<!-- 檔案是否存在: " + uploadedFile.exists() + " -->");
     out.println("<!-- 檔案大小: " + uploadedFile.length() + " bytes -->");
     
-    // ✅ 修正 6：使用正斜線儲存到資料庫（網頁路徑）
-    String picPath = (objFolderConfig.WebsiteRelativeFilePath() + fileName).replace("\\", "/");
+ // ✅ 修正 6：統一使用 images/ 格式
+    String picPath = "images/" + fileName;
     out.println("<!-- 資料庫儲存路徑: " + picPath + " -->");
 
     out.println("<!-- styleTitle: " + styleTitle + " -->");
