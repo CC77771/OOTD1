@@ -345,12 +345,12 @@ body {
                   </li>
                   <% } %>
 
-                  <!-- 商家控制台 (只有商家可見) -->
+                  <!-- 品牌合作方控制台 (只有商家可見) -->
                   <% 
                     if("4".equals(positionId)) { 
                   %>
                   <li class="nav-item">
-                    <a class="nav-link" href="merchant.jsp">商家控制台</a>
+                    <a class="nav-link" href="merchant.jsp">品牌合作方控制台</a>
                   </li>
                   <% } %>
                 

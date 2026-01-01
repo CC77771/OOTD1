@@ -308,14 +308,15 @@ jsonData.append("]");
             html += '<div class="p-8"><div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg"><p class="text-sm text-blue-800"><strong>💡 操作說明：</strong></p>';
             html += '<ul class="text-sm text-blue-700 mt-2 ml-4"><li>• 點擊圖片添加商品標籤</li><li>• 拖動標籤可調整位置</li><li>• 移到標籤上方可看到刪除按鈕</li></ul></div>';
             
-            // ✅ 移除 onclick，改用後面的事件監聽器
+            // ✅ 圖片容器 - 移除 onclick
             html += '<div class="image-container" id="tagContainer"><img src="' + set.image + '" id="editImage">';
             
+            // ✅ 標籤渲染 - 移除 onmousedown，改用後面的事件監聽
             set.tags.forEach(function(tag, index) {
-                html += '<div class="tag-label" style="left: ' + tag.x + '%; top: ' + tag.y + '%;" onmousedown="startDrag(event, ' + index + ')">';
+                html += '<div class="tag-label" data-tag-index="' + index + '" style="left: ' + tag.x + '%; top: ' + tag.y + '%;">';
                 html += '<div class="bg-white bg-opacity-90 px-3 py-2 rounded-lg shadow-lg border-2" style="border-color: #a89f91; position: relative;">';
                 html += '<div class="text-xs text-gray-600">' + tag.name + '</div><div class="font-bold" style="color: #a89f91;">$' + tag.price + '</div>';
-                html += '<div class="delete-tag-btn" onclick="deleteTag(event, ' + index + ')">×</div></div></div>';
+                html += '<div class="delete-tag-btn" data-delete-index="' + index + '">×</div></div></div>';
             });
             
             html += '</div><div class="mt-6 p-4 border rounded-lg" style="border-color: #d4cdc5; background: #f9f9f9;"><h3 class="font-semibold text-gray-800 mb-4">新增商品標籤</h3>';
@@ -326,14 +327,43 @@ jsonData.append("]");
             html += '</div><p class="text-sm text-gray-500 mt-3">填寫完成後,點擊圖片上的位置即可添加標籤</p></div>';
             html += '<div class="flex gap-3 mt-6"><button onclick="closeEditTagModal()" class="flex-1 px-6 py-3 border-2 text-gray-700 rounded-lg" style="border-color: #d4cdc5;">取消</button>';
             html += '<button onclick="saveTagsAndClose()" class="flex-1 px-6 py-3 text-white rounded-lg" style="background-color: #a89f91;">完成編輯</button></div></div></div></div>';
-         // ✅ 在 render 後添加事件監聽器
+            
+            // ✅ 在 render 後綁定事件
             setTimeout(function() {
-                const container = document.getElementById('tagContainer');
-                if (container) {
-                    container.addEventListener('click', addTagAtClick);
-                }
+                attachTagEvents();
             }, 0);
+            
             return html;
+        }
+        
+     // ✅ 新增：綁定標籤拖動和刪除事件
+        function attachTagEvents() {
+            const container = document.getElementById('tagContainer');
+            if (!container) return;
+            
+            // 綁定圖片點擊事件（新增標籤）
+            const img = document.getElementById('editImage');
+            if (img) {
+                img.addEventListener('click', addTagAtClick);
+            }
+            
+            // 綁定所有標籤的拖動事件
+            const tags = document.querySelectorAll('.tag-label');
+            tags.forEach(function(tag) {
+                tag.addEventListener('mousedown', function(event) {
+                    const index = parseInt(tag.getAttribute('data-tag-index'));
+                    startDrag(event, index);
+                });
+            });
+            
+            // 綁定所有刪除按鈕的點擊事件
+            const deleteBtns = document.querySelectorAll('.delete-tag-btn');
+            deleteBtns.forEach(function(btn) {
+                btn.addEventListener('click', function(event) {
+                    const index = parseInt(btn.getAttribute('data-delete-index'));
+                    deleteTag(event, index);
+                });
+            });
         }
 
         function previewImage(event) {
@@ -371,7 +401,7 @@ jsonData.append("]");
         function onDrag(event) {
             if (draggedIndex === null) return;
             
-            isDragging = true;  // ✅ 標記為正在拖動
+            isDragging = true;
             
             const container = document.getElementById('tagContainer');
             const img = document.getElementById('editImage');
@@ -383,54 +413,89 @@ jsonData.append("]");
             if (x >= 0 && x <= 100 && y >= 0 && y <= 100) {
                 state.currentEditingSet.tags[draggedIndex].x = x;
                 state.currentEditingSet.tags[draggedIndex].y = y;
-                render();
+                
+                // ✅ 即時更新標籤位置，不重新渲染整個頁面
+                const tagElements = document.querySelectorAll('.tag-label');
+                if (tagElements[draggedIndex]) {
+                    tagElements[draggedIndex].style.left = x + '%';
+                    tagElements[draggedIndex].style.top = y + '%';
+                }
             }
         }
 
         function stopDrag() {
-            draggedIndex = null;
-            setTimeout(function() {
-                isDragging = false;  // ✅ 延遲重置狀態
-            }, 100);
             document.removeEventListener('mousemove', onDrag);
             document.removeEventListener('mouseup', stopDrag);
+            
+            if (draggedIndex !== null) {
+                // 拖動結束後立即重新渲染並重新綁定事件
+                setTimeout(function() {
+                    render();
+                    isDragging = false;
+                    draggedIndex = null;
+                }, 50);
+            } else {
+                isDragging = false;
+            }
         }
 
         function addTagAtClick(event) {
-        	// ✅ 如果正在拖動或點擊的不是圖片，就不執行
+            // 如果正在拖動或點擊的不是圖片，就不執行
             if (isDragging || event.target.id !== 'editImage') {
                 return;
             }
-
             
             const name = document.getElementById('tagName').value.trim();
             const price = document.getElementById('tagPrice').value.trim();
-            const url = document.getElementById('tagUrl').value.trim();
+            let url = document.getElementById('tagUrl').value.trim();
             
             if (!name || !price || !url) {
                 alert('請先填寫完整的商品資訊');
                 return;
             }
+                    
             
             const img = document.getElementById('editImage');
             const rect = img.getBoundingClientRect();
             const x = ((event.clientX - rect.left) / rect.width) * 100;
             const y = ((event.clientY - rect.top) / rect.height) * 100;
             
+            // 添加新標籤
             state.currentEditingSet.tags.push({ name, price, url, x, y });
             
+            // 清空輸入欄位
             document.getElementById('tagName').value = '';
             document.getElementById('tagPrice').value = '';
             document.getElementById('tagUrl').value = '';
             
+            // ✅ 立即重新渲染
             render();
+            
+            console.log('新標籤已添加，總標籤數:', state.currentEditingSet.tags.length);
+         // 立即重新渲染
+            setTimeout(function() {
+                render();
+                // 清空輸入欄位
+                document.getElementById('tagName').value = '';
+                document.getElementById('tagPrice').value = '';
+                document.getElementById('tagUrl').value = '';
+            }, 0);
         }
 
         function deleteTag(event, index) {
             event.stopPropagation();
+            event.preventDefault();
+            
             if (confirm('確定要刪除這個標籤嗎？')) {
+                // 從陣列中移除標籤
                 state.currentEditingSet.tags.splice(index, 1);
-                render();
+                
+                console.log('標籤已刪除，剩餘標籤數:', state.currentEditingSet.tags.length);
+                
+                // 立即重新渲染
+                setTimeout(function() {
+                    render();
+                }, 0);
             }
         }
 
