@@ -28,6 +28,13 @@
     rel="stylesheet">
     
 <style>
+<style>
+/* 🔧 移除 body 預設 margin，讓 header 對齊頂部 */
+body {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
 /* 🔒 鎖住 header 排版，避免 logo 被擠動 */
 .w3l-header .navbar .container-fluid > .row {
     display: flex;
