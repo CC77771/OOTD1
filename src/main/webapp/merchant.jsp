@@ -306,7 +306,7 @@ jsonData.append("]");
             html += '<div class="p-6 text-white" style="background: linear-gradient(135deg, #a89f91 0%, #93897d 100%);"><div class="flex items-center justify-between">';
             html += '<h2 class="text-2xl font-bold">編輯商品標籤 - ' + set.title + '</h2><button onclick="closeEditTagModal()"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button></div></div>';
             html += '<div class="p-8"><div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg"><p class="text-sm text-blue-800"><strong>💡 操作說明：</strong></p>';
-            html += '<ul class="text-sm text-blue-700 mt-2 ml-4"><li>• 點擊圖片添加商品標籤</li><li>• 拖動標籤可調整位置</li><li>• 移到標籤上方可看到刪除按鈕</li></ul></div>';
+            html += '<ul class="text-sm text-blue-700 mt-2 ml-4"><li>• 點擊圖片添加商品標籤</li><li>• 拖動標籤可調整位置</li><li>• 移到標籤上方可看到刪除按鈕</li><li>• 若無法儲存時請檢查商品連結是否過長</li></ul></div>';
             
             // ✅ 圖片容器 - 移除 onclick
             html += '<div class="image-container" id="tagContainer"><img src="' + set.image + '" id="editImage">';
@@ -465,6 +465,8 @@ jsonData.append("]");
             
             // 添加新標籤
             state.currentEditingSet.tags.push({ name, price, url, x, y });
+            console.log('新標籤已添加，總標籤數:', state.currentEditingSet.tags.length);  // ⭐ 關鍵除錯
+            console.log('當前所有標籤:', state.currentEditingSet.tags);  // ⭐ 關鍵除錯
             
             // 清空輸入欄位
             document.getElementById('tagName').value = '';
