@@ -8,7 +8,7 @@
 
 <%
 // 設定圖片上傳路徑
-String savePath = application.getRealPath("/") + "images\\my_wardrobe";
+String savePath = objFolderConfig.FilePath();
 File saveDir = new File(savePath);
 if (!saveDir.exists()) {
     saveDir.mkdirs();
@@ -18,7 +18,7 @@ if (!saveDir.exists()) {
 int maxSize = 5 * 1024 * 1024;
 
 // 處理檔案上傳
-MultipartRequest multi = new MultipartRequest(request, savePath, maxSize, "UTF-8", new DefaultFileRenamePolicy());
+MultipartRequest multi = new MultipartRequest(request, savePath, maxSize, "utf-8", new DefaultFileRenamePolicy());  // ✅ 改這裡:UTF-8 改 utf-8
 
 // 取得表單資料
 String memberId = multi.getParameter("memberId");
@@ -33,7 +33,7 @@ System.out.println("clothing_code: " + clothing_code);
 System.out.println("brand: " + brand);
 // 取得上傳的檔案名稱
 String fileName = multi.getFilesystemName("clothingImage");
-String pic = "images/my_wardrobe/" + fileName;
+String pic = objFolderConfig.WebsiteRelativeFilePath() + fileName;
 
 // 連接資料庫
 String dbPath = objDBConfig.FilePath();
@@ -54,7 +54,7 @@ pstmt.setString(7, size);
 // 執行 SQL
 pstmt.executeUpdate();
 
-// 除錯用：印出 SQL
+// 除錯用:印出 SQL
 out.println("資料已成功新增");
 
 // 關閉連接

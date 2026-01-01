@@ -316,7 +316,14 @@ response.setDateHeader("Expires", 0);
                 %>
                     <div class="item-card">
                         <div class="item-image-container" onclick="openImageModal('<%= pic %>')">
-    <img src="<%= pic %>" class="item-image" alt="<%= brand != null ? brand : "衣物" %>">
+    <% 
+    // ✅ 強制統一路徑格式,移除可能的 my_wardrobe 子資料夾
+    String displayPic = pic;
+    if(pic != null) {
+        displayPic = pic.replace("\\", "/").replace("images/my_wardrobe/", "images/");
+    }
+%>
+<img src="<%= displayPic %>" class="item-image" alt="<%= brand != null ? brand : "衣物" %>" onerror="console.error('圖片載入失敗: <%= pic %>')">
 </div>                        <div class="item-info">
                             <div class="item-name"><%= brand != null && !brand.isEmpty() ? brand : "未命名" %></div>
                             <% if(textDescription != null && !textDescription.isEmpty()) { %>

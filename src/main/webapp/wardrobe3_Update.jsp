@@ -8,11 +8,7 @@
 
 <%
 // 設定圖片上傳路徑
-String savePath = application.getRealPath("/") + "images/my_wardrobe";
-File saveDir = new File(savePath);
-if (!saveDir.exists()) {
-    saveDir.mkdirs();
-}
+String savePath = objFolderConfig.FilePath();
 
 // 設定上傳檔案大小限制 (5MB)
 int maxSize = 5 * 1024 * 1024;
@@ -53,28 +49,19 @@ rs.close();
 queryStmt.close();
 
 // 處理圖片上傳
-String pic = oldPicFromDB; // 預設使用舊圖片
+String pic = (oldPicFromDB != null) ? oldPicFromDB.replace("\\", "/") : null; // 預設使用舊圖片,統一轉換為正斜線
 String fileName = multi.getFilesystemName("clothingImage");
 
 if(fileName != null && !fileName.isEmpty()) {
     System.out.println("📤 偵測到新上傳的檔案: " + fileName);
     
-    // ✅ 取得副檔名
-    String ext = "";
-    int dotIndex = fileName.lastIndexOf(".");
-    if(dotIndex > 0) {
-        ext = fileName.substring(dotIndex).toLowerCase();
-    }
     
-    // ✅ 產生安全的英數字檔名
-    String newFileName = memberId + "_" + clothing_number + "_" + System.currentTimeMillis() + ext;
     
-    // ✅ 重新命名上傳的檔案
-    File uploadedFile = new File(savePath, fileName);
-    File newFile = new File(savePath, newFileName);
     
-    if(uploadedFile.renameTo(newFile)) {
-        System.out.println("✅ 檔案重新命名成功: " + fileName + " → " + newFileName);
+   // ✅ 直接使用原始檔名
+String newFileName = fileName;
+    
+    
         
         // ✅ 嘗試刪除舊圖片
         if(oldPicFromDB != null && !oldPicFromDB.isEmpty()) {
@@ -113,7 +100,7 @@ if(fileName != null && !fileName.isEmpty()) {
         }
         
         // ✅ 更新為新檔名
-        pic = "images/my_wardrobe/" + newFileName;
+       pic = (objFolderConfig.WebsiteRelativeFilePath() + newFileName).replace("\\", "/");
         System.out.println("✅ 新圖片路徑: " + pic);
     } else {
         System.out.println("❌ 檔案重新命名失敗!");
