@@ -22,16 +22,18 @@ if("POST".equals(request.getMethod())) {
         // 暫時使用預設圖片
         String picPath = "images/default-post.jpg";
         
-        // 存入資料庫
+     // 存入資料庫
         Class.forName("net.ucanaccess.jdbc.UcanaccessDriver");
         Connection con = DriverManager.getConnection("jdbc:ucanaccess://" + objDBConfig.FilePath() + ";");
-        
-        String sql = "INSERT INTO personal_wear (memberId, wearId, pic, [like], collect, view, post_state) VALUES (?, ?, ?, 0, 0, 0, True)";
+
+        // ✅ 修正：加入 tags 欄位
+        String sql = "INSERT INTO personal_wear (memberId, wearId, pic, tags, [like], collect, view, post_state) VALUES (?, ?, ?, ?, 0, 0, 0, True)";
         PreparedStatement pstmt = con.prepareStatement(sql);
         pstmt.setString(1, memberId);
         pstmt.setString(2, wearId != null ? wearId : "");
         pstmt.setString(3, picPath);
-        
+        pstmt.setString(4, tags != null ? tags : ""); // ✅ 加入標籤參數
+
         pstmt.executeUpdate();
         pstmt.close();
         con.close();
@@ -517,7 +519,7 @@ if("POST".equals(request.getMethod())) {
             }, 1500);
         }
 
-        // 顯示建議的標籤
+     // 顯示建議的標籤
         function displaySuggestedTags() {
             const container = document.getElementById('suggestedTags');
             container.innerHTML = '';
@@ -525,7 +527,7 @@ if("POST".equals(request.getMethod())) {
             suggestedTagsList.forEach(tag => {
                 const tagEl = document.createElement('span');
                 tagEl.className = 'tag';
-                tagEl.textContent = tag;
+                tagEl.textContent = tag;  // ✅ 這裡不要加 #
                 tagEl.onclick = () => toggleTag(tag, false);
                 
                 if (selectedTags.includes(tag)) {
