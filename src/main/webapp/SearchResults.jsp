@@ -427,9 +427,9 @@ List<Map<String, Object>> searchResults = new ArrayList<>(uniqueResults.values()
                     <a href="SearchResults.jsp?keyword=正式" class="tag-btn <%= keyword.contains("正式") ? "active" : "" %>">正式</a>
                     <a href="SearchResults.jsp?keyword=韓系" class="tag-btn <%= keyword.contains("韓系") ? "active" : "" %>">韓系</a>
                     <a href="SearchResults.jsp?keyword=日系" class="tag-btn <%= keyword.contains("日系") ? "active" : "" %>">日系</a>
-                    <a href="SearchResults.jsp?keyword=復古" class="tag-btn <%= keyword.contains("復古") ? "active" : "" %>">復古</a>
-                    <a href="SearchResults.jsp?keyword=運動" class="tag-btn <%= keyword.contains("運動") ? "active" : "" %>">運動</a>
-                    <a href="SearchResults.jsp?keyword=甜美" class="tag-btn <%= keyword.contains("甜美") ? "active" : "" %>">甜美</a>
+                    <a href="SearchResults.jsp?keyword=經典" class="tag-btn <%= keyword.contains("經典") ? "active" : "" %>">經典</a>
+                    <a href="SearchResults.jsp?keyword=美式" class="tag-btn <%= keyword.contains("美式") ? "active" : "" %>">美式</a>
+                    <a href="SearchResults.jsp?keyword=學院風" class="tag-btn <%= keyword.contains("學院風") ? "active" : "" %>">學院風</a>
                     <a href="SearchResults.jsp?keyword=簡約" class="tag-btn <%= keyword.contains("簡約") ? "active" : "" %>">簡約</a>
                     <a href="index1.jsp" class="tag-btn" style="background: #ddd;">← 返回</a>
                 </div>
@@ -557,9 +557,9 @@ List<Map<String, Object>> searchResults = new ArrayList<>(uniqueResults.values()
                     <a href="SearchResults.jsp?keyword=正式" class="tag-btn">正式</a>
                     <a href="SearchResults.jsp?keyword=韓系" class="tag-btn">韓系</a>
                     <a href="SearchResults.jsp?keyword=日系" class="tag-btn">日系</a>
-                    <a href="SearchResults.jsp?keyword=復古" class="tag-btn">復古</a>
-                    <a href="SearchResults.jsp?keyword=運動" class="tag-btn">運動</a>
-                    <a href="SearchResults.jsp?keyword=甜美" class="tag-btn">甜美</a>
+                    <a href="SearchResults.jsp?keyword=經典" class="tag-btn">經典</a>
+                    <a href="SearchResults.jsp?keyword=美式" class="tag-btn">美式</a>
+                    <a href="SearchResults.jsp?keyword=學院風" class="tag-btn">學院風</a>
                     <a href="SearchResults.jsp?keyword=簡約" class="tag-btn">簡約</a>
                 </div>
             </div>
