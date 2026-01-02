@@ -33,9 +33,20 @@ if("true".equals(ajaxAction)) {
             con = getConnection(dbPath);
             String sql = "";
             
-            if("delete".equals(action)) {
-                // 軟刪除：將 post_state 設為 False
+            if("approve".equals(action)) {
+                sql = "UPDATE personal_wear SET post_state = True WHERE postid = ?";
+                message = "貼文已通過";
+            } else if("reject".equals(action)) {
                 sql = "UPDATE personal_wear SET post_state = False WHERE postid = ?";
+                message = "貼文已拒絕";
+            } else if("delete".equals(action)) {
+                sql = "DELETE FROM personal_wear WHERE postid = ?";
+                message = "貼文已刪除";
+            } else {
+                message = "無效的操作";
+            }
+            
+            if(!sql.isEmpty()) {
                 pstmt = con.prepareStatement(sql);
                 pstmt.setInt(1, Integer.parseInt(postId));
                 
@@ -43,12 +54,9 @@ if("true".equals(ajaxAction)) {
                 
                 if(result > 0) {
                     success = true;
-                    message = "貼文已刪除";
                 } else {
                     message = "找不到該貼文";
                 }
-            } else {
-                message = "無效的操作";
             }
             
         } catch(NumberFormatException e) {
@@ -122,6 +130,8 @@ if("update".equals(request.getParameter("action"))) {
     
     StringBuilder postsJSON = new StringBuilder("[");
     int totalPosts = 0;
+    int pendingPosts = 0;
+    int approvedPosts = 0;
     
     try {
         conn = getConnection(dbPath);
@@ -137,7 +147,6 @@ if("update".equals(request.getParameter("action"))) {
                      "       MAX(p.[like]) as likeCount, " +
                      "       SUM(CASE WHEN p.message IS NOT NULL AND p.message <> '' THEN 1 ELSE 0 END) as commentCount " +
                      "FROM personal_wear p " +
-                     "WHERE p.post_state = True " +
                      "GROUP BY p.postid " +
                      "ORDER BY p.postid DESC";
         
@@ -147,8 +156,16 @@ if("update".equals(request.getParameter("action"))) {
         boolean first = true;
         while(rs.next()) {
             totalPosts++;
+            boolean postState = rs.getBoolean("post_state");
+            if(postState) {
+                approvedPosts++;
+            } else {
+                pendingPosts++;
+            }
             
             if(!first) postsJSON.append(",");
+            
+            String status = postState ? "approved" : "rejected";
             
             postsJSON.append("{");
             postsJSON.append("id:").append(rs.getInt("postid")).append(",");
@@ -173,6 +190,7 @@ if("update".equals(request.getParameter("action"))) {
             postsJSON.append("views:").append(rs.getInt("view")).append(",");
             postsJSON.append("likes:").append(rs.getInt("likeCount")).append(",");
             postsJSON.append("comments:").append(rs.getInt("commentCount")).append(",");
+            postsJSON.append("status:'").append(status).append("',");
             
             String pic = rs.getString("pic");
             if(pic != null && !pic.trim().isEmpty()) {
@@ -243,11 +261,11 @@ body {
 }
 
 .nav-tabs .nav-link.active {
-    background: #ffffff;
-    color: #333 !important;
-    border: 1px solid #ddd;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    transform: none;
+    background: #0d6efd !important;
+    color: #ffffff !important;
+    border: 1px solid #0d6efd;
+    box-shadow: 0 6px 15px rgba(13,110,253,0.3);
+    transform: translateY(-3px);
 }
 
 .nav-tabs {
@@ -355,6 +373,14 @@ table img:hover {
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
 
+.filter-buttons {
+    margin-bottom: 20px;
+}
+
+.filter-buttons .btn {
+    margin-right: 10px;
+}
+
 .modal-content {
     border-radius: 15px;
 }
@@ -376,13 +402,8 @@ table img:hover {
 <body>
 <div class="admin-container">
     <div class="admin-header">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <h1>🛠️ 貼文審核</h1>
-                <p>歡迎回來 | 管理 CZ_OOTD 平台內容與使用者</p>
-            </div>
-            <a href="manager3.jsp" class="back-btn">← 返回控制台</a>
-        </div>
+        <h1>🛠️ 管理者控制台</h1>
+        <p>歡迎回來 | 管理 CZ_OOTD 平台內容與使用者</p>
     </div>
 
     <!-- 分頁導航 -->
@@ -392,21 +413,36 @@ table img:hover {
         </li>
         
         <li class="nav-item">
-            <a class="nav-link active" href="postManagement.jsp">📝 貼文審核</a>
+            <a class="nav-link active">📝 貼文審核</a>
         </li>
 
         <li class="nav-item">
             <a class="nav-link" href="userManagement.jsp">👥 一般會員管理</a>
         </li>
-                
+        
+        <li class="nav-item">
+            <a class="nav-link" href="clickAnalytics.jsp">📊 點擊率分析</a>
+        </li>
     </ul>
 
     <!-- 統計卡片 -->
     <div class="row mb-4">
-        <div class="col-md-12">
+        <div class="col-md-4">
             <div class="stats-card">
                 <p>總貼文數</p>
                 <h3 id="statTotal"><%= totalPosts %></h3>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stats-card">
+                <p>待審核貼文</p>
+                <h3 id="statPending" style="color: #dc3545;"><%= pendingPosts %></h3>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stats-card">
+                <p>已通過貼文</p>
+                <h3 id="statApproved" style="color: #28a745;"><%= approvedPosts %></h3>
             </div>
         </div>
     </div>
@@ -414,6 +450,12 @@ table img:hover {
     <!-- 貼文列表 -->
     <div class="content-card">
         <div class="d-flex justify-content-between mb-3">
+            <div class="filter-buttons">
+                <button class="btn btn-outline-secondary active" onclick="filterPosts('all')">全部</button>
+                <button class="btn btn-outline-warning" onclick="filterPosts('pending')">待審核</button>
+                <button class="btn btn-outline-success" onclick="filterPosts('approved')">已通過</button>
+                <button class="btn btn-outline-danger" onclick="filterPosts('rejected')">已拒絕</button>
+            </div>
             <div class="search-box">
                 <input type="text" id="postSearch" placeholder="🔍 搜尋貼文標題或作者...">
             </div>
@@ -431,6 +473,7 @@ table img:hover {
                         <th>瀏覽數</th>
                         <th>按讚數</th>
                         <th>留言數</th>
+                        <th>狀態</th>
                         <th>操作</th>
                     </tr>
                 </thead>
@@ -504,6 +547,7 @@ table img:hover {
 <script>
 // 從 JSP 載入貼文資料
 var posts = <%= postsJSON.toString() %>;
+var currentFilter = 'all';
 
 // 初始化
 function init() {
@@ -538,7 +582,12 @@ function showToast(message, type) {
 // 更新統計數據
 function updateStats() {
     var total = posts.length;
+    var pending = posts.filter(function(p) { return p.status === 'rejected'; }).length;
+    var approved = posts.filter(function(p) { return p.status === 'approved'; }).length;
+    
     document.getElementById('statTotal').textContent = total;
+    document.getElementById('statPending').textContent = pending;
+    document.getElementById('statApproved').textContent = approved;
 }
 
 // 渲染貼文表格
@@ -546,14 +595,38 @@ function renderPosts() {
     var tbody = document.getElementById('postTable');
     tbody.innerHTML = '';
     
-    if(posts.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">沒有貼文資料</td></tr>';
+    var filteredPosts = posts;
+    if(currentFilter !== 'all') {
+        filteredPosts = posts.filter(function(p) { 
+            if(currentFilter === 'pending') return p.status === 'rejected';
+            return p.status === currentFilter; 
+        });
+    }
+    
+    if(filteredPosts.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">沒有符合條件的貼文</td></tr>';
         return;
     }
     
-    posts.forEach(function(post) {
-        var actionButtons = '<button class="btn btn-primary btn-action" onclick="editPost(' + post.id + ')">修改</button>' +
-                          '<button class="btn btn-danger btn-action" onclick="deletePost(' + post.id + ')">刪除</button>';
+    filteredPosts.forEach(function(post) {
+        var statusBadge = '';
+        var actionButtons = '';
+        
+        if (post.status === 'approved') {
+            statusBadge = '<span class="badge bg-success">已通過</span>';
+            actionButtons = '<button class="btn btn-primary btn-action" onclick="editPost(' + post.id + ')">修改</button>' +
+                          '<button class="btn btn-danger btn-action" onclick="rejectPost(' + post.id + ')">拒絕</button>' +
+                          '<button class="btn btn-secondary btn-action" onclick="deletePost(' + post.id + ')">刪除</button>';
+        } else if (post.status === 'rejected') {
+            statusBadge = '<span class="badge bg-danger">已拒絕</span>';
+            actionButtons = '<button class="btn btn-success btn-action" onclick="approvePost(' + post.id + ')">通過</button>' +
+                          '<button class="btn btn-secondary btn-action" onclick="deletePost(' + post.id + ')">刪除</button>';
+        } else {
+            statusBadge = '<span class="badge bg-warning">待審核</span>';
+            actionButtons = '<button class="btn btn-success btn-action" onclick="approvePost(' + post.id + ')">通過</button>' +
+                          '<button class="btn btn-danger btn-action" onclick="rejectPost(' + post.id + ')">拒絕</button>' +
+                          '<button class="btn btn-secondary btn-action" onclick="deletePost(' + post.id + ')">刪除</button>';
+        }
         
         // 圖片欄位
         var imageCell = '';
@@ -583,10 +656,24 @@ function renderPosts() {
             '<td><strong>' + post.views.toLocaleString() + '</strong></td>' +
             '<td><span class="badge bg-danger">' + post.likes + '</span></td>' +
             '<td><span class="badge bg-primary">' + post.comments + '</span></td>' +
+            '<td>' + statusBadge + '</td>' +
             '<td>' + actionButtons + '</td>' +
             '</tr>';
         tbody.innerHTML += row;
     });
+}
+
+// 篩選貼文
+function filterPosts(filter) {
+    currentFilter = filter;
+    
+    // 更新按鈕狀態
+    document.querySelectorAll('.filter-buttons .btn').forEach(function(btn) {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    renderPosts();
 }
 
 // 搜尋功能
@@ -621,9 +708,23 @@ function editPost(postId) {
     }
 }
 
+// 通過貼文
+function approvePost(postId) {
+    if(confirm('確定要通過此貼文嗎？')) {
+        updatePostStatus(postId, 'approve');
+    }
+}
+
+// 拒絕貼文
+function rejectPost(postId) {
+    if (confirm('確定要拒絕此貼文嗎？拒絕後該貼文將不會顯示在前台！')) {
+        updatePostStatus(postId, 'reject');
+    }
+}
+
 // 刪除貼文
 function deletePost(postId) {
-    if (confirm('確定要刪除此貼文嗎？刪除後該貼文將不再顯示！')) {
+    if (confirm('確定要刪除此貼文嗎？此操作無法復原！')) {
         updatePostStatus(postId, 'delete');
     }
 }
@@ -649,7 +750,6 @@ function updatePostStatus(postId, action) {
             showToast('操作失敗：' + error, 'danger');
         });
 }
-
 // 頁面載入完成後執行
 window.onload = function() {
     init();

@@ -458,7 +458,200 @@ header svg:hover {
     transition: none !important;
 }
 </style>
+<style>
+/* ... 您原有的所有樣式 ... */
 
+/* ===== 🔧 強制統一搜索彈窗大小 ===== */
+.search-modal-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: rgba(0, 0, 0, 0.6) !important;
+    backdrop-filter: blur(5px) !important;
+    z-index: 100001 !important;
+    display: none !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    padding-top: 60px !important;
+}
+
+.search-modal-overlay.active {
+    display: flex !important;
+}
+
+.search-modal-content {
+    background: white !important;
+    border-radius: 25px !important;
+    max-width: 850px !important;  /* ✅ 固定寬度 */
+    width: 95% !important;
+    padding: 40px 50px !important;
+    box-shadow: 0 15px 50px rgba(0,0,0,0.25) !important;
+    min-height: 500px !important;
+    animation: slideDown 0.3s ease !important;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.search-modal-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 25px !important;
+}
+
+.search-modal-header h3 {
+    margin: 0 !important;
+    color: #333 !important;
+    font-size: 26px !important;
+    font-weight: 600 !important;
+}
+
+.close-search-modal {
+    background: transparent !important;
+    border: 2px solid #ddd !important;
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 50% !important;
+    cursor: pointer !important;
+    font-size: 26px !important;
+    color: #666 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.3s ease !important;
+}
+
+.close-search-modal:hover {
+    background: #a89f91 !important;
+    border-color: #a89f91 !important;
+    color: white !important;
+    transform: rotate(90deg) !important;
+}
+
+.search-input-group {
+    position: relative !important;
+    width: 100% !important;
+    margin-bottom: 30px !important;
+}
+
+.search-input {
+    width: 100% !important;
+    padding: 18px 60px 18px 25px !important;
+    border: 2px solid #ddd !important;
+    border-radius: 30px !important;
+    font-size: 16px !important;
+    transition: all 0.3s ease !important;
+    background: #f8f8f8 !important;
+}
+
+.search-input:focus {
+    outline: none !important;
+    border-color: #a89f91 !important;
+    background: #fff !important;
+    box-shadow: 0 3px 12px rgba(168, 159, 145, 0.2) !important;
+}
+
+.search-button {
+    position: absolute !important;
+    right: 5px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    background: #a89f91 !important;
+    border: none !important;
+    border-radius: 50% !important;
+    width: 60px !important;   /* ✅ 改成 60px */
+    height: 60px !important;  /* ✅ 改成 60px */
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.3s ease !important;
+}
+
+.search-button:hover {
+    background: #9b8e82 !important;
+    transform: translateY(-50%) scale(1.05) !important;
+}
+
+.search-button svg {
+    stroke: white !important;
+    width: 26px !important;   /* ✅ 改成 26px */
+    height: 26px !important;  /* ✅ 改成 26px */
+}
+
+.dropdown-section {
+    margin-top: 25px !important;
+}
+
+.dropdown-title {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    color: #666 !important;
+    margin-bottom: 15px !important;
+    padding-bottom: 10px !important;
+    border-bottom: 2px solid #eee !important;
+}
+
+.dropdown-title svg {
+    stroke: #a89f91 !important;
+}
+
+.dropdown-list {
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-height: 350px !important;
+    overflow-y: auto !important;
+}
+
+.dropdown-list li {
+    padding: 15px 20px !important;
+    cursor: pointer !important;
+    border-radius: 10px !important;
+    transition: all 0.2s ease !important;
+    color: #333 !important;
+    font-size: 15px !important;
+    margin-bottom: 5px !important;
+}
+
+.dropdown-list li:hover {
+    background: #f5f5f5 !important;
+    color: #a89f91 !important;
+    transform: translateX(8px) !important;
+}
+
+/* 響應式 */
+@media (max-width: 768px) {
+    .search-modal-content {
+        width: 95% !important;
+        padding: 25px 20px !important;
+        min-height: auto !important;
+    }
+    
+    .search-modal-header h3 {
+        font-size: 22px !important;
+    }
+    
+    .search-input {
+        padding: 15px 55px 15px 20px !important;
+        font-size: 15px !important;
+    }
+}
+</style>
 </head>
 <body class="homepage">
 <button id="backToTop" class="back-to-top" onclick="scrollToTop()">
@@ -545,7 +738,7 @@ String commentQuery = "SELECT message, memberId FROM personal_wear WHERE postid 
     pstmtComment.close();
 %>
     <!-- 帖子 -->
-    <div class="swiper-slide" data-postid="<%= postid %>">
+    <div class="swiper-slide" data-postid="<%= postid %>" id="post-<%= postid %>">
         <div class="post-item">
             <div class="image-holder">
                 <a href="#">
@@ -556,7 +749,14 @@ String commentQuery = "SELECT message, memberId FROM personal_wear WHERE postid 
                 </a>
             </div>
             <div class="post-content py-4">
-    <p class="post-description"><%=rs.getString("memberId") %> <%=rs.getString("wearId") %></p>
+    <p class="post-description">
+        <a href="userProfile.jsp?memberId=<%=rs.getString("memberId") %>" 
+           class="user-link"
+           style="color: #a89f91; text-decoration: none; font-weight: 500; cursor: pointer;">
+            <%=rs.getString("memberId") %>
+        </a> 
+        <%=rs.getString("wearId") %>
+    </p>
     
     <!-- ✅ 新增標籤顯示 -->
     <%
@@ -881,6 +1081,26 @@ function toggleComment(element) {
             });
     }
     
+ // 頁面載入時檢查是否有指定的貼文ID
+    window.addEventListener('load', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetPostId = urlParams.get('postid');
+        
+        if (targetPostId && swiper) {
+            // 找到對應的投影片索引
+            const slides = swiper.slides;
+            for (let i = 0; i < slides.length; i++) {
+                if (slides[i].getAttribute('data-postid') === targetPostId) {
+                    // 滑動到該投影片
+                    setTimeout(function() {
+                        swiper.slideTo(i, 500); // 500ms 的滑動動畫
+                    }, 100);
+                    break;
+                }
+            }
+        }
+    });
+ 
 </script>
 
 <!-- CSS -->
@@ -1398,6 +1618,18 @@ button[data-bs-toggle] {
 .star-icon[data-collected="true"] svg path {
     fill: yellow !important;
 }
+
+/* ========== 在這裡新增用戶帳號連結樣式 ========== */
+/* 用戶帳號連結樣式 */
+.user-link {
+    transition: all 0.3s ease;
+}
+
+.user-link:hover {
+    color: #6b5d52 !important;
+    text-decoration: underline !important;
+}
+/* ========== 新增結束 ========== */
 
 </style>
 

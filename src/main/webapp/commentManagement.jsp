@@ -162,6 +162,51 @@ if("true".equals(ajaxAction)) {
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;700&display=swap" rel="stylesheet">
 
 <style>
+/* Tabs 容器 - 置中 & 下移 & 緊湊 */
+#adminTab {
+    display: flex !important;          
+    justify-content: center !important; 
+    flex-wrap: wrap;                   
+    gap: 30px;                         
+    margin: 50px auto 20px auto;       
+}
+
+/* Tab 按鈕美化 - 卡片風格 */
+.nav-tabs .nav-link {
+    font-size: 35px;          
+    padding: 15px 30px;       
+    font-weight: 600;
+    color: #333;
+    border-radius: 15px;
+    text-align: center;
+    background: #ffffff;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    border: 1px solid #ddd;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+/* Hover 效果 */
+.nav-tabs .nav-link:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    background: #f9f9f9;
+}
+
+/* Active 卡片 - 藍色背景 */
+.nav-tabs .nav-link.active {
+    background: #0d6efd !important;
+    color: #ffffff !important;
+    border: 1px solid #0d6efd;
+    box-shadow: 0 6px 15px rgba(13,110,253,0.3);
+    transform: translateY(-3px);
+}
+
+/* 移除底線 */
+.nav-tabs {
+    border-bottom: none !important;
+}
+
 body {
     background-color: #f8f9fa;
     font-family: 'Jost', sans-serif;
@@ -277,14 +322,28 @@ table img:hover {
 <body>
 <div class="admin-container">
     <div class="admin-header">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <h1>💬 評論審核管理</h1>
-                <p>管理平台上的所有評論內容</p>
-            </div>
-            <a href="manager3.jsp" class="back-btn">← 返回控制台</a>
-        </div>
+        <h1>🛠️ 管理者控制台</h1>
+        <p>歡迎回來 | 管理 CZ_OOTD 平台內容與使用者</p>
     </div>
+
+    <!-- 分頁導航 -->
+    <ul class="nav nav-tabs" id="adminTab" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active">💬 評論審核</a>
+        </li>
+        
+        <li class="nav-item">
+            <a class="nav-link" href="postManagement.jsp">📝 貼文審核</a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link" href="userManagement.jsp">👥 一般會員管理</a>
+        </li>
+        
+        <li class="nav-item">
+            <a class="nav-link" href="analyticsManagement.jsp">📊 點擊率分析</a>
+        </li>
+    </ul>
 
     <!-- 統計卡片 -->
     <div class="row mb-4">
@@ -554,4 +613,4 @@ window.onload = function() {
 </script>
 
 </body>
-</html>
+</html
