@@ -29,7 +29,30 @@
     
 <style>
 <style>
-/* 🔧 移除 body 預設 margin，讓 header 對齊頂部 */
+/* ===== 🔒 強制 Header 和搜尋功能層級最高 ===== */
+.w3l-header {
+    position: relative !important;
+    z-index: 99999 !important;
+}
+
+.w3l-header .navbar {
+    position: relative !important;
+    z-index: 99999 !important;
+}
+
+.w3l-header * {
+    position: relative !important;
+    z-index: 99999 !important;
+}
+
+.simple-search-icon {
+    position: relative !important;
+    z-index: 100000 !important;
+}
+
+.search-modal-overlay {
+    z-index: 100001 !important;
+}
 body {
     margin: 0 !important;
     padding: 0 !important;
@@ -74,13 +97,11 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.3s ease;
     margin-right: 15px;
 }
 
 .simple-search-icon:hover {
     background: #a89f91;
-    transform: scale(1.1);
 }
 
 .simple-search-icon:hover svg {
@@ -89,7 +110,6 @@ body {
 
 .simple-search-icon svg {
     stroke: #a89f91;
-    transition: all 0.3s ease;
 }
 
 /* 搜索弹窗样式 */

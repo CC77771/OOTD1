@@ -25,7 +25,7 @@ if (postid != null && commentText != null && !commentText.trim().isEmpty() && me
         rs = pstmt.executeQuery();
         
         if (rs.next()) {
-            int originalMemberId = rs.getInt("memberid");
+            // 不需要取得原始貼文的 memberid，因為留言要用留言者自己的 memberId
             String wearId = rs.getString("wearId");
             String pic = rs.getString("pic");
             int likeCount = rs.getInt("like");
@@ -37,21 +37,21 @@ if (postid != null && commentText != null && !commentText.trim().isEmpty() && me
             rs.close();
             pstmt.close();
             
-            // SQL 插入語句：插入留言
+         // SQL 插入語句：插入留言
             String insertCommentQuery = "INSERT INTO personal_wear (postid, memberid, wearId, message, pic, [like], collect, view, post_state) " +
                                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
             pstmt = con.prepareStatement(insertCommentQuery);
-            
+
             // 設定參數
             pstmt.setInt(1, Integer.parseInt(postid));  // postid（相同）
-            pstmt.setInt(2, originalMemberId);          // 原始貼文的 memberid
-            pstmt.setString(3, wearId);                 // wearId（相同）
-            pstmt.setString(4, commentText);            // 留言內容
-            pstmt.setString(5, pic);                    // pic（相同）
-            pstmt.setInt(6, likeCount);                 // like（相同）
-            pstmt.setInt(7, collectCount);              // collect（相同）
-            pstmt.setInt(8, viewCount);                 // view（相同）
-            pstmt.setBoolean(9, postState);             // post_state（相同）
+            pstmt.setString(2, memberId);               // ✅ 正確：用留言者的 memberId
+            pstmt.setString(3, wearId);                 
+            pstmt.setString(4, commentText);            
+            pstmt.setString(5, pic);                    
+            pstmt.setInt(6, likeCount);                 
+            pstmt.setInt(7, collectCount);              
+            pstmt.setInt(8, viewCount);                 
+            pstmt.setBoolean(9, postState);
             
             // 執行插入操作
             int result = pstmt.executeUpdate();

@@ -143,8 +143,14 @@ styleStmt.close();
     display: none;
     align-items: center;
     justify-content: center;
-    z-index: 9999;
+    z-index: -1;  /* ✅ 初始設為 -1，不干擾其他元素 */
     animation: fadeIn 0.5s ease;
+    pointer-events: none;  /* ✅ 初始設為 none，不接收點擊 */
+}
+
+.modal-overlay[style*="display: none"] {
+    pointer-events: none !important;  /* ✅ 新增這段 */
+    z-index: -1 !important;
 }
 
 @keyframes fadeIn {
@@ -403,6 +409,55 @@ styleStmt.close();
 }
 </style>  
 
+<style>
+/* ===== 強制移除所有搜尋相關的動畫 ===== */
+header *,
+.navbar *,
+.action-menu *,
+.search-box *,
+header a,
+header button,
+header svg,
+header img,
+.search-popup *,
+button[data-bs-toggle],
+button[data-bs-toggle] * {
+    transform: none !important;
+    transition: none !important;
+    animation: none !important;
+    -webkit-transform: none !important;
+    -webkit-transition: none !important;
+    -webkit-animation: none !important;
+}
+
+/* ✅ 針對搜尋圖示移除所有動畫效果 */
+.simple-search-icon,
+.simple-search-icon:hover,
+.simple-search-icon svg,
+.simple-search-icon:hover svg {
+    transform: none !important;
+    transition: none !important;
+    animation: none !important;
+    -webkit-transform: none !important;
+    -webkit-transition: none !important;
+    -webkit-animation: none !important;
+}
+
+/* 確保搜尋圖示和導航列元素不受影響 */
+header .action-menu svg,
+header .search-box svg,
+header button svg {
+    transform: scale(1) !important;
+}
+
+/* 移除 hover 效果的動畫 */
+header a:hover,
+header button:hover,
+header svg:hover {
+    transform: none !important;
+    transition: none !important;
+}
+</style>
 
 </head>
 <body class="homepage">
@@ -438,8 +493,35 @@ while(rs.next()){
     String postid = rs.getString("postid");
     int viewCount = rs.getInt("view");
     
-    // 查詢該貼文的所有留言
-    String commentQuery = "SELECT message FROM personal_wear WHERE postid = ? AND message IS NOT NULL AND TRIM(message) != '' ORDER BY recordid ASC";
+ // ✅ 新增：查詢當前會員是否已按讚
+    boolean isLiked = false;
+    String checkLikeSql = "SELECT COUNT(*) as cnt FROM user_likes WHERE memberId = ? AND postid = ?";
+    PreparedStatement pstmtLike = con.prepareStatement(checkLikeSql);
+    pstmtLike.setString(1, member);
+    pstmtLike.setInt(2, Integer.parseInt(postid));
+    ResultSet rsLike = pstmtLike.executeQuery();
+    if(rsLike.next() && rsLike.getInt("cnt") > 0) {
+        isLiked = true;
+    }
+    rsLike.close();
+    pstmtLike.close();
+    
+    // ✅ 新增：查詢當前會員是否已收藏
+    boolean isCollected = false;
+    String checkCollectSql = "SELECT COUNT(*) as cnt FROM user_collects WHERE memberId = ? AND postid = ?";
+    PreparedStatement pstmtCollect = con.prepareStatement(checkCollectSql);
+    pstmtCollect.setString(1, member);
+    pstmtCollect.setInt(2, Integer.parseInt(postid));
+    ResultSet rsCollect = pstmtCollect.executeQuery();
+    if(rsCollect.next() && rsCollect.getInt("cnt") > 0) {
+        isCollected = true;
+    }
+    rsCollect.close();
+    pstmtCollect.close();
+    
+  
+    // 查詢該貼文的所有留言（包含留言者帳號）
+String commentQuery = "SELECT message, memberId FROM personal_wear WHERE postid = ? AND message IS NOT NULL AND TRIM(message) != '' ORDER BY recordid ASC";
     PreparedStatement pstmtComment = con.prepareStatement(commentQuery);
     pstmtComment.setInt(1, Integer.parseInt(postid));
     ResultSet rsComment = pstmtComment.executeQuery();
@@ -450,8 +532,11 @@ while(rs.next()){
     while(rsComment.next()) {
         if(hasComment) commentsDataJS.append(",");
         String message = rsComment.getString("message");
+        String commentMemberId = rsComment.getString("memberId");
         message = message.replace("'", "\\'").replace("\n", "\\n").replace("\r", "");
-        commentsDataJS.append("'").append(message).append("'");
+        commentMemberId = commentMemberId.replace("'", "\\'");
+        // 格式改為：{member:'帳號', message:'留言內容'}
+        commentsDataJS.append("{member:'").append(commentMemberId).append("',message:'").append(message).append("'}");
         hasComment = true;
     }
     commentsDataJS.append("],");
@@ -496,21 +581,21 @@ while(rs.next()){
     
     <div class="post-actions">
                     <div class="action-icons">
-                        <a href="#" class="action-icon like-icon" onclick="toggleLike(this)">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" class="feather feather-heart">
-                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>
-                            </svg>
-                        </a>
+                        <a href="#" class="action-icon like-icon" onclick="toggleLike(this)" data-liked="<%= isLiked %>">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" class="feather feather-heart">
+        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>
+    </svg>
+</a>
                         <a href="#" class="action-icon comment-icon" onclick="toggleComment(this)">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" class="feather feather-message-circle">
                                 <path d="M21 11.5a8.5 8.5 0 1 0-13.971 6.607l-3.75 3.75a1 1 0 0 0-.23 1.082A1 1 0 0 0 4 21h4.582a8.5 8.5 0 0 0 12.418-9.5z"></path>
                             </svg>
                         </a>
-                        <a href="#" class="action-icon star-icon" onclick="toggleStar(this)">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" class="feather feather-star">
-                                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path>
-                            </svg>
-                        </a>
+                        <a href="#" class="action-icon star-icon" onclick="toggleStar(this)" data-collected="<%= isCollected %>">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" class="feather feather-star">
+        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path>
+    </svg>
+</a>
                     </div>
                     <div class="action-text">
                         <span class="likes-count"><%=rs.getInt("like") %></span>&nbsp;                                                  
@@ -672,53 +757,33 @@ function updateViewCount(postid, slideElement) {
 }
     // ========== 瀏覽次數追蹤程式碼結束 ==========
 
-    // 你原本的其他函數（點讚、留言、收藏等）
-    function toggleLike(element) {
-        const icon = element.querySelector('svg path');
-        icon.style.fill = icon.style.fill === 'red' ? 'none' : 'red';
-        
-        const likeCountElement = element.closest('.post-actions').querySelector('.likes-count');
-        let likeCount = parseInt(likeCountElement.textContent);
-        likeCountElement.textContent = (icon.style.fill === 'red') ? likeCount + 1 : likeCount - 1;
+    // 留言功能 - 修改這個函數
+function toggleComment(element) {
+    // 找到當前貼文的 postid
+    var postSlide = element.closest('.swiper-slide');
+    var postid = postSlide.getAttribute('data-postid');
+    
+    // 設置隱藏欄位的值
+    document.getElementById('hiddenPostid').value = postid;
+    
+    // 清空並載入該貼文的留言
+    var commentList = document.getElementById('commentList');
+    commentList.innerHTML = '';
+    
+    if (allComments[postid] && allComments[postid].length > 0) {
+        allComments[postid].forEach(function(comment) {
+            var li = document.createElement('li');
+            // 顯示格式：帳號 + 留言內容
+            li.innerHTML = '<strong style="color: #a89f91;">' + comment.member + ':</strong> ' + comment.message;
+            commentList.appendChild(li);
+        });
+    } else {
+        commentList.innerHTML = '<li style="color: #999;">目前還沒有留言，快來搶沙發吧！</li>';
     }
-
-    // 点赞功能
-    function toggleLike(element) {
-        const icon = element.querySelector('svg path');
-        icon.style.fill = icon.style.fill === 'red' ? 'none' : 'red'; // 点赞后变红色
-
-        // 更新点赞数
-        const likeCountElement = element.closest('.post-actions').querySelector('.likes-count');
-        let likeCount = parseInt(likeCountElement.textContent);
-        likeCountElement.textContent = (icon.style.fill === 'red') ? likeCount + 1 : likeCount - 1;
-    }
-
- // 留言功能 - 修改這個函數
-    function toggleComment(element) {
-        // 找到當前貼文的 postid
-        var postSlide = element.closest('.swiper-slide');
-        var postid = postSlide.getAttribute('data-postid');
-        
-        // 設置隱藏欄位的值
-        document.getElementById('hiddenPostid').value = postid;
-        
-        // 清空並載入該貼文的留言
-        var commentList = document.getElementById('commentList');
-        commentList.innerHTML = '';
-        
-        if (allComments[postid] && allComments[postid].length > 0) {
-            allComments[postid].forEach(function(comment) {
-                var li = document.createElement('li');
-                li.textContent = comment;
-                commentList.appendChild(li);
-            });
-        } else {
-            commentList.innerHTML = '<li style="color: #999;">目前還沒有留言，快來搶沙發吧！</li>';
-        }
-        
-        // 打開留言模態框
-        document.getElementById('commentModal').style.display = 'flex';
-    }
+    
+    // 打開留言模態框
+    document.getElementById('commentModal').style.display = 'flex';
+}
 
  // 關閉留言模態框
     function closeCommentModal() {
@@ -749,16 +814,73 @@ function updateViewCount(postid, slideElement) {
         }
     }
 
-    // 收藏功能
-    function toggleStar(element) {
+    
+ // 按讚功能 - 記錄會員狀態
+    function toggleLike(element) {
+        event.preventDefault();
+        
         const icon = element.querySelector('svg path');
-        icon.style.fill = icon.style.fill === 'yellow' ? 'none' : 'yellow'; // 收藏后变黄色
-
-        // 更新收藏数
-        const starCountElement = element.closest('.post-actions').querySelector('.stars-count');
-        let starCount = parseInt(starCountElement.textContent);
-        starCountElement.textContent = (icon.style.fill === 'yellow') ? starCount + 1 : starCount - 1;
+        const isLiked = element.getAttribute('data-liked') === 'true';
+        const action = isLiked ? 'remove' : 'add';
+        
+        const postSlide = element.closest('.swiper-slide');
+        const postid = postSlide.getAttribute('data-postid');
+        const memberId = '<%= member %>';
+        
+        fetch('updateLike.jsp?postid=' + postid + '&memberId=' + memberId + '&action=' + action)
+            .then(response => response.text())
+            .then(data => {
+                const newCount = data.trim();
+                if (newCount !== 'error' && !isNaN(newCount)) {
+                    // 更新狀態
+                    element.setAttribute('data-liked', !isLiked);
+                    icon.style.fill = isLiked ? 'none' : 'red';
+                    
+                    const likeCountElement = element.closest('.post-actions').querySelector('.likes-count');
+                    likeCountElement.textContent = newCount;
+                } else {
+                    alert('操作失敗，請稍後再試！');
+                }
+            })
+            .catch(error => {
+                console.error('錯誤:', error);
+                alert('系統錯誤，請稍後再試！');
+            });
     }
+
+ // 收藏功能 - 記錄會員狀態
+    function toggleStar(element) {
+        event.preventDefault();
+        
+        const icon = element.querySelector('svg path');
+        const isCollected = element.getAttribute('data-collected') === 'true';
+        const action = isCollected ? 'remove' : 'add';
+        
+        const postSlide = element.closest('.swiper-slide');
+        const postid = postSlide.getAttribute('data-postid');
+        const memberId = '<%= member %>';
+        
+        fetch('updateCollect.jsp?postid=' + postid + '&memberId=' + memberId + '&action=' + action)
+            .then(response => response.text())
+            .then(data => {
+                const newCount = data.trim();
+                if (newCount !== 'error' && !isNaN(newCount)) {
+                    // 更新狀態
+                    element.setAttribute('data-collected', !isCollected);
+                    icon.style.fill = isCollected ? 'none' : 'yellow';
+                    
+                    const starCountElement = element.closest('.post-actions').querySelector('.stars-count');
+                    starCountElement.textContent = newCount;
+                } else {
+                    alert('操作失敗，請稍後再試！');
+                }
+            })
+            .catch(error => {
+                console.error('錯誤:', error);
+                alert('系統錯誤，請稍後再試！');
+            });
+    }
+    
 </script>
 
 <!-- CSS -->
@@ -848,9 +970,16 @@ function updateViewCount(postid, slideElement) {
         padding-left: 0;
     }
     #commentList li {
-        padding: 8px;
-        border-bottom: 1px solid #ddd;
-        margin-bottom: 10px;
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 10px;
+    text-align: left;
+    line-height: 1.6;
+}
+
+#commentList li strong {
+    margin-right: 8px;
+}
     }
     #commentText {
         width: 100%;
@@ -1170,6 +1299,71 @@ for(String tag : tagArray) {
   object-fit: cover;
 }
 
+/* ===== 確保導航列和搜尋功能正常運作 ===== */
+
+/* 導航列要在正常層級 */
+header {
+    position: relative !important;
+    z-index: 1050 !important;
+}
+
+.navbar {
+    position: relative !important;
+    z-index: 1050 !important;
+}
+
+/* 搜尋功能 */
+.search-popup {
+    z-index: 1060 !important;
+}
+
+.offcanvas {
+    z-index: 1055 !important;
+}
+
+.offcanvas-backdrop {
+    z-index: 1054 !important;
+}
+
+/* 確保搜尋圖示可以點擊 */
+.action-menu,
+.search-box,
+button[data-bs-toggle] {
+    position: relative !important;
+    z-index: 1051 !important;
+    pointer-events: auto !important;
+}
+
+/* ✅ 新增：移除搜尋圖示的動畫效果 */
+.action-menu svg,
+.search-box svg,
+.action-menu a,
+.search-box a {
+    transform: none !important;
+    transition: none !important;
+    animation: none !important;
+}
+
+.action-menu a:hover svg,
+.search-box a:hover svg {
+    transform: none !important;
+}
+
+/* 留言彈窗 */
+#commentModal {
+    z-index: 1040 !important;
+}
+
+/* 回到頂部按鈕 */
+.back-to-top {
+    z-index: 1030 !important;
+}
+
+/* 開場動畫關閉後完全不干擾 */
+.modal-overlay {
+    transition: z-index 0s 0.4s;
+}
+
 /* 貼文標籤樣式 */
 .post-tags {
     display: flex;
@@ -1194,6 +1388,17 @@ for(String tag : tagArray) {
     color: white;
     transform: translateY(-2px);
 }
+
+/* ✅ 新增：已按讚的愛心顯示紅色 */
+.like-icon[data-liked="true"] svg path {
+    fill: red !important;
+}
+
+/* ✅ 新增：已收藏的星星顯示黃色 */
+.star-icon[data-collected="true"] svg path {
+    fill: yellow !important;
+}
+
 </style>
 
 
@@ -1388,17 +1593,23 @@ for(String tag : tagArray) {
 </div>
 
  <script>
-function closeModal() {
-    const overlay = document.getElementById('modalOverlay');
-    overlay.style.animation = 'fadeOut 0.4s ease';
-    setTimeout(() => {
-        overlay.style.display = 'none';
-    }, 400);
-}
+ function closeModal() {
+	    const overlay = document.getElementById('modalOverlay');
+	    overlay.style.animation = 'fadeOut 0.4s ease';
+	    
+	    setTimeout(() => {
+	        overlay.style.display = 'none';
+	        overlay.style.zIndex = '-1';
+	        overlay.style.pointerEvents = 'none';  // ✅ 新增：完全不接收點擊
+	    }, 400);
+	}
 
-window.addEventListener('load', function() {
-    document.getElementById('modalOverlay').style.display = 'flex';
-});
+ window.addEventListener('load', function() {
+	    const overlay = document.getElementById('modalOverlay');
+	    overlay.style.display = 'flex';
+	    overlay.style.zIndex = '10001';
+	    overlay.style.pointerEvents = 'auto';  // ✅ 新增：顯示時可接收點擊
+	});
 
 document.getElementById('modalOverlay').addEventListener('click', function(e) {
     if (e.target === this) {
