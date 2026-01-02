@@ -34,39 +34,8 @@ if("true".equals(ajaxAction)) {
             String sql = "";
             
             if("delete".equals(action)) {
-                sql = "DELETE FROM personal_wear WHERE postid = ?";
-                message = "貼文已刪除";
-            } else if("toggleState".equals(action)) {
-                // 先查詢當前狀態
-                sql = "SELECT post_state FROM personal_wear WHERE postid = ?";
-                pstmt = con.prepareStatement(sql);
-                pstmt.setInt(1, Integer.parseInt(postId));
-                ResultSet rs = pstmt.executeQuery();
-                
-                if(rs.next()) {
-                    boolean currentState = rs.getBoolean("post_state");
-                    rs.close();
-                    pstmt.close();
-                    
-                    // 切換狀態
-                    sql = "UPDATE personal_wear SET post_state = ? WHERE postid = ?";
-                    pstmt = con.prepareStatement(sql);
-                    pstmt.setBoolean(1, !currentState);
-                    pstmt.setInt(2, Integer.parseInt(postId));
-                    
-                    int result = pstmt.executeUpdate();
-                    if(result > 0) {
-                        success = true;
-                        message = !currentState ? "貼文已啟用" : "貼文已停用";
-                    }
-                } else {
-                    message = "找不到該貼文";
-                }
-            } else {
-                message = "無效的操作";
-            }
-            
-            if("delete".equals(action) && !sql.isEmpty()) {
+                // 軟刪除：將 post_state 設為 False
+                sql = "UPDATE personal_wear SET post_state = False WHERE postid = ?";
                 pstmt = con.prepareStatement(sql);
                 pstmt.setInt(1, Integer.parseInt(postId));
                 
@@ -74,9 +43,12 @@ if("true".equals(ajaxAction)) {
                 
                 if(result > 0) {
                     success = true;
+                    message = "貼文已刪除";
                 } else {
                     message = "找不到該貼文";
                 }
+            } else {
+                message = "無效的操作";
             }
             
         } catch(NumberFormatException e) {
@@ -108,6 +80,7 @@ if("true".equals(ajaxAction)) {
 if("update".equals(request.getParameter("action"))) {
     String postId = request.getParameter("postId");
     String wearId = request.getParameter("wearId");
+    String tags = request.getParameter("tags");
     
     if(postId != null && wearId != null) {
         Connection con = null;
@@ -115,10 +88,11 @@ if("update".equals(request.getParameter("action"))) {
         
         try {
             con = getConnection(dbPath);
-            String sql = "UPDATE personal_wear SET wearId = ? WHERE postid = ?";
+            String sql = "UPDATE personal_wear SET wearId = ?, tags = ? WHERE postid = ?";
             pstmt = con.prepareStatement(sql);
             pstmt.setString(1, wearId);
-            pstmt.setInt(2, Integer.parseInt(postId));
+            pstmt.setString(2, tags);
+            pstmt.setInt(3, Integer.parseInt(postId));
             
             int result = pstmt.executeUpdate();
             
@@ -147,26 +121,34 @@ if("update".equals(request.getParameter("action"))) {
     ResultSet rs = null;
     
     StringBuilder postsJSON = new StringBuilder("[");
-    int activeCount = 0;
-    int inactiveCount = 0;
     int totalPosts = 0;
     
     try {
         conn = getConnection(dbPath);
-        String sql = "SELECT postid, memberid, wearId, view, post_state, post_date, pic FROM personal_wear ORDER BY postid DESC";
+        
+        // 使用 GROUP BY 確保每個貼文只出現一次
+        String sql = "SELECT p.postid, " +
+                     "       MAX(p.memberid) as memberid, " +
+                     "       MAX(p.wearId) as wearId, " +
+                     "       MAX(p.view) as view, " +
+                     "       MAX(p.post_state) as post_state, " +
+                     "       MAX(p.pic) as pic, " +
+                     "       MAX(p.tags) as tags, " +
+                     "       MAX(p.[like]) as likeCount, " +
+                     "       SUM(CASE WHEN p.message IS NOT NULL AND p.message <> '' THEN 1 ELSE 0 END) as commentCount " +
+                     "FROM personal_wear p " +
+                     "WHERE p.post_state = True " +
+                     "GROUP BY p.postid " +
+                     "ORDER BY p.postid DESC";
+        
         pstmt = conn.prepareStatement(sql);
         rs = pstmt.executeQuery();
         
         boolean first = true;
         while(rs.next()) {
             totalPosts++;
-            boolean postState = rs.getBoolean("post_state");
-            if(postState) activeCount++;
-            else inactiveCount++;
             
             if(!first) postsJSON.append(",");
-            
-            String status = postState ? "active" : "inactive";
             
             postsJSON.append("{");
             postsJSON.append("id:").append(rs.getInt("postid")).append(",");
@@ -180,21 +162,25 @@ if("update".equals(request.getParameter("action"))) {
             }
             postsJSON.append("title:'").append(wearId).append("',");
             
-            postsJSON.append("views:").append(rs.getInt("view")).append(",");
-            
-            String postDate = "";
-            if(rs.getTimestamp("post_date") != null) {
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-                postDate = sdf.format(rs.getTimestamp("post_date"));
+            String tags = rs.getString("tags");
+            if(tags != null) {
+                tags = tags.replace("'", "\\'").replace("\n", "\\n").replace("\r", "").replace("\"", "\\\"");
+            } else {
+                tags = "";
             }
-            postsJSON.append("date:'").append(postDate).append("',");
+            postsJSON.append("tags:'").append(tags).append("',");
+            
+            postsJSON.append("views:").append(rs.getInt("view")).append(",");
+            postsJSON.append("likes:").append(rs.getInt("likeCount")).append(",");
+            postsJSON.append("comments:").append(rs.getInt("commentCount")).append(",");
             
             String pic = rs.getString("pic");
             if(pic != null && !pic.trim().isEmpty()) {
-                postsJSON.append("pic:'").append(pic.replace("\\", "\\\\")).append("',");
+                postsJSON.append("pic:'").append(pic.replace("\\", "\\\\").replace("'", "\\'")).append("'");
+            } else {
+                postsJSON.append("pic:''");
             }
             
-            postsJSON.append("status:'").append(status).append("'");
             postsJSON.append("}");
             
             first = false;
@@ -209,33 +195,13 @@ if("update".equals(request.getParameter("action"))) {
     }
     
     postsJSON.append("]");
-    
-    // === 如果沒有資料，加入假資料 ===
-    if(totalPosts == 0) {
-        postsJSON = new StringBuilder("[");
-        postsJSON.append("{id:1,author:'user001',title:'秋冬穿搭分享 - 簡約風格',views:1250,date:'2024-12-10 14:30',pic:'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=60&h=60&fit=crop',status:'active'},");
-        postsJSON.append("{id:2,author:'fashionista',title:'聖誕派對穿搭推薦',views:890,date:'2024-12-09 10:15',pic:'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=60&h=60&fit=crop',status:'active'},");
-        postsJSON.append("{id:3,author:'user002',title:'週末輕鬆穿搭',views:650,date:'2024-12-08 16:45',pic:'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=60&h=60&fit=crop',status:'inactive'},");
-        postsJSON.append("{id:4,author:'stylequeen',title:'上班族OL穿搭日記',views:2100,date:'2024-12-07 09:20',pic:'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=60&h=60&fit=crop',status:'active'},");
-        postsJSON.append("{id:5,author:'user003',title:'冬季大衣穿搭技巧',views:1580,date:'2024-12-06 13:50',pic:'https://images.unsplash.com/photo-1539533018447-63fcce2678e3?w=60&h=60&fit=crop',status:'active'},");
-        postsJSON.append("{id:6,author:'trendygirl',title:'復古風格穿搭',views:420,date:'2024-12-05 11:30',pic:'https://images.unsplash.com/photo-1445205170230-053b83016050?w=60&h=60&fit=crop',status:'inactive'},");
-        postsJSON.append("{id:7,author:'user004',title:'運動休閒風穿搭',views:980,date:'2024-12-04 15:00',pic:'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=60&h=60&fit=crop',status:'active'},");
-        postsJSON.append("{id:8,author:'fashionblogger',title:'約會穿搭靈感',views:1750,date:'2024-12-03 12:40',pic:'https://images.unsplash.com/photo-1487222477894-8943e31ef7b2?w=60&h=60&fit=crop',status:'active'},");
-        postsJSON.append("{id:9,author:'user005',title:'學生族平價穿搭',views:560,date:'2024-12-02 10:10',pic:'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=60&h=60&fit=crop',status:'inactive'},");
-        postsJSON.append("{id:10,author:'stylelover',title:'韓系穿搭分享',views:2350,date:'2024-12-01 14:25',pic:'https://images.unsplash.com/photo-1467632499275-7a693a761056?w=60&h=60&fit=crop',status:'active'}");
-        postsJSON.append("]");
-        
-        totalPosts = 10;
-        activeCount = 7;
-        inactiveCount = 3;
-    }
 %>
 
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
-<title>貼文管理 - CZ_OOTD</title>
+<title>貼文審核 - CZ_OOTD</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -389,14 +355,6 @@ table img:hover {
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
 
-.filter-buttons {
-    margin-bottom: 20px;
-}
-
-.filter-buttons .btn {
-    margin-right: 10px;
-}
-
 .modal-content {
     border-radius: 15px;
 }
@@ -440,10 +398,7 @@ table img:hover {
         <li class="nav-item">
             <a class="nav-link" href="userManagement.jsp">👥 一般會員管理</a>
         </li>
-
-        <li class="nav-item">
-            <a class="nav-link" href="analytics.jsp">📊 點擊率分析</a>
-        </li>
+                
     </ul>
 
     <!-- 統計卡片 -->
@@ -471,9 +426,11 @@ table img:hover {
                         <th>編號</th>
                         <th>圖片</th>
                         <th>標題</th>
+                        <th>標籤</th>
                         <th>作者</th>
                         <th>瀏覽數</th>
-                        <th>發布時間</th>
+                        <th>按讚數</th>
+                        <th>留言數</th>
                         <th>操作</th>
                     </tr>
                 </thead>
@@ -504,6 +461,11 @@ table img:hover {
                     <div class="mb-3">
                         <label class="form-label">標題</label>
                         <input type="text" class="form-control" name="wearId" id="editTitle" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">標籤 (以逗號分隔)</label>
+                        <input type="text" class="form-control" name="tags" id="editTags" placeholder="例: 休閒,簡約,秋冬">
                     </div>
                     
                     <div class="mb-3">
@@ -585,7 +547,7 @@ function renderPosts() {
     tbody.innerHTML = '';
     
     if(posts.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">沒有貼文資料</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">沒有貼文資料</td></tr>';
         return;
     }
     
@@ -600,14 +562,27 @@ function renderPosts() {
         } else {
             imageCell = '<span class="text-muted">無圖片</span>';
         }
+        
+        // 標籤欄位
+        var tagsCell = '';
+        if(post.tags && post.tags.trim() !== '') {
+            var tagArray = post.tags.split(',');
+            tagsCell = tagArray.map(function(tag) {
+                return '<span class="badge bg-secondary me-1">' + tag.trim() + '</span>';
+            }).join('');
+        } else {
+            tagsCell = '<span class="text-muted">無標籤</span>';
+        }
             
         var row = '<tr>' +
             '<td>' + String(post.id).padStart(3, '0') + '</td>' +
             '<td>' + imageCell + '</td>' +
-            '<td>' + (post.title.length > 30 ? post.title.substring(0, 30) + '...' : post.title) + '</td>' +
+            '<td>' + (post.title.length > 20 ? post.title.substring(0, 20) + '...' : post.title) + '</td>' +
+            '<td>' + tagsCell + '</td>' +
             '<td>' + post.author + '</td>' +
             '<td><strong>' + post.views.toLocaleString() + '</strong></td>' +
-            '<td>' + post.date + '</td>' +
+            '<td><span class="badge bg-danger">' + post.likes + '</span></td>' +
+            '<td><span class="badge bg-primary">' + post.comments + '</span></td>' +
             '<td>' + actionButtons + '</td>' +
             '</tr>';
         tbody.innerHTML += row;
@@ -638,6 +613,7 @@ function editPost(postId) {
         document.getElementById('editPostId').value = post.id;
         document.getElementById('editPostIdDisplay').value = String(post.id).padStart(3, '0');
         document.getElementById('editTitle').value = post.title;
+        document.getElementById('editTags').value = post.tags || '';
         document.getElementById('editAuthor').value = post.author;
         
         var modal = new bootstrap.Modal(document.getElementById('editModal'));
@@ -647,7 +623,7 @@ function editPost(postId) {
 
 // 刪除貼文
 function deletePost(postId) {
-    if (confirm('確定要刪除此貼文嗎？此操作無法復原！')) {
+    if (confirm('確定要刪除此貼文嗎？刪除後該貼文將不再顯示！')) {
         updatePostStatus(postId, 'delete');
     }
 }

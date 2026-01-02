@@ -34,14 +34,15 @@
         
         // 使用 GROUP BY 確保每個貼文只出現一次，同時統計留言數
         String sql = "SELECT p.postid, " +
-                     "       MAX(p.memberid) as memberid, " +
-                     "       MAX(p.wearId) as wearId, " +
-                     "       MAX(p.view) as view, " +
-                     "       SUM(CASE WHEN p.message IS NOT NULL AND p.message <> '' THEN 1 ELSE 0 END) as commentCount " +
-                     "FROM personal_wear p " +
-                     "WHERE p.post_state = True " +
-                     "GROUP BY p.postid " +
-                     "ORDER BY MAX(p.view) DESC";
+             "       MAX(p.memberid) as memberid, " +
+             "       MAX(p.wearId) as wearId, " +
+             "       MAX(p.view) as view, " +
+             "       MAX(p.[like]) as likeCount, " +  // 新增這行
+             "       SUM(CASE WHEN p.message IS NOT NULL AND p.message <> '' THEN 1 ELSE 0 END) as commentCount " +
+             "FROM personal_wear p " +
+             "WHERE p.post_state = True " +
+             "GROUP BY p.postid " +
+             "ORDER BY MAX(p.[like]) DESC";  // 改這行，原本是 ORDER BY MAX(p.view) DESC
         
         pstmt = conn.prepareStatement(sql);
         rs = pstmt.executeQuery();
@@ -54,6 +55,7 @@
             data.put("author", rs.getString("memberid"));
             data.put("totalClicks", rs.getInt("view"));
             data.put("totalComments", rs.getInt("commentCount"));
+            data.put("totalLikes", rs.getInt("likeCount"));  // 新增這行
             
             analyticsDataList.add(data);
         }
@@ -197,6 +199,12 @@ body {
     background: linear-gradient(135deg, #a89f91 0%, #8f8c7f 100%);
     transition: width 0.3s ease;
 }
+
+.table td, .table th {
+    text-align: center;
+    vertical-align: middle;
+}
+
 </style>
 </head>
 
@@ -214,7 +222,7 @@ body {
         </li>
         
         <li class="nav-item">
-            <a class="nav-link" href="postManagement.jsp">📝 貼文管理</a>
+            <a class="nav-link" href="postManagement.jsp">📝 貼文審核</a>
         </li>
 
         <li class="nav-item">
@@ -280,6 +288,7 @@ var analyticsData = [
         title: '<%= title %>',
         author: '<%= data.get("author") %>',
         totalClicks: <%= data.get("totalClicks") %>,
+        totalLikes: <%= data.get("totalLikes") %>,  // 新增這行
         totalComments: <%= data.get("totalComments") %>
     }<%= (i < analyticsDataList.size() - 1) ? "," : "" %>
     <%
@@ -308,7 +317,13 @@ function renderAnalytics() {
     console.log('找到 analyticsTable，準備渲染 ' + analyticsData.length + ' 筆資料');
     tbody.innerHTML = '';
     
-    analyticsData.forEach(function(data) {
+ // 新增這行：先按總點擊遞減排序
+    var sortedData = analyticsData.slice().sort(function(a, b) { 
+        return b.totalClicks - a.totalClicks; 
+    });
+
+    // 改用 sortedData 而不是 analyticsData
+    sortedData.forEach(function(data) {
         var row = '<tr>' +
             '<td>' + String(data.id).padStart(3, '0') + '</td>' +
             '<td>' + data.title + '</td>' +
@@ -318,6 +333,8 @@ function renderAnalytics() {
             '</tr>';
         tbody.innerHTML += row;
     });
+    
+    
     console.log('數據表格渲染完成！');
 
     // 渲染熱門貼文排行
@@ -327,24 +344,24 @@ function renderAnalytics() {
         return;
     }
     
-    var topPosts = analyticsData.slice().sort(function(a, b) { return b.totalClicks - a.totalClicks; }).slice(0, 10);
+    var topPosts = analyticsData.slice().sort(function(a, b) { return b.totalLikes - a.totalLikes; }).slice(0, 10);
 
     if(topPosts.length === 0) {
         topPostsDiv.innerHTML = '<div style="text-align:center;padding:40px;color:#6c757d;">目前沒有貼文資料</div>';
         return;
     }
 
-    var maxClicks = topPosts[0].totalClicks;
+    var maxLikes = topPosts[0].totalLikes;
     var topPostsHTML = '';
     
     topPosts.forEach(function(post, index) {
-        var percentage = (post.totalClicks / maxClicks * 100).toFixed(1);
+    	var percentage = (post.totalLikes / maxLikes * 100).toFixed(1);
         topPostsHTML += '<div class="rank-item">' +
         '<div class="rank-number">' + (index + 1) + '</div>' +
         '<div class="rank-info">' +
         '<div><strong>' + post.title + '</strong></div>' +
         '<div class="rank-bar"><div class="rank-bar-fill" style="width: ' + percentage + '%"></div></div>' +
-        '<small class="text-muted">' + post.totalClicks.toLocaleString() + ' 次點擊</small>' +
+        '<small class="text-muted">' + post.totalLikes.toLocaleString() + ' 個讚</small>' +
         '</div></div>';
     });
     topPostsDiv.innerHTML = topPostsHTML;

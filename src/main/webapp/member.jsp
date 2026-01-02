@@ -370,7 +370,7 @@
 
 </div>
 
-<!-- ✅ 新增：我的貼文區塊 -->
+<!-- ✅ 新增:我的貼文區塊 -->
 <div class="container" style="margin-top: 30px;">
     <h3 style="text-align: center; margin-bottom: 20px;">
         <i class="fas fa-images"></i> 我的貼文
@@ -418,9 +418,24 @@
             rsMsg.close();
             pstmtMsg.close();
     %>
-        <div class="post-card" onclick="location.href='index1.jsp?postid=<%= postid %>#post-<%= postid %>'" style="cursor: pointer;">
-            <img src="<%= pic %>" alt="Post Image" class="post-image" onerror="this.src='images/default.jpg'">
-            <div class="post-content-mini">
+        <div class="post-card" data-postid="<%= postid %>">
+            <div style="position: relative;">
+                <button onclick="deletePost(event, '<%= postid %>')" 
+                        style="position: absolute; top: 10px; right: 10px; 
+                               background: rgba(255, 0, 0, 0.8); color: white; 
+                               border: none; border-radius: 50%; width: 35px; height: 35px; 
+                               cursor: pointer; z-index: 10; display: flex; align-items: center; 
+                               justify-content: center; font-size: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">
+                    <i class="fas fa-trash"></i>
+                </button>
+                
+                <img src="<%= pic %>" alt="Post Image" class="post-image" 
+                     onerror="this.src='images/default.jpg'"
+                     onclick="location.href='index1.jsp?postid=<%= postid %>#post-<%= postid %>'" 
+                     style="cursor: pointer;">
+            </div>
+            
+            <div class="post-content-mini" onclick="location.href='index1.jsp?postid=<%= postid %>#post-<%= postid %>'" style="cursor: pointer;">
                 <div class="post-theme-mini"><%= wearId != null ? wearId : "無主題" %></div>
                 <div class="tags-container-mini">
                     <% if (tags != null && !tags.trim().isEmpty()) { 
@@ -459,6 +474,49 @@
     %>
     </div>
 </div>
+
+<script>
+function deletePost(event, postid) {
+    event.stopPropagation();
+    
+    if (!confirm('確定要刪除這篇貼文嗎?刪除後將無法恢復!')) {
+        return;
+    }
+    
+    fetch('deletePost.jsp?postid=' + postid)
+        .then(response => response.text())
+        .then(data => {
+            if (data.trim() === 'success') {
+                alert('貼文已成功刪除!');
+                const postCard = document.querySelector('[data-postid="' + postid + '"]');
+                if (postCard) {
+                    postCard.style.transition = 'opacity 0.3s';
+                    postCard.style.opacity = '0';
+                    setTimeout(() => {
+                        postCard.remove();
+                        
+                        const remainingPosts = document.querySelectorAll('.post-card').length;
+                        if (remainingPosts === 0) {
+                            const postsGrid = document.querySelector('.posts-grid');
+                            postsGrid.innerHTML = `
+                                <div class="empty-message-mini">
+                                    <i class="fas fa-image"></i>
+                                    <p>您還沒有發布任何貼文</p>
+                                </div>
+                            `;
+                        }
+                    }, 300);
+                }
+            } else {
+                alert('刪除失敗,請稍後再試!');
+            }
+        })
+        .catch(error => {
+            console.error('錯誤:', error);
+            alert('系統錯誤,請稍後再試!');
+        });
+}
+</script>
 
 </body>
 </html>
