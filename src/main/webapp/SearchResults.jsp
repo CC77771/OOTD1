@@ -10,8 +10,8 @@ String keyword = request.getParameter("keyword");
 if(keyword == null) keyword = "";
 keyword = keyword.trim();
 
-// 存儲搜索結果
-List<Map<String, Object>> searchResults = new ArrayList<>();
+// 存儲搜索結果 - 使用 LinkedHashMap 確保不重複
+Map<String, Map<String, Object>> uniqueResults = new LinkedHashMap<>();
 int totalResults = 0;
 
 if(!keyword.isEmpty()) {
@@ -19,23 +19,22 @@ if(!keyword.isEmpty()) {
         Class.forName("net.ucanaccess.jdbc.UcanaccessDriver");
         Connection con = DriverManager.getConnection("jdbc:ucanaccess://" + objDBConfig.FilePath() + ";");
         
-        // ✅ 更靈活的模糊搜索 - 只要標籤中包含關鍵字的任何部分就顯示
-        // 例如搜尋"休閒"會匹配"休閒風"、"休閒"、"休閒穿搭"等
+        // ✅ 簡化查詢 - 先取得符合條件的 postid，再用 MAX 取得其他欄位
         String sql = "SELECT postid, " +
-                     "       memberId, " +
-                     "       wearId, " +
-                     "       pic, " +
-                     "       [like], " +
-                     "       collect, " +
-                     "       view, " +
-                     "       tags " +
+                     "       MAX(memberId) as memberId, " +
+                     "       MAX(wearId) as wearId, " +
+                     "       MAX(pic) as pic, " +
+                     "       MAX([like]) as [like], " +
+                     "       MAX(collect) as collect, " +
+                     "       MAX(view) as view, " +
+                     "       MAX(tags) as tags " +
                      "FROM personal_wear " +
                      "WHERE post_state = True " +
                      "AND (tags LIKE ? OR wearId LIKE ?) " +
-                     "ORDER BY [view] DESC, postid DESC";
+                     "GROUP BY postid " +
+                     "ORDER BY MAX([view]) DESC, postid DESC";
         
         PreparedStatement pstmt = con.prepareStatement(sql);
-        // 使用 %關鍵字% 來匹配包含該關鍵字的任何內容
         String searchPattern = "%" + keyword + "%";
         pstmt.setString(1, searchPattern);
         pstmt.setString(2, searchPattern);
@@ -46,22 +45,27 @@ if(!keyword.isEmpty()) {
         ResultSet rs = pstmt.executeQuery();
         
         while(rs.next()) {
-            Map<String, Object> post = new HashMap<>();
-            post.put("postid", rs.getString("postid"));
-            post.put("wearId", rs.getString("wearId"));
-            post.put("pic", rs.getString("pic"));
-            post.put("like", rs.getInt("like"));
-            post.put("collect", rs.getInt("collect"));
-            post.put("view", rs.getInt("view"));
-            post.put("memberId", rs.getString("memberId"));
-            post.put("tags", rs.getString("tags"));
+            String postid = rs.getString("postid");
             
-            searchResults.add(post);
-            System.out.println("✅ 找到: " + rs.getString("postid") + " | 標籤: " + rs.getString("tags"));
+            // 使用 postid 作為 key，確保不重複
+            if(!uniqueResults.containsKey(postid)) {
+                Map<String, Object> post = new HashMap<>();
+                post.put("postid", postid);
+                post.put("wearId", rs.getString("wearId"));
+                post.put("pic", rs.getString("pic"));
+                post.put("like", rs.getInt("like"));
+                post.put("collect", rs.getInt("collect"));
+                post.put("view", rs.getInt("view"));
+                post.put("memberId", rs.getString("memberId"));
+                post.put("tags", rs.getString("tags"));
+                
+                uniqueResults.put(postid, post);
+                System.out.println("✅ 找到: " + postid + " | 標籤: " + rs.getString("tags"));
+            }
         }
         
-        totalResults = searchResults.size();
-        System.out.println("📊 總計: " + totalResults + " 筆");
+        totalResults = uniqueResults.size();
+        System.out.println("📊 總計: " + totalResults + " 筆（已去重）");
         
         rs.close();
         pstmt.close();
@@ -72,6 +76,9 @@ if(!keyword.isEmpty()) {
         System.out.println("❌ 錯誤: " + e.getMessage());
     }
 }
+
+// 轉換為 List 供 JSP 使用
+List<Map<String, Object>> searchResults = new ArrayList<>(uniqueResults.values());
 %>
 
 <%@include file="menu.jsp" %>
@@ -270,11 +277,6 @@ if(!keyword.isEmpty()) {
             margin-top: 2px;
         }
 
-        /* 文字描述 - 隱藏 */
-        .post-text {
-            display: none;
-        }
-
         /* 標籤 - 只顯示一個標籤，淺黃色背景 */
         .post-tags {
             display: flex;
@@ -372,21 +374,6 @@ if(!keyword.isEmpty()) {
             font-size: 16px;
         }
 
-        /* 匹配說明 */
-        .match-info {
-            text-align: center;
-            padding: 15px;
-            background: #fff3cd;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            color: #856404;
-        }
-
-        .match-info strong {
-            color: #a89f91;
-        }
-
         /* 響應式 */
         @media (max-width: 1200px) {
             .posts-grid {
@@ -440,9 +427,9 @@ if(!keyword.isEmpty()) {
                     <a href="SearchResults.jsp?keyword=正式" class="tag-btn <%= keyword.contains("正式") ? "active" : "" %>">正式</a>
                     <a href="SearchResults.jsp?keyword=韓系" class="tag-btn <%= keyword.contains("韓系") ? "active" : "" %>">韓系</a>
                     <a href="SearchResults.jsp?keyword=日系" class="tag-btn <%= keyword.contains("日系") ? "active" : "" %>">日系</a>
-                    <a href="SearchResults.jsp?keyword=經典" class="tag-btn <%= keyword.contains("經典") ? "active" : "" %>">經典</a>
-                    <a href="SearchResults.jsp?keyword=美式" class="tag-btn <%= keyword.contains("美式") ? "active" : "" %>">美式</a>
-                    <a href="SearchResults.jsp?keyword=學院風" class="tag-btn <%= keyword.contains("學院風") ? "active" : "" %>">學院風</a>
+                    <a href="SearchResults.jsp?keyword=復古" class="tag-btn <%= keyword.contains("復古") ? "active" : "" %>">復古</a>
+                    <a href="SearchResults.jsp?keyword=運動" class="tag-btn <%= keyword.contains("運動") ? "active" : "" %>">運動</a>
+                    <a href="SearchResults.jsp?keyword=甜美" class="tag-btn <%= keyword.contains("甜美") ? "active" : "" %>">甜美</a>
                     <a href="SearchResults.jsp?keyword=簡約" class="tag-btn <%= keyword.contains("簡約") ? "active" : "" %>">簡約</a>
                     <a href="index1.jsp" class="tag-btn" style="background: #ddd;">← 返回</a>
                 </div>
@@ -528,13 +515,13 @@ if(!keyword.isEmpty()) {
                                     </div>
                                     <div class="action-btn">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                                            <path d="M21 11.5a8.5 8.5 0 1 0-13.971 6.607l-3.75 3.75a1 1 0 0 0-.23 1.082A1 1 0 0 0 4 21h4.582a8.5 8.5 0 0 0 12.418-9.5z"/>
                                         </svg>
                                         <span>0</span>
                                     </div>
                                     <div class="action-btn">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                                            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
                                         </svg>
                                         <span><%= post.get("collect") %></span>
                                     </div>
@@ -570,28 +557,13 @@ if(!keyword.isEmpty()) {
                     <a href="SearchResults.jsp?keyword=正式" class="tag-btn">正式</a>
                     <a href="SearchResults.jsp?keyword=韓系" class="tag-btn">韓系</a>
                     <a href="SearchResults.jsp?keyword=日系" class="tag-btn">日系</a>
-                    <a href="SearchResults.jsp?keyword=經典" class="tag-btn">經典</a>
-                    <a href="SearchResults.jsp?keyword=美式" class="tag-btn">美式</a>
-                    <a href="SearchResults.jsp?keyword=學院風" class="tag-btn">學院風</a>
+                    <a href="SearchResults.jsp?keyword=復古" class="tag-btn">復古</a>
+                    <a href="SearchResults.jsp?keyword=運動" class="tag-btn">運動</a>
+                    <a href="SearchResults.jsp?keyword=甜美" class="tag-btn">甜美</a>
                     <a href="SearchResults.jsp?keyword=簡約" class="tag-btn">簡約</a>
                 </div>
             </div>
         <% } %>
     </div>
-
-    <script>
-        // 關鍵字高亮（在文字描述中）
-        window.onload = function() {
-            const keyword = '<%= keyword %>';
-            if(!keyword) return;
-
-            // 高亮文字描述中的關鍵字
-            document.querySelectorAll('.post-text').forEach(el => {
-                const text = el.innerHTML;
-                const regex = new RegExp(`(${keyword})`, 'gi');
-                el.innerHTML = text.replace(regex, '<mark style="background:#fff3cd;padding:2px 4px;border-radius:3px;font-weight:600;">$1</mark>');
-            });
-        };
-    </script>
 </body>
 </html>
