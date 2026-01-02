@@ -7,13 +7,13 @@ Class.forName("net.ucanaccess.jdbc.UcanaccessDriver");
 Connection con=DriverManager.getConnection("jdbc:ucanaccess://"+objDBConfig.FilePath()+";");
 Statement smt= con.createStatement();
 String sql = "SELECT postid, " +
-        "       MAX(memberId) as memberId, " +
-        "       MAX(wearId) as wearId, " +
-        "       MAX(pic) as pic, " +
+        "       FIRST(memberId) as memberId, " +
+        "       FIRST(wearId) as wearId, " +
+        "       FIRST(pic) as pic, " +
         "       MAX([like]) as [like], " +
         "       MAX(collect) as collect, " +
         "       MAX(view) as view, " +
-        "       MAX(tags) as tags " +  // ✅ 加這行
+        "       FIRST(tags) as tags " +
         "FROM personal_wear " +
         "WHERE post_state = True " +
         "GROUP BY postid " +

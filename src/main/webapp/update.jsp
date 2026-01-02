@@ -19,7 +19,7 @@ if (postid != null && commentText != null && !commentText.trim().isEmpty() && me
         con = DriverManager.getConnection("jdbc:ucanaccess://" + objDBConfig.FilePath() + ";");
 
         // 先查詢該 postid 的原始貼文資料
-        String selectQuery = "SELECT memberid, wearId, pic, [like], collect, view, post_state FROM personal_wear WHERE postid = ? AND message IS NULL";
+        String selectQuery = "SELECT memberid, wearId, pic, [like], collect, view, post_state, tags FROM personal_wear WHERE postid = ? AND message IS NULL";
         pstmt = con.prepareStatement(selectQuery);
         pstmt.setInt(1, Integer.parseInt(postid));
         rs = pstmt.executeQuery();
@@ -32,14 +32,16 @@ if (postid != null && commentText != null && !commentText.trim().isEmpty() && me
             int collectCount = rs.getInt("collect");
             int viewCount = rs.getInt("view");
             boolean postState = rs.getBoolean("post_state");
+            String tags = rs.getString("tags");  // ✅ 新增這行
+            
             
             // 關閉第一個查詢
             rs.close();
             pstmt.close();
             
          // SQL 插入語句：插入留言
-            String insertCommentQuery = "INSERT INTO personal_wear (postid, memberid, wearId, message, pic, [like], collect, view, post_state) " +
-                                       "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String insertCommentQuery = "INSERT INTO personal_wear (postid, memberid, wearId, message, pic, [like], collect, view, post_state, tags) " +
+                           "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             pstmt = con.prepareStatement(insertCommentQuery);
 
             // 設定參數
@@ -52,6 +54,7 @@ if (postid != null && commentText != null && !commentText.trim().isEmpty() && me
             pstmt.setInt(7, collectCount);              
             pstmt.setInt(8, viewCount);                 
             pstmt.setBoolean(9, postState);
+            pstmt.setString(10, tags);  // ✅ 新增這行
             
             // 執行插入操作
             int result = pstmt.executeUpdate();
