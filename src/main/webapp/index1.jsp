@@ -545,7 +545,7 @@ String commentQuery = "SELECT message, memberId FROM personal_wear WHERE postid 
     pstmtComment.close();
 %>
     <!-- 帖子 -->
-    <div class="swiper-slide" data-postid="<%= postid %>">
+    <div class="swiper-slide" data-postid="<%= postid %>" id="post-<%= postid %>">
         <div class="post-item">
             <div class="image-holder">
                 <a href="#">
@@ -881,6 +881,26 @@ function toggleComment(element) {
             });
     }
     
+ // 頁面載入時檢查是否有指定的貼文ID
+    window.addEventListener('load', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetPostId = urlParams.get('postid');
+        
+        if (targetPostId && swiper) {
+            // 找到對應的投影片索引
+            const slides = swiper.slides;
+            for (let i = 0; i < slides.length; i++) {
+                if (slides[i].getAttribute('data-postid') === targetPostId) {
+                    // 滑動到該投影片
+                    setTimeout(function() {
+                        swiper.slideTo(i, 500); // 500ms 的滑動動畫
+                    }, 100);
+                    break;
+                }
+            }
+        }
+    });
+ 
 </script>
 
 <!-- CSS -->
