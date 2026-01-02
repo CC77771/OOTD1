@@ -19,12 +19,8 @@
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
     String currentDate = sdf.format(new Date());
     
-    // === 資料庫連線 - 直接指定路徑 ===
-    // 如果 DBConfig 的 FilePath() 沒有正確回傳,可以直接指定
-    String dbPath = "C:/Users/user/Documents/OOTD1/src/main/webapp/OOTD1.accdb";
-    
-    // 或者使用 DBConfig (如果它有正確設定)
-    // String dbPath = objDBConfig.FilePath();
+    // === 資料庫連線 ===
+    String dbPath = objDBConfig.FilePath();
     
     Connection conn = null;
     PreparedStatement pstmt = null;
@@ -36,60 +32,34 @@
     try {
         conn = getConnection(dbPath);
         
-        // 查詢語句 - 從 personal_wear 資料表取得貼文資料
-        // 注意:Access 資料庫的 GROUP BY 語法可能需要調整
-        String sql = "SELECT postid, memberid, wearId, view " +
-                     "FROM personal_wear " +
-                     "WHERE post_state = True " +
-                     "ORDER BY view DESC";
+        // 使用 GROUP BY 確保每個貼文只出現一次，同時統計留言數
+        String sql = "SELECT p.postid, " +
+                     "       MAX(p.memberid) as memberid, " +
+                     "       MAX(p.wearId) as wearId, " +
+                     "       MAX(p.view) as view, " +
+                     "       SUM(CASE WHEN p.message IS NOT NULL AND p.message <> '' THEN 1 ELSE 0 END) as commentCount " +
+                     "FROM personal_wear p " +
+                     "WHERE p.post_state = True " +
+                     "GROUP BY p.postid " +
+                     "ORDER BY MAX(p.view) DESC";
         
         pstmt = conn.prepareStatement(sql);
         rs = pstmt.executeQuery();
         
-        // 用來統計每個貼文的留言數
-        Map<Integer, Integer> commentCountMap = new HashMap<>();
-        
         while(rs.next()) {
-            int postId = rs.getInt("postid");
+            Map<String, Object> data = new HashMap<>();
             
-            // 如果這個 postid 還沒處理過
-            if(!commentCountMap.containsKey(postId)) {
-                Map<String, Object> data = new HashMap<>();
-                
-                data.put("id", postId);
-                data.put("title", rs.getString("wearId") != null ? rs.getString("wearId") : "未命名");
-                data.put("author", rs.getString("memberid") != null ? rs.getString("memberid") : "未知");
-                data.put("totalClicks", rs.getInt("view"));
-                
-                // 計算留言數 - 需要額外查詢
-                int commentCount = 0;
-                try {
-                    PreparedStatement pstmt2 = conn.prepareStatement(
-                        "SELECT COUNT(*) as cnt FROM personal_wear " +
-                        "WHERE postid = ? AND message IS NOT NULL AND message <> ''"
-                    );
-                    pstmt2.setInt(1, postId);
-                    ResultSet rs2 = pstmt2.executeQuery();
-                    if(rs2.next()) {
-                        commentCount = rs2.getInt("cnt");
-                    }
-                    rs2.close();
-                    pstmt2.close();
-                } catch(Exception e2) {
-                    // 如果留言查詢失敗,設為 0
-                    commentCount = 0;
-                }
-                
-                data.put("totalComments", commentCount);
-                
-                analyticsDataList.add(data);
-                commentCountMap.put(postId, 1);
-            }
+            data.put("id", rs.getInt("postid"));
+            data.put("title", rs.getString("wearId"));
+            data.put("author", rs.getString("memberid"));
+            data.put("totalClicks", rs.getInt("view"));
+            data.put("totalComments", rs.getInt("commentCount"));
+            
+            analyticsDataList.add(data);
         }
         
     } catch(Exception e) {
         out.println("<div class='alert alert-danger'>資料庫錯誤: " + e.getMessage() + "</div>");
-        out.println("<div class='alert alert-warning'>資料庫路徑: " + dbPath + "</div>");
         e.printStackTrace();
     } finally {
         if(rs != null) try { rs.close(); } catch(Exception e) {}
@@ -141,12 +111,13 @@
     background: #f9f9f9;
 }
 
-/* 移除 Active 卡片的特殊樣式,讓它跟其他的一樣 */
+/* 移除 Active 卡片的特殊樣式，讓它跟其他的一樣 */
 .nav-tabs .nav-link.active {
-    background: #0d6efd;
-    color: white !important;
-    border: 1px solid #0d6efd;
+    background: #ffffff;
+    color: #333 !important;
+    border: 1px solid #ddd;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transform: none;
 }
 
 /* 移除底線 */
@@ -226,7 +197,6 @@ body {
     background: linear-gradient(135deg, #a89f91 0%, #8f8c7f 100%);
     transition: width 0.3s ease;
 }
-
 </style>
 </head>
 
@@ -251,14 +221,17 @@ body {
             <a class="nav-link" href="userManagement.jsp">👥 一般會員管理</a>
         </li>
         
-        <li class="nav-item">
-            <a class="nav-link active">📊 點擊率分析</a>
-        </li>
+		<li class="nav-item">
+    <a class="nav-link active" style="background-color: #0d6efd; color: #000;">
+        📊 點擊率分析
+    </a>
+</li>
+
     </ul>
 
     <!-- 點擊率分析內容 -->
     <div class="analytics-content">
-        <!-- 第一行:熱門貼文排行 -->
+        <!-- 第一行：熱門貼文排行 -->
         <div class="row">
             <div class="col-md-12">
                 <div class="analytics-card">
@@ -268,7 +241,7 @@ body {
             </div>
         </div>
         
-        <!-- 第二行:點擊率數據總覽獨立展開 -->
+        <!-- 第二行：點擊率數據總覽獨立展開 -->
         <div class="row">
             <div class="col-md-12">
                 <div class="analytics-card">
@@ -300,13 +273,12 @@ var analyticsData = [
     <%
     for(int i = 0; i < analyticsDataList.size(); i++) {
         Map<String, Object> data = analyticsDataList.get(i);
-        String title = data.get("title") != null ? data.get("title").toString().replace("'", "\\'").replace("\n", " ").replace("\r", " ") : "未命名";
-        String author = data.get("author") != null ? data.get("author").toString().replace("'", "\\'") : "未知";
+        String title = data.get("title") != null ? data.get("title").toString().replace("'", "\\'").replace("\n", " ").replace("\r", " ") : "";
     %>
     {
         id: <%= data.get("id") %>,
         title: '<%= title %>',
-        author: '<%= author %>',
+        author: '<%= data.get("author") %>',
         totalClicks: <%= data.get("totalClicks") %>,
         totalComments: <%= data.get("totalComments") %>
     }<%= (i < analyticsDataList.size() - 1) ? "," : "" %>
@@ -316,29 +288,24 @@ var analyticsData = [
 ];
 
 console.log('從資料庫載入 ' + analyticsData.length + ' 筆資料');
-console.log('資料內容:', analyticsData);
 
 // 渲染點擊率分析
 function renderAnalytics() {
     console.log('開始渲染點擊率分析...');
     
-    // 檢查是否有資料
+ // 檢查是否有資料
     if(analyticsData.length === 0) {
         console.log('沒有資料可以渲染');
-        document.getElementById('analyticsTable').innerHTML = 
-            '<tr><td colspan="5" style="text-align:center;padding:40px;color:#6c757d;">目前沒有資料</td></tr>';
-        document.getElementById('topPostsRanking').innerHTML = 
-            '<div style="text-align:center;padding:40px;color:#6c757d;">目前沒有貼文資料</div>';
         return;
     }
     
     // 渲染數據表格
     var tbody = document.getElementById('analyticsTable');
     if (!tbody) {
-        console.error('找不到 analyticsTable 元素!');
+        console.error('找不到 analyticsTable 元素！');
         return;
     }
-    console.log('找到 analyticsTable,準備渲染 ' + analyticsData.length + ' 筆資料');
+    console.log('找到 analyticsTable，準備渲染 ' + analyticsData.length + ' 筆資料');
     tbody.innerHTML = '';
     
     analyticsData.forEach(function(data) {
@@ -351,12 +318,12 @@ function renderAnalytics() {
             '</tr>';
         tbody.innerHTML += row;
     });
-    console.log('數據表格渲染完成!');
+    console.log('數據表格渲染完成！');
 
     // 渲染熱門貼文排行
     var topPostsDiv = document.getElementById('topPostsRanking');
     if (!topPostsDiv) {
-        console.error('找不到 topPostsRanking 元素!');
+        console.error('找不到 topPostsRanking 元素！');
         return;
     }
     
@@ -371,20 +338,20 @@ function renderAnalytics() {
     var topPostsHTML = '';
     
     topPosts.forEach(function(post, index) {
-        var percentage = maxClicks > 0 ? (post.totalClicks / maxClicks * 100).toFixed(1) : 0;
+        var percentage = (post.totalClicks / maxClicks * 100).toFixed(1);
         topPostsHTML += '<div class="rank-item">' +
         '<div class="rank-number">' + (index + 1) + '</div>' +
         '<div class="rank-info">' +
-        '<div><strong>' + post.title + '</strong> <small class="text-muted">by ' + post.author + '</small></div>' +
+        '<div><strong>' + post.title + '</strong></div>' +
         '<div class="rank-bar"><div class="rank-bar-fill" style="width: ' + percentage + '%"></div></div>' +
-        '<small class="text-muted">' + post.totalClicks.toLocaleString() + ' 次點擊 • ' + post.totalComments + ' 則留言</small>' +
+        '<small class="text-muted">' + post.totalClicks.toLocaleString() + ' 次點擊</small>' +
         '</div></div>';
     });
     topPostsDiv.innerHTML = topPostsHTML;
-    console.log('熱門貼文排行渲染完成!');
+    console.log('熱門貼文排行渲染完成！');
 }
 
-// 頁面載入時初始化
+//頁面載入時初始化
 console.log('準備初始化...');
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', renderAnalytics);
