@@ -556,7 +556,14 @@ String commentQuery = "SELECT message, memberId FROM personal_wear WHERE postid 
                 </a>
             </div>
             <div class="post-content py-4">
-    <p class="post-description"><%=rs.getString("memberId") %> <%=rs.getString("wearId") %></p>
+    <p class="post-description">
+        <a href="userProfile.jsp?memberId=<%=rs.getString("memberId") %>" 
+           class="user-link"
+           style="color: #a89f91; text-decoration: none; font-weight: 500; cursor: pointer;">
+            <%=rs.getString("memberId") %>
+        </a> 
+        <%=rs.getString("wearId") %>
+    </p>
     
     <!-- ✅ 新增標籤顯示 -->
     <%
@@ -1418,6 +1425,18 @@ button[data-bs-toggle] {
 .star-icon[data-collected="true"] svg path {
     fill: yellow !important;
 }
+
+/* ========== 在這裡新增用戶帳號連結樣式 ========== */
+/* 用戶帳號連結樣式 */
+.user-link {
+    transition: all 0.3s ease;
+}
+
+.user-link:hover {
+    color: #6b5d52 !important;
+    text-decoration: underline !important;
+}
+/* ========== 新增結束 ========== */
 
 </style>
 
