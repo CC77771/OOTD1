@@ -28,7 +28,6 @@
     rel="stylesheet">
     
 <style>
-<style>
 /* ===== 🔒 強制 Header 和搜尋功能層級最高 ===== */
 .w3l-header {
     position: relative !important;
@@ -53,6 +52,7 @@
 .search-modal-overlay {
     z-index: 100001 !important;
 }
+
 body {
     margin: 0 !important;
     padding: 0 !important;
@@ -86,29 +86,33 @@ body {
     align-items: center;
 }
 
-/* 🔍 搜索图标样式 */
+/* 🔍 優化搜索图标样式 - 更簡潔融入設計 */
 .simple-search-icon {
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
     background: transparent;
-    border: 2px solid #a89f91;
+    border: none;
     border-radius: 50%;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-right: 15px;
+    margin: 0;
+    padding: 0;
+    transition: all 0.3s ease;
 }
 
 .simple-search-icon:hover {
-    background: #a89f91;
-}
-
-.simple-search-icon:hover svg {
-    stroke: white;
+    background: rgba(168, 159, 145, 0.1);
+    transform: scale(1.1);
 }
 
 .simple-search-icon svg {
+    stroke: #666;
+    transition: all 0.3s ease;
+}
+
+.simple-search-icon:hover svg {
     stroke: #a89f91;
 }
 
@@ -121,7 +125,7 @@ body {
     height: 100%;
     background: rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(5px);
-    z-index: 10000;
+    z-index: 100001;
     display: none;
     align-items: flex-start;
     justify-content: center;
@@ -130,6 +134,12 @@ body {
 
 .search-modal-overlay.active {
     display: flex;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 .search-modal-content {
@@ -280,6 +290,39 @@ body {
     transform: translateX(5px);
 }
 
+/* 右側按鈕區域優化 */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.header-actions .nav-link {
+    color: #333;
+    font-size: 14px;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.header-actions .nav-link:hover {
+    color: #a89f91;
+}
+
+.btn-style {
+    background: #a89f91;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.btn-style:hover {
+    background: #9b8e82;
+    transform: translateY(-2px);
+}
+
 @media (max-width: 768px) {
     .search-modal-content {
         width: 95%;
@@ -291,9 +334,12 @@ body {
     }
     
     .simple-search-icon {
-        width: 35px;
-        height: 35px;
-        margin-right: 10px;
+        width: 32px;
+        height: 32px;
+    }
+    
+    .header-actions {
+        gap: 8px;
     }
 }
 </style>
@@ -380,24 +426,26 @@ body {
           </div>
 
           <!-- 右侧：搜索 + 登入 -->
-          <div class="col-auto d-flex align-items-center gap-2">
-            <!-- 搜索图标 -->
-            <button type="button" class="simple-search-icon" onclick="toggleSearchModal()" title="搜索">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="8"/>
-                <path d="m21 21-4.35-4.35"/>
-              </svg>
-            </button>
-            
-            <!-- 会员名称 -->
-            <% if(session.getAttribute("accessId") != null){ %>
-              <a class="nav-link" href="member.jsp?memberId=<%=session.getAttribute("accessId")%>" style="white-space: nowrap;">
-                <%=session.getAttribute("accessId")%>
-              </a>
-              <input type="submit" value="登出" name="login" class="btn btn-style btn-effect px-3 py-1">
-            <% } else { %>
-              <a class="text-uppercase align-items-center" href="login.jsp" style="white-space: nowrap;">登入</a>
-            <% } %>
+          <div class="col-auto">
+            <div class="header-actions">
+              <!-- 搜索图标 -->
+              <button type="button" class="simple-search-icon" onclick="toggleSearchModal()" title="搜索">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"/>
+                  <path d="m21 21-4.35-4.35"/>
+                </svg>
+              </button>
+              
+              <!-- 会员名称 -->
+              <% if(session.getAttribute("accessId") != null){ %>
+                <a class="nav-link" href="member.jsp?memberId=<%=session.getAttribute("accessId")%>" style="white-space: nowrap;">
+                  <%=session.getAttribute("accessId")%>
+                </a>
+                <input type="submit" value="登出" name="login" class="btn btn-style">
+              <% } else { %>
+                <a class="text-uppercase" href="login.jsp" style="white-space: nowrap; color: #333; text-decoration: none;">登入</a>
+              <% } %>
+            </div>
           </div>
 
         </div>
@@ -436,17 +484,17 @@ body {
                     <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
                 </svg>
                 熱門搜尋
-             </div>
+            </div>
             <ul class="dropdown-list">
-    <li onclick="selectSearchFromModal('休閒')">🌿 休閒</li>
-    <li onclick="selectSearchFromModal('正式')">👔 正式</li>
-    <li onclick="selectSearchFromModal('美式')">⚽ 美式</li>
-    <li onclick="selectSearchFromModal('韓系')">🇰🇷 韓系</li>
-    <li onclick="selectSearchFromModal('日系')">🇯🇵 日系</li>
-    <li onclick="selectSearchFromModal('經典')">📻 經典</li>
-    <li onclick="selectSearchFromModal('學院風')">💖 學院風</li>
-    <li onclick="selectSearchFromModal('簡約')">✨ 簡約</li>
-</ul>
+                <li onclick="selectSearchFromModal('休閒')">🌿 休閒</li>
+                <li onclick="selectSearchFromModal('正式')">👔 正式</li>
+                <li onclick="selectSearchFromModal('美式')">⚽ 美式</li>
+                <li onclick="selectSearchFromModal('韓系')">🇰🇷 韓系</li>
+                <li onclick="selectSearchFromModal('日系')">🇯🇵 日系</li>
+                <li onclick="selectSearchFromModal('經典')">📻 經典</li>
+                <li onclick="selectSearchFromModal('學院風')">💖 學院風</li>
+                <li onclick="selectSearchFromModal('簡約')">✨ 簡約</li>
+            </ul>
         </div>
     </div>
 </div>
@@ -467,11 +515,10 @@ function toggleSearchModal() {
     }
 }
 
-//从弹窗执行搜索
+// 从弹窗执行搜索
 function performSearchFromModal() {
     const keyword = document.getElementById('modalSearchInput').value.trim();
     if (keyword) {
-        // 跳轉到搜索結果頁面
         window.location.href = 'SearchResults.jsp?keyword=' + encodeURIComponent(keyword);
         toggleSearchModal();
     } else {
@@ -482,11 +529,11 @@ function performSearchFromModal() {
 // 从弹窗选择搜索项目
 function selectSearchFromModal(keyword) {
     if (keyword) {
-        // 直接跳轉到搜索結果頁面
         window.location.href = 'SearchResults.jsp?keyword=' + encodeURIComponent(keyword);
         toggleSearchModal();
     }
 }
+
 // 按下 Enter 键执行搜索
 document.addEventListener('DOMContentLoaded', function() {
     const input = document.getElementById('modalSearchInput');
