@@ -4,28 +4,21 @@
 <jsp:useBean id="objDBConfig" scope="session" class="CZ.group.tool.database.DBConfig" />
 <jsp:useBean id="objFolderConfig" scope="session" class="CZ.group.tool.upload.FolderConfig2" />
 <%
-// 改成 accessId
-String testMemberId = (String) session.getAttribute("accessId");  // ✅ 改這裡
-out.println("<!-- Session accessId: " + testMemberId + " -->");
-%>
-<%
 String accessId = (String) session.getAttribute("accessId");
 String memberId = (String) session.getAttribute("memberId");
 
 out.println("<!-- Debug Info -->");
 out.println("<!-- Session accessId: " + accessId + " -->");
 out.println("<!-- Session memberId: " + memberId + " -->");
-out.println("<!-- Session ID: " + session.getId() + " -->");
 %>
 <%
-// 從資料庫讀取商品資料供標籤選擇使用
+// 從資料庫讀取商品資料
 ArrayList<HashMap<String, String>> commodityList = new ArrayList<>();
 try {
     String dbPath = objDBConfig.FilePath();
     Class.forName("net.ucanaccess.jdbc.UcanaccessDriver");
     Connection con = DriverManager.getConnection("jdbc:ucanaccess://" + dbPath);
     
-    // 更新 SQL 查詢以對應正確的欄位
     String sql = "SELECT commodity_code, memberId, commodity_title, pic, commodity_name, price, website, authorization FROM commodity_information ORDER BY commodity_code";
     Statement stmt = con.createStatement();
     ResultSet rs = stmt.executeQuery(sql);
@@ -48,10 +41,9 @@ try {
     con.close();
 } catch(Exception e) {
     out.println("資料庫錯誤: " + e.getMessage());
-    e.printStackTrace();
 }
 
-// 將資料轉換為 JavaScript 陣列格式
+// 轉換為 JavaScript 陣列格式
 StringBuilder jsonData = new StringBuilder("[");
 for(int i = 0; i < commodityList.size(); i++) {
     HashMap<String, String> item = commodityList.get(i);
@@ -131,7 +123,6 @@ jsonData.append("]");
             { title: '資料撷取授權', desc: '授權自動同步訂單資料' }
         ];
 
-        // 從資料庫讀取的商品資料
         const dbCommodities = <%= jsonData.toString() %>;
 
         let state = {
@@ -168,29 +159,21 @@ jsonData.append("]");
                 return;
             }
             
-            console.log('開始載入穿搭組合, memberId:', memberId);
-            
             fetch('load_style_sets.jsp?memberId=' + encodeURIComponent(memberId))
                 .then(response => response.json())
                 .then(data => {
-                    console.log('載入的資料:', data);
                     if (data.success) {
-                        // 確保每個項目都有 title 欄位
                         state.styleSets = data.styleSets.map(set => ({
                             ...set,
                             title: set.title || set.commodity_title || '未命名穿搭'
                         }));
-                        console.log('處理後的穿搭組合:', state.styleSets);
                         render();
-                    } else {
-                        console.error('載入失敗:', data.message);
                     }
                 })
                 .catch(error => {
                     console.error('載入穿搭組合失敗:', error);
                 });
         }
-        
 
         function saveData() {
             localStorage.setItem('shopeeAuthData', JSON.stringify({
@@ -204,6 +187,7 @@ jsonData.append("]");
             const app = document.getElementById('app');
             let html = '<div class="max-w-7xl mx-auto">';
             
+            // 標題區塊
             html += '<div class="bg-white rounded-lg shadow-lg p-8 mb-6 fade-in">';
             html += '<div class="flex items-center justify-center mb-6">';
             html += '<svg class="w-12 h-12 mr-4" style="color: #a89f91;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>';
@@ -232,6 +216,7 @@ jsonData.append("]");
             html += '</div>';
 
             if (state.isConnected) {
+                // 穿搭組合管理
                 html += '<div class="bg-white rounded-lg shadow-lg p-8 mb-6 fade-in">';
                 html += '<div class="flex items-center justify-between mb-6"><h2 class="text-2xl font-bold text-gray-800">穿搭組合管理</h2>';
                 html += '<button onclick="openStyleSetModal()" class="text-white px-6 py-2 rounded-lg transition font-medium flex items-center gap-2" style="background-color: #a89f91;"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>新增穿搭組合</button></div>';
@@ -254,6 +239,62 @@ jsonData.append("]");
                     html += '</div>';
                 }
                 html += '</div>';
+                
+                // ✅✅✅ 穿搭數據統計區塊 ✅✅✅
+                html += '<div class="bg-white rounded-lg shadow-lg p-8 mb-6 fade-in">';
+                html += '<h2 class="text-2xl font-bold text-gray-800 mb-6">📊 穿搭數據統計</h2>';
+                
+                // 統計卡片
+                html += '<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">';
+                
+                html += '<div class="border rounded-lg p-4" style="border-color: #d4cdc5;">';
+                html += '<div class="text-gray-500 text-sm">總瀏覽次數</div>';
+                html += '<div class="text-3xl font-bold" style="color: #a89f91;">1,234</div>';
+                html += '</div>';
+                
+                html += '<div class="border rounded-lg p-4" style="border-color: #d4cdc5;">';
+                html += '<div class="text-gray-500 text-sm">平均點擊率</div>';
+                html += '<div class="text-3xl font-bold" style="color: #a89f91;">68%</div>';
+                html += '</div>';
+                
+                html += '<div class="border rounded-lg p-4" style="border-color: #d4cdc5;">';
+                html += '<div class="text-gray-500 text-sm">最受歡迎穿搭</div>';
+                html += '<div class="text-lg font-bold text-gray-800">秋冬GOGOGO</div>';
+                html += '</div>';
+                
+                html += '</div>';
+                
+                // 穿搭排行
+                html += '<h3 class="font-semibold text-lg mb-4">🏆 熱門穿搭排行</h3>';
+                html += '<div class="space-y-2">';
+                
+                // 排行項目 1
+                html += '<div class="flex items-center gap-4 p-3 bg-gray-50 rounded">';
+                html += '<span class="text-2xl font-bold" style="color: #a89f91;">1</span>';
+                html += '<div class="flex-1">';
+                html += '<div class="font-medium">小資族Fighting！</div>';
+                html += '<div class="w-full bg-gray-200 rounded h-2 mt-1">';
+                html += '<div class="h-2 rounded" style="width: 85%; background-color: #a89f91;"></div>';
+                html += '</div>';
+                html += '</div>';
+                html += '<span class="text-gray-600 font-medium">850 次瀏覽</span>';
+                html += '</div>';
+                
+                // 排行項目 2
+                html += '<div class="flex items-center gap-4 p-3 bg-gray-50 rounded">';
+                html += '<span class="text-2xl font-bold" style="color: #a89f91;">2</span>';
+                html += '<div class="flex-1">';
+                html += '<div class="font-medium">秋冬GOGOGO</div>';
+                html += '<div class="w-full bg-gray-200 rounded h-2 mt-1">';
+                html += '<div class="h-2 rounded" style="width: 72%; background-color: #a89f91;"></div>';
+                html += '</div>';
+                html += '</div>';
+                html += '<span class="text-gray-600 font-medium">612 次瀏覽</span>';
+                html += '</div>';
+                
+                html += '</div>';
+                html += '</div>';
+                // ✅✅✅ 統計區塊結束 ✅✅✅
             }
 
             if (state.showAuthModal) html += renderAuthModal();
@@ -306,12 +347,10 @@ jsonData.append("]");
             html += '<div class="p-6 text-white" style="background: linear-gradient(135deg, #a89f91 0%, #93897d 100%);"><div class="flex items-center justify-between">';
             html += '<h2 class="text-2xl font-bold">編輯商品標籤 - ' + set.title + '</h2><button onclick="closeEditTagModal()"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button></div></div>';
             html += '<div class="p-8"><div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg"><p class="text-sm text-blue-800"><strong>💡 操作說明：</strong></p>';
-            html += '<ul class="text-sm text-blue-700 mt-2 ml-4"><li>• 點擊圖片添加商品標籤</li><li>• 拖動標籤可調整位置</li><li>• 移到標籤上方可看到刪除按鈕</li><li>• 若無法儲存時請檢查商品連結是否過長</li></ul></div>';
+            html += '<ul class="text-sm text-blue-700 mt-2 ml-4"><li>• 點擊圖片添加商品標籤</li><li>• 拖動標籤可調整位置</li><li>• 移到標籤上方可看到刪除按鈕</li></ul></div>';
             
-            // ✅ 圖片容器 - 移除 onclick
             html += '<div class="image-container" id="tagContainer"><img src="' + set.image + '" id="editImage">';
             
-            // ✅ 標籤渲染 - 移除 onmousedown，改用後面的事件監聽
             set.tags.forEach(function(tag, index) {
                 html += '<div class="tag-label" data-tag-index="' + index + '" style="left: ' + tag.x + '%; top: ' + tag.y + '%;">';
                 html += '<div class="bg-white bg-opacity-90 px-3 py-2 rounded-lg shadow-lg border-2" style="border-color: #a89f91; position: relative;">';
