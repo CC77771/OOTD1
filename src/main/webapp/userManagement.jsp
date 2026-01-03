@@ -384,10 +384,7 @@
             <li class="nav-item">
                 <a class="nav-link active">👥 一般會員管理</a>
             </li>
-            
-            <li class="nav-item">
-                <a class="nav-link" href="analyticsManagement.jsp">📊 點擊率分析</a>
-            </li>
+                      
         </ul>
         
         <% if (!message.isEmpty()) { %>

@@ -340,9 +340,6 @@ table img:hover {
             <a class="nav-link" href="userManagement.jsp">👥 一般會員管理</a>
         </li>
         
-        <li class="nav-item">
-            <a class="nav-link" href="analyticsManagement.jsp">📊 點擊率分析</a>
-        </li>
     </ul>
 
     <!-- 統計卡片 -->
@@ -613,4 +610,4 @@ window.onload = function() {
 </script>
 
 </body>
-</html
+</html>

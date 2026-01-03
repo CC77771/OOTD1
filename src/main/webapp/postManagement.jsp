@@ -419,10 +419,7 @@ table img:hover {
         <li class="nav-item">
             <a class="nav-link" href="userManagement.jsp">👥 一般會員管理</a>
         </li>
-        
-        <li class="nav-item">
-            <a class="nav-link" href="clickAnalytics.jsp">📊 點擊率分析</a>
-        </li>
+               
     </ul>
 
     <!-- 統計卡片 -->
