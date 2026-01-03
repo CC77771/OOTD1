@@ -585,38 +585,48 @@ if("POST".equals(request.getMethod())) {
 
         // 切換標籤選擇狀態
         function toggleTag(tagName, isCustom) {
-            const index = selectedTags.indexOf(tagName);
-            
-            if (index > -1) {
-                selectedTags.splice(index, 1);
-            } else {
-                selectedTags.push(tagName);
-            }
-            
-            updateSelectedTagsDisplay();
-            displaySuggestedTags();
-            updateHiddenInput();
-        }
+    const index = selectedTags.indexOf(tagName);
+    
+    if (index > -1) {
+        selectedTags.splice(index, 1);
+    } else {
+        selectedTags.push(tagName);
+    }
+    
+    updateHiddenInput();           // ✅ 先更新
+    updateSelectedTagsDisplay();   // ✅ 再顯示
+    displaySuggestedTags();
+}
 
         // 更新已選標籤顯示
-        function updateSelectedTagsDisplay() {
-            const container = document.getElementById('selectedTagsDisplay');
-            container.innerHTML = '';
-            
-            if (selectedTags.length === 0) {
-                container.innerHTML = '<span style="color: #999;">尚未選擇標籤</span>';
-                return;
-            }
-            
-            selectedTags.forEach(tag => {
-                const tagEl = document.createElement('span');
-                const isCustom = !suggestedTagsList.includes(tag);
-                tagEl.className = isCustom ? 'tag user-added selected' : 'tag selected';
-                tagEl.innerHTML = `${tag} <span class="tag-remove" onclick="removeTag('${tag}')">×</span>`;
-                container.appendChild(tagEl);
-            });
-        }
-
+       function updateSelectedTagsDisplay() {
+    const container = document.getElementById('selectedTagsDisplay');
+    container.innerHTML = '';
+    
+    if (selectedTags.length === 0) {
+        container.innerHTML = '<span style="color: #999;">尚未選擇標籤</span>';
+        return;
+    }
+    
+    selectedTags.forEach(tag => {
+        const tagEl = document.createElement('span');
+        const isCustom = !suggestedTagsList.includes(tag);
+        tagEl.className = isCustom ? 'tag user-added selected' : 'tag selected';
+        
+        // ✅ 新的方式：分開建立元素
+        const removeBtn = document.createElement('span');
+        removeBtn.className = 'tag-remove';
+        removeBtn.textContent = '×';
+        removeBtn.onclick = function(e) {
+            e.stopPropagation();
+            removeTag(tag);
+        };
+        
+        tagEl.textContent = tag + ' ';
+        tagEl.appendChild(removeBtn);
+        container.appendChild(tagEl);
+    });
+}
         // 移除標籤
         function removeTag(tagName) {
             toggleTag(tagName);
