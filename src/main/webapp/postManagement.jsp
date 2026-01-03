@@ -401,9 +401,14 @@ table img:hover {
 
 <body>
 <div class="admin-container">
-    <div class="admin-header">
-        <h1>🛠️ 管理者控制台</h1>
-        <p>歡迎回來 | 管理 CZ_OOTD 平台內容與使用者</p>
+  <div class="admin-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1>🛠️ 管理者控制台</h1>
+                <p>歡迎回來 | 管理 CZ_OOTD 平台內容與使用者</p>
+            </div>
+            <a href="manager3.jsp" class="back-btn">← 返回控制台</a>
+        </div>
     </div>
 
     <!-- 分頁導航 -->
@@ -444,20 +449,13 @@ table img:hover {
         </div>
     </div>
 
-    <!-- 貼文列表 -->
+<!-- 貼文列表 -->
     <div class="content-card">
-        <div class="d-flex justify-content-between mb-3">
-            <div class="filter-buttons">
-                <button class="btn btn-outline-secondary active" onclick="filterPosts('all')">全部</button>
-                <button class="btn btn-outline-warning" onclick="filterPosts('pending')">待審核</button>
-                <button class="btn btn-outline-success" onclick="filterPosts('approved')">已通過</button>
-                <button class="btn btn-outline-danger" onclick="filterPosts('rejected')">已拒絕</button>
-            </div>
+        <div class="d-flex justify-content-end mb-3">
             <div class="search-box">
                 <input type="text" id="postSearch" placeholder="🔍 搜尋貼文標題或作者...">
             </div>
         </div>
-
         <div class="table-responsive">
             <table class="table table-hover">
                 <thead class="table-light">

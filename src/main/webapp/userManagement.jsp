@@ -365,11 +365,16 @@
     </style>
 </head>
 <body>
-    <div class="admin-container">
-        <div class="admin-header">
-            <h1>🛠️ 管理者控制台</h1>
-            <p>歡迎回來 | 管理 CZ_OOTD 平台內容與使用者</p>
+   <div class="admin-container">
+  <div class="admin-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1>🛠️ 管理者控制台</h1>
+                <p>歡迎回來 | 管理 CZ_OOTD 平台內容與使用者</p>
+            </div>
+            <a href="manager3.jsp" class="back-btn">← 返回控制台</a>
         </div>
+    </div>
 
         <!-- 分頁導航 -->
         <ul class="nav nav-tabs" id="adminTab" role="tablist">

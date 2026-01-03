@@ -106,6 +106,13 @@ if("true".equals(ajaxAction)) {
         
         boolean first = true;
         while(rs.next()) {
+            String message = rs.getString("message");
+            
+            // 如果評論內容為空或只有空白，跳過此筆資料
+            if(message == null || message.trim().isEmpty()) {
+                continue;
+            }
+            
             totalComments++;
             boolean postState = rs.getBoolean("post_state");
             if(!postState) pendingCount++;
@@ -119,12 +126,8 @@ if("true".equals(ajaxAction)) {
             commentsJSON.append("commenter:'").append(rs.getString("memberid") != null ? rs.getString("memberid") : "匿名").append("',");
             commentsJSON.append("postTitle:'穿搭分享',");
             
-            String message = rs.getString("message");
-            if(message != null) {
-                message = message.replace("'", "\\'").replace("\n", "\\n").replace("\r", "").replace("\"", "\\\"");
-            } else {
-                message = "";
-            }
+            // 處理評論內容
+            message = message.replace("'", "\\'").replace("\n", "\\n").replace("\r", "").replace("\"", "\\\"");
             commentsJSON.append("content:'").append(message).append("',");
             
             String pic = rs.getString("pic");
@@ -321,11 +324,15 @@ table img:hover {
 
 <body>
 <div class="admin-container">
-    <div class="admin-header">
-        <h1>🛠️ 管理者控制台</h1>
-        <p>歡迎回來 | 管理 CZ_OOTD 平台內容與使用者</p>
+  <div class="admin-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1>🛠️ 管理者控制台</h1>
+                <p>歡迎回來 | 管理 CZ_OOTD 平台內容與使用者</p>
+            </div>
+            <a href="manager3.jsp" class="back-btn">← 返回控制台</a>
+        </div>
     </div>
-
     <!-- 分頁導航 -->
     <ul class="nav nav-tabs" id="adminTab" role="tablist">
         <li class="nav-item">
