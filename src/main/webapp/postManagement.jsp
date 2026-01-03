@@ -136,7 +136,7 @@ if("update".equals(request.getParameter("action"))) {
     try {
         conn = getConnection(dbPath);
         
-        // 使用 GROUP BY 確保每個貼文只出現一次
+        // *** 關鍵修改：加入 WHERE 條件只顯示 post_state = True 的貼文 ***
         String sql = "SELECT p.postid, " +
                      "       MAX(p.memberid) as memberid, " +
                      "       MAX(p.wearId) as wearId, " +
@@ -147,6 +147,7 @@ if("update".equals(request.getParameter("action"))) {
                      "       MAX(p.[like]) as likeCount, " +
                      "       SUM(CASE WHEN p.message IS NOT NULL AND p.message <> '' THEN 1 ELSE 0 END) as commentCount " +
                      "FROM personal_wear p " +
+                     "WHERE p.post_state = True " +  // ← 新增這行
                      "GROUP BY p.postid " +
                      "ORDER BY p.postid DESC";
         
@@ -431,7 +432,7 @@ table img:hover {
     <div class="row mb-4">
         <div class="col-md-4">
             <div class="stats-card">
-                <p>總貼文數</p>
+                <p>總貼文數 (已通過)</p>
                 <h3 id="statTotal"><%= totalPosts %></h3>
             </div>
         </div>
