@@ -34,13 +34,16 @@ if("true".equals(ajaxAction)) {
             String sql = "";
             
             if("approve".equals(action)) {
-                sql = "UPDATE personal_wear SET post_state = True WHERE postid = ?";
+                // ✅ 使用 recordid 更新 message_state = True（通過評論）
+                sql = "UPDATE personal_wear SET message_state = True WHERE recordid = ?";
                 message = "評論已通過";
             } else if("reject".equals(action)) {
-                sql = "UPDATE personal_wear SET post_state = False WHERE postid = ?";
+                // ✅ 使用 recordid 更新 message_state = False（拒絕評論）
+                sql = "UPDATE personal_wear SET message_state = False WHERE recordid = ?";
                 message = "評論已拒絕";
             } else if("delete".equals(action)) {
-                sql = "DELETE FROM personal_wear WHERE postid = ?";
+                // ✅ 使用 recordid 刪除評論記錄
+                sql = "DELETE FROM personal_wear WHERE recordid = ?";
                 message = "評論已刪除";
             } else {
                 message = "無效的操作";
@@ -73,8 +76,6 @@ if("true".equals(ajaxAction)) {
                 e.printStackTrace();
             }
         }
-    } else {
-        message = "參數錯誤";
     }
     
     // 回傳 JSON
@@ -89,7 +90,7 @@ if("true".equals(ajaxAction)) {
 <%@include file="menu.jsp" %>
 <%
     
-    // ============ 讀取評論資料 ============
+    // ============ 讀取評論資料（後台管理 - 顯示所有評論）============
     Connection conn = null;
     PreparedStatement pstmt = null;
     ResultSet rs = null;
@@ -97,25 +98,50 @@ if("true".equals(ajaxAction)) {
     StringBuilder commentsJSON = new StringBuilder("[");
     int pendingCount = 0;
     int totalComments = 0;
+    int approvedCount = 0;
+    int rejectedCount = 0;
     
     try {
         conn = getConnection(dbPath);
-        String sql = "SELECT postid, memberid, message, post_state, pic FROM personal_wear ORDER BY postid DESC";
+        
+        // ✅ 後台管理：顯示所有評論（不過濾 message_state）
+        String sql = "SELECT recordid, postid, memberid, message, post_state, message_state, pic " +
+                "FROM personal_wear " +
+                "WHERE message IS NOT NULL AND TRIM(message) <> '' " +
+                "ORDER BY recordid DESC";
+        
         pstmt = conn.prepareStatement(sql);
         rs = pstmt.executeQuery();
         
         boolean first = true;
         while(rs.next()) {
             totalComments++;
-            boolean postState = rs.getBoolean("post_state");
-            if(!postState) pendingCount++;
             
+            // ✅ 檢查 message_state 是否為 null（待審核）
+            Object messageStateObj = rs.getObject("message_state");
+            boolean messageState = false;
+            String status = "pending";
+            
+            if(messageStateObj == null) {
+                // message_state 為 null = 待審核
+                pendingCount++;
+                status = "pending";
+            } else {
+                messageState = rs.getBoolean("message_state");
+                if(messageState) {
+                    approvedCount++;
+                    status = "approved";
+                } else {
+                    rejectedCount++;
+                    status = "rejected";
+                }
+            }
+
             if(!first) commentsJSON.append(",");
             
-            String status = postState ? "approved" : "rejected";
-            
             commentsJSON.append("{");
-            commentsJSON.append("id:").append(rs.getInt("postid")).append(",");
+            commentsJSON.append("id:").append(rs.getInt("recordid")).append(",");
+            commentsJSON.append("postid:").append(rs.getInt("postid")).append(",");
             commentsJSON.append("commenter:'").append(rs.getString("memberid") != null ? rs.getString("memberid") : "匿名").append("',");
             commentsJSON.append("postTitle:'穿搭分享',");
             
@@ -126,12 +152,13 @@ if("true".equals(ajaxAction)) {
                 message = "";
             }
             commentsJSON.append("content:'").append(message).append("',");
-            
+
             String pic = rs.getString("pic");
             if(pic != null && !pic.trim().isEmpty()) {
                 commentsJSON.append("pic:'").append(pic.replace("\\", "\\\\")).append("',");
             }
-            
+
+            commentsJSON.append("messageState:").append(messageStateObj != null ? messageState : "null").append(",");
             commentsJSON.append("status:'").append(status).append("'");
             commentsJSON.append("}");
             
@@ -147,9 +174,6 @@ if("true".equals(ajaxAction)) {
     }
     
     commentsJSON.append("]");
-    
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-    String currentDate = sdf.format(new java.util.Date());
 %>
 
 <!DOCTYPE html>
@@ -347,22 +371,28 @@ table img:hover {
 
     <!-- 統計卡片 -->
     <div class="row mb-4">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="stats-card">
                 <p>總評論數</p>
                 <h3 id="statTotal"><%= totalComments %></h3>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="stats-card">
                 <p>待審核評論</p>
-                <h3 id="statPending" style="color: #dc3545;"><%= pendingCount %></h3>
+                <h3 id="statPending" style="color: #ffc107;"><%= pendingCount %></h3>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="stats-card">
                 <p>已通過評論</p>
-                <h3 id="statApproved" style="color: #28a745;"><%= totalComments - pendingCount %></h3>
+                <h3 id="statApproved" style="color: #28a745;"><%= approvedCount %></h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <p>已拒絕評論</p>
+                <h3 id="statRejected" style="color: #dc3545;"><%= rejectedCount %></h3>
             </div>
         </div>
     </div>
@@ -385,7 +415,8 @@ table img:hover {
             <table class="table table-hover">
                 <thead class="table-light">
                     <tr>
-                        <th>編號</th>
+                        <th>記錄編號</th>
+                        <th>貼文編號</th>
                         <th>圖片</th>
                         <th>評論者</th>
                         <th>評論內容</th>
@@ -456,12 +487,14 @@ function showToast(message, type) {
 // 更新統計數據
 function updateStats() {
     var total = comments.length;
-    var pending = comments.filter(function(c) { return c.status === 'rejected'; }).length;
+    var pending = comments.filter(function(c) { return c.status === 'pending'; }).length;
     var approved = comments.filter(function(c) { return c.status === 'approved'; }).length;
+    var rejected = comments.filter(function(c) { return c.status === 'rejected'; }).length;
     
     document.getElementById('statTotal').textContent = total;
     document.getElementById('statPending').textContent = pending;
     document.getElementById('statApproved').textContent = approved;
+    document.getElementById('statRejected').textContent = rejected;
 }
 
 // 渲染評論表格
@@ -472,13 +505,12 @@ function renderComments() {
     var filteredComments = comments;
     if(currentFilter !== 'all') {
         filteredComments = comments.filter(function(c) { 
-            if(currentFilter === 'pending') return c.status === 'rejected';
             return c.status === currentFilter; 
         });
     }
     
     if(filteredComments.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">沒有符合條件的評論</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">沒有符合條件的評論</td></tr>';
         return;
     }
     
@@ -495,6 +527,7 @@ function renderComments() {
             actionButtons = '<button class="btn btn-success btn-action" onclick="approveComment(' + comment.id + ')">通過</button>' +
                           '<button class="btn btn-secondary btn-action" onclick="deleteComment(' + comment.id + ')">刪除</button>';
         } else {
+            // pending
             statusBadge = '<span class="badge bg-warning">待審核</span>';
             actionButtons = '<button class="btn btn-success btn-action" onclick="approveComment(' + comment.id + ')">通過</button>' +
                           '<button class="btn btn-danger btn-action" onclick="rejectComment(' + comment.id + ')">拒絕</button>' +
@@ -510,7 +543,8 @@ function renderComments() {
         }
             
         var row = '<tr>' +
-            '<td>' + String(comment.id).padStart(3, '0') + '</td>' +
+            '<td>' + String(comment.id).padStart(4, '0') + '</td>' +
+            '<td>' + String(comment.postid).padStart(3, '0') + '</td>' +
             '<td>' + imageCell + '</td>' +
             '<td>' + comment.commenter + '</td>' +          
             '<td>' + (comment.content.length > 50 ? comment.content.substring(0, 50) + '...' : comment.content) + '</td>' +
@@ -560,7 +594,7 @@ function approveComment(commentId) {
 
 // 拒絕評論
 function rejectComment(commentId) {
-    if (confirm('確定要拒絕此評論嗎？')) {
+    if (confirm('確定要拒絕此評論嗎？拒絕後該評論將不會顯示在前台留言區。')) {
         updateCommentStatus(commentId, 'reject');
     }
 }
@@ -572,7 +606,7 @@ function deleteComment(commentId) {
     }
 }
 
-// 更新評論狀態
+// 更新評論狀態（使用 recordid）
 function updateCommentStatus(commentId, action) {
     // 顯示載入中
     showToast('處理中...', 'info');

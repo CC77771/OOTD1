@@ -714,7 +714,7 @@ while(rs.next()){
     
   
     // 查詢該貼文的所有留言（包含留言者帳號）
-String commentQuery = "SELECT message, memberId FROM personal_wear WHERE postid = ? AND message IS NOT NULL AND TRIM(message) != '' ORDER BY recordid ASC";
+String commentQuery = "SELECT message, memberId FROM personal_wear WHERE postid = ? AND message IS NOT NULL AND TRIM(message) != '' AND message_state = True ORDER BY recordid ASC";
     PreparedStatement pstmtComment = con.prepareStatement(commentQuery);
     pstmtComment.setInt(1, Integer.parseInt(postid));
     ResultSet rsComment = pstmtComment.executeQuery();
@@ -801,7 +801,7 @@ String commentQuery = "SELECT message, memberId FROM personal_wear WHERE postid 
                         <span class="likes-count"><%=rs.getInt("like") %></span>&nbsp;                                                  
                         <span class="comments-count">
                         <% 
-                            String messageQuery = "SELECT COUNT(*) AS message_count FROM personal_wear WHERE postid = ? AND message IS NOT NULL AND TRIM(message) != ''";
+                        String messageQuery = "SELECT COUNT(*) AS message_count FROM personal_wear WHERE postid = ? AND message IS NOT NULL AND TRIM(message) != '' AND message_state = True";
                             PreparedStatement pstmt2 = con.prepareStatement(messageQuery);
                             pstmt2.setString(1, postid);
                             ResultSet messageRs = pstmt2.executeQuery();
@@ -1759,23 +1759,27 @@ button[data-bs-toggle] {
        
       </div>
     </div>
-    <div class="border-top py-4">
-      <div class="container">
-        <div class="row">
-          <div class="col-md-6 d-flex flex-wrap">
-            <div class="payment-option">
-              <span>Payment Option:</span>
-              <img src="images/visa-card.png" alt="card">
-              <img src="images/paypal-card.png" alt="card">
-              <img src="images/master-card.png" alt="card">
-            </div>
-          </div>
-          <div class="col-md-6 text-end">
-            <p>© CZ</p>
-          </div>
-        </div>
-      </div>
+   <div class="row align-items-center">
+  <div class="col-md-4 d-flex flex-wrap">
+    <div class="payment-option">
+      <span>Payment Option:</span>
+      <img src="images/visa-card.png" alt="card">
+      <img src="images/paypal-card.png" alt="card">
+      <img src="images/master-card.png" alt="card">
     </div>
+  </div>
+  
+  <!-- ✅ 新增 -->
+  <div class="col-md-4 text-center">
+    <a href="mailto:a1234567@gmail.com" class="footer-contact-link">
+      聯絡我們: a1234567@gmail.com
+    </a>
+  </div>
+  
+  <div class="col-md-4 text-end">
+    <p>© CZ</p>
+  </div>
+</div>
   </footer>
 
 
@@ -1966,7 +1970,19 @@ function openProductModal(productId) {
 }
 
 </script>
+<style>
+.footer-contact-link {
+  color: #555;
+  text-decoration: none;
+  font-size: 16px;
+  font-family: 'Jost', sans-serif;
+  transition: color 0.3s ease;
+}
 
+.footer-contact-link:hover {
+  color: #a89f91;
+}
+</style>
 </body>
 
 </html>
