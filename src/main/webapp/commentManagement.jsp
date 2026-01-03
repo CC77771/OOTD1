@@ -100,20 +100,12 @@ if("true".equals(ajaxAction)) {
     
     try {
         conn = getConnection(dbPath);
-        // ★ 修改：只查詢 post_state = True 的資料
-        String sql = "SELECT postid, memberid, message, post_state, pic FROM personal_wear WHERE post_state = True ORDER BY postid DESC";
+        String sql = "SELECT postid, memberid, message, post_state, pic FROM personal_wear ORDER BY postid DESC";
         pstmt = conn.prepareStatement(sql);
         rs = pstmt.executeQuery();
         
         boolean first = true;
         while(rs.next()) {
-            String message = rs.getString("message");
-            
-            // 如果評論內容為空或只有空白，跳過此筆資料
-            if(message == null || message.trim().isEmpty()) {
-                continue;
-            }
-            
             totalComments++;
             boolean postState = rs.getBoolean("post_state");
             if(!postState) pendingCount++;
@@ -127,8 +119,12 @@ if("true".equals(ajaxAction)) {
             commentsJSON.append("commenter:'").append(rs.getString("memberid") != null ? rs.getString("memberid") : "匿名").append("',");
             commentsJSON.append("postTitle:'穿搭分享',");
             
-            // 處理評論內容
-            message = message.replace("'", "\\'").replace("\n", "\\n").replace("\r", "").replace("\"", "\\\"");
+            String message = rs.getString("message");
+            if(message != null) {
+                message = message.replace("'", "\\'").replace("\n", "\\n").replace("\r", "").replace("\"", "\\\"");
+            } else {
+                message = "";
+            }
             commentsJSON.append("content:'").append(message).append("',");
             
             String pic = rs.getString("pic");
@@ -325,15 +321,11 @@ table img:hover {
 
 <body>
 <div class="admin-container">
-  <div class="admin-header">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <h1>🛠️ 管理者控制台</h1>
-                <p>歡迎回來 | 管理 CZ_OOTD 平台內容與使用者</p>
-            </div>
-            <a href="manager3.jsp" class="back-btn">← 返回控制台</a>
-        </div>
+    <div class="admin-header">
+        <h1>🛠️ 管理者控制台</h1>
+        <p>歡迎回來 | 管理 CZ_OOTD 平台內容與使用者</p>
     </div>
+
     <!-- 分頁導航 -->
     <ul class="nav nav-tabs" id="adminTab" role="tablist">
         <li class="nav-item">
@@ -348,6 +340,9 @@ table img:hover {
             <a class="nav-link" href="userManagement.jsp">👥 一般會員管理</a>
         </li>
         
+        <li class="nav-item">
+            <a class="nav-link" href="analyticsManagement.jsp">📊 點擊率分析</a>
+        </li>
     </ul>
 
     <!-- 統計卡片 -->
@@ -377,7 +372,9 @@ table img:hover {
         <div class="d-flex justify-content-between mb-3">
             <div class="filter-buttons">
                 <button class="btn btn-outline-secondary active" onclick="filterComments('all')">全部</button>
+                <button class="btn btn-outline-warning" onclick="filterComments('pending')">待審核</button>
                 <button class="btn btn-outline-success" onclick="filterComments('approved')">已通過</button>
+                <button class="btn btn-outline-danger" onclick="filterComments('rejected')">已拒絕</button>
             </div>
             <div class="search-box">
                 <input type="text" id="commentSearch" placeholder="🔍 搜尋評論內容或使用者...">
@@ -475,6 +472,7 @@ function renderComments() {
     var filteredComments = comments;
     if(currentFilter !== 'all') {
         filteredComments = comments.filter(function(c) { 
+            if(currentFilter === 'pending') return c.status === 'rejected';
             return c.status === currentFilter; 
         });
     }
@@ -488,10 +486,20 @@ function renderComments() {
         var statusBadge = '';
         var actionButtons = '';
         
-        // 因為只顯示 post_state = True 的資料，所以都是已通過狀態
-        statusBadge = '<span class="badge bg-success">已通過</span>';
-        actionButtons = '<button class="btn btn-danger btn-action" onclick="rejectComment(' + comment.id + ')">拒絕</button>' +
-                      '<button class="btn btn-secondary btn-action" onclick="deleteComment(' + comment.id + ')">刪除</button>';
+        if (comment.status === 'approved') {
+            statusBadge = '<span class="badge bg-success">已通過</span>';
+            actionButtons = '<button class="btn btn-danger btn-action" onclick="rejectComment(' + comment.id + ')">拒絕</button>' +
+                          '<button class="btn btn-secondary btn-action" onclick="deleteComment(' + comment.id + ')">刪除</button>';
+        } else if (comment.status === 'rejected') {
+            statusBadge = '<span class="badge bg-danger">已拒絕</span>';
+            actionButtons = '<button class="btn btn-success btn-action" onclick="approveComment(' + comment.id + ')">通過</button>' +
+                          '<button class="btn btn-secondary btn-action" onclick="deleteComment(' + comment.id + ')">刪除</button>';
+        } else {
+            statusBadge = '<span class="badge bg-warning">待審核</span>';
+            actionButtons = '<button class="btn btn-success btn-action" onclick="approveComment(' + comment.id + ')">通過</button>' +
+                          '<button class="btn btn-danger btn-action" onclick="rejectComment(' + comment.id + ')">拒絕</button>' +
+                          '<button class="btn btn-secondary btn-action" onclick="deleteComment(' + comment.id + ')">刪除</button>';
+        }
         
         // 圖片欄位
         var imageCell = '';
@@ -543,9 +551,16 @@ function showImage(imageSrc) {
     modal.show();
 }
 
+// 通過評論
+function approveComment(commentId) {
+    if(confirm('確定要通過此評論嗎？')) {
+        updateCommentStatus(commentId, 'approve');
+    }
+}
+
 // 拒絕評論
 function rejectComment(commentId) {
-    if (confirm('確定要拒絕此評論嗎？拒絕後將不再顯示在列表中。')) {
+    if (confirm('確定要拒絕此評論嗎？')) {
         updateCommentStatus(commentId, 'reject');
     }
 }
@@ -598,4 +613,5 @@ window.onload = function() {
 </script>
 
 </body>
+</html
 </html>
