@@ -90,8 +90,9 @@
 
         .post-image {
             width: 100%;
-            height: 280px;
-            object-fit: cover;
+            height: auto; 
+            max-height: 400px;  
+            object-fit: contain;
             background-color: #f5f5f5;
         }
 
@@ -291,7 +292,8 @@
             }
 
             .post-image {
-                height: 200px;
+                height: auto;
+                max-height: 250px; 
             }
 
             .tabs {
