@@ -344,25 +344,60 @@
         <h3><%= position %></h3>
     </div>
 
-        <!-- Research Fields Section -->
-        <div class="form-section">
-            <h3>個人資料：</h3>
-            <ul>
-                <% for (String field : researchFields.split(",")) { %>
-                    <li><%= field.trim() %></li>
-                <% } %>
-            </ul>
+        <!-- 個人資料簡化版 -->
+<div class="form-section">
+    <h3>個人資料</h3>
+    <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-top: 15px;">
+        <div style="display: grid; grid-template-columns: 100px 1fr; gap: 15px; align-items: center;">
+            
+            <!-- 性別 -->
+            <div style="font-weight: 600; color: #666;">
+                <i class="fas fa-venus-mars" style="margin-right: 5px; color: #a89f91;"></i> 性別
+            </div>
+            <div><%= (gender != null && !gender.equals("null")) ? gender : "未設定" %></div>
+            
+            <!-- 生日 -->
+            <% if (birthdate != null && !birthdate.equals("null") && !birthdate.trim().isEmpty()) { %>
+            <div style="font-weight: 600; color: #666;">
+                <i class="fas fa-birthday-cake" style="margin-right: 5px; color: #a89f91;"></i> 生日
+            </div>
+            <div><%= birthdate %></div>
+            <% } %>
+            
+            <!-- 電子信箱 -->
+            <% if (email != null && !email.equals("null") && !email.trim().isEmpty()) { %>
+            <div style="font-weight: 600; color: #666;">
+                <i class="fas fa-envelope" style="margin-right: 5px; color: #a89f91;"></i> 信箱
+            </div>
+            <div><%= email %></div>
+            <% } %>
+            
+            <!-- 註冊日期 -->
+            <% 
+            try {
+                String registerDate = rs.getString("register");
+                if (registerDate != null && !registerDate.equals("null") && registerDate.contains(" ")) {
+                    registerDate = registerDate.split(" ")[0];
+                }
+                if (registerDate != null && !registerDate.equals("null") && !registerDate.trim().isEmpty()) { 
+            %>
+                <div style="font-weight: 600; color: #666;">
+                    <i class="fas fa-calendar-plus" style="margin-right: 5px; color: #a89f91;"></i> 註冊
+                </div>
+                <div><%= registerDate %></div>
+            <% 
+                }
+            } catch(Exception e) {
+                // 如果沒有註冊日期欄位就忽略
+            }
+            %>
+            
         </div>
+    </div>
+</div>
       
-<form name="form" action="memberEdit_DBUpdate_pic.jsp" method="post" enctype="multipart/form-data">
-    <input type="file" name="theFirstFile" accept="image/*">
-     <input type="hidden" name="memberId" value="<%=rs.getString("memberId")%> " />
-  <button type="submit" value="上傳圖片" name="submitButton" style="background-color: #a89f91; color: #fff; border: none; padding: 10px 30px; border-radius: 5px; cursor: pointer;">
-修改圖片
-</button>
-</form>
 
-<a href="memberEdit1.jsp?memberId=<%=rs.getString("memberId")%>"  class="custom-button">編輯</a>
+<a href="memberEdit1.jsp?memberId=<%=rs.getString("memberId")%>"  class="custom-button">個人資料編輯</a>
 <br><br>
 <a class="custom-button" href="my_wardrobe3.jsp">我的衣櫃</a>
 <a class="custom-button" href="Posts.jsp">新增貼文</a>
@@ -420,14 +455,14 @@
     %>
         <div class="post-card" data-postid="<%= postid %>">
             <div style="position: relative;">
-                <button onclick="deletePost(event, '<%= postid %>')" 
+               <button onclick="deletePost(event, '<%= postid %>')" 
                         style="position: absolute; top: 10px; right: 10px; 
                                background: rgba(255, 0, 0, 0.8); color: white; 
                                border: none; border-radius: 50%; width: 35px; height: 35px; 
                                cursor: pointer; z-index: 10; display: flex; align-items: center; 
                                justify-content: center; font-size: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">
                     <i class="fas fa-trash"></i>
-                </button>
+                </button> 
                 
                 <img src="<%= pic %>" alt="Post Image" class="post-image" 
                      onerror="this.src='images/default.jpg'"

@@ -77,7 +77,7 @@ try {
         con.close();
         
         if(updateCount > 0) {
-        	response.sendRedirect("member.jsp?memberId=" + session.getAttribute("accessId"));
+        	response.sendRedirect("memberEdit1.jsp?memberId=" + session.getAttribute("accessId"));
         } else {
             out.println("<p style='color:red;'>✗ 數據庫更新失敗！</p>");
         }
@@ -90,7 +90,7 @@ try {
     e.printStackTrace();
     out.println("<h3 style='color:red;'>發生錯誤：</h3>");
     out.println("<pre>" + e.getMessage() + "</pre>");
-    out.println("<p><a href='member.jsp?memberId=" + session.getAttribute("accessId") + "'>返回會員頁面</a></p>");
+    out.println("<p><a href='memberEdit1.jsp?'>返回個人資料編輯</a></p>");
 }
 %>
 </body>
