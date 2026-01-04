@@ -356,22 +356,39 @@ body {
         gap: 8px;
     }
 }
-/* ===== 🎯 調整下拉選單間距（保留原本樣式） ===== */
+/* ===== 🎯 下拉選單完整設定 - 強制向下展開 ===== */
 
-/* 減少下拉選單與按鈕的間距 */
+/* 基本選單樣式 */
 .navbar-nav .dropdown-menu {
-    margin-top: 0 !important; /* 完全緊貼按鈕 */
+    margin-top: 0.5rem !important;
+    padding: 0.5rem 0 !important;
+    min-width: 150px !important;
+    border-radius: 0.375rem !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
 }
 
-/* 減少選單項目的上下間距 */
+/* 🔥 關鍵：強制向下展開，覆蓋 Bootstrap 所有定位 */
+.navbar-nav .dropdown-menu,
+.navbar-nav .dropdown-menu[data-bs-popper] {
+    position: absolute !important;
+    top: 100% !important;
+    bottom: auto !important;
+    left: 0 !important;
+    right: auto !important;
+    transform: none !important;
+    inset: unset !important;
+}
+
+/* 選單項目樣式 */
 .navbar-nav .dropdown-menu .dropdown-item {
-    padding-top: 0.25rem !important;
-    padding-bottom: 0.25rem !important;
+    padding: 0.4rem 1.2rem !important;
+    font-size: 15px !important;
+    line-height: 1.3 !important;
 }
 
-/* 如果想要有一點點間距（推薦） */
-.navbar-nav .dropdown-menu {
-    margin-top: 2px !important; /* 只留 2px 的小間距 */
+/* 懸停效果 */
+.navbar-nav .dropdown-menu .dropdown-item:hover {
+    background-color: #f0f0f0 !important;
 }
 </style>
     
