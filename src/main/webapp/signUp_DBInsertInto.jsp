@@ -29,11 +29,12 @@
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
             String register_date = now.format(formatter);
             // If memberId does not exist, proceed with the INSERT operation
-            String sql = "INSERT INTO personal_information (memberId, memberPwd, register_date) VALUES (?, ?, ?)";
+            String sql = "INSERT INTO personal_information (memberId, memberPwd, register_date, positionId) VALUES (?, ?, ?, ?)";
             PreparedStatement pstmt = con.prepareStatement(sql);
             pstmt.setString(1, memberid);  // Set memberid in the query
             pstmt.setString(2, memberpwd); // Set memberpwd in the query
             pstmt.setString(3, register_date); // 新增這行
+            pstmt.setInt(4, 2); // 設定 positionId 為 2 (一般會員)
         
           
             // Execute the query

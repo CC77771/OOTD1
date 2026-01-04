@@ -297,6 +297,20 @@ body {
     gap: 15px;
 }
 
+/* ===== 🎯 縮小選單按鈕之間的間距 ===== */
+
+/* 調整選單項目之間的間距 */
+.navbar-nav {
+    gap: 1rem !important; /* 從原本的 gap-md-5 (3rem) 改為 1rem */
+}
+
+/* 針對中等以上螢幕 */
+@media (min-width: 768px) {
+    .navbar-nav {
+        gap: 1.5rem !important; /* 可以調整這個數值：1rem = 小間距, 2rem = 中等間距 */
+    }
+}
+
 .header-actions .nav-link {
     color: #333;
     font-size: 14px;
@@ -342,6 +356,23 @@ body {
         gap: 8px;
     }
 }
+/* ===== 🎯 調整下拉選單間距（保留原本樣式） ===== */
+
+/* 減少下拉選單與按鈕的間距 */
+.navbar-nav .dropdown-menu {
+    margin-top: 0 !important; /* 完全緊貼按鈕 */
+}
+
+/* 減少選單項目的上下間距 */
+.navbar-nav .dropdown-menu .dropdown-item {
+    padding-top: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
+}
+
+/* 如果想要有一點點間距（推薦） */
+.navbar-nav .dropdown-menu {
+    margin-top: 2px !important; /* 只留 2px 的小間距 */
+}
 </style>
     
 </head>
@@ -369,7 +400,7 @@ body {
                 <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
               </div>
               <div class="offcanvas-body">
-                <ul class="navbar-nav justify-content-center flex-grow-1 gap-1 gap-md-5 pe-3">
+                <ul class="navbar-nav justify-content-center flex-grow-1 gap-1 gap-md-2 pe-3">
                   
                   <!-- 體型建議 -->
                   <li class="nav-item dropdown">
